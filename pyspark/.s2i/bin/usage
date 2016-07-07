@@ -1,12 +1,18 @@
 #!/bin/bash -e
 cat <<EOF
-This is the s2i-test S2I image:
+This is the daikon-pyspark S2I image:
 To use it, install S2I: https://github.com/openshift/source-to-image
 
 Sample invocation:
 
-s2i build git://<source code> s2i-test <application image>
+s2i build git://<source code> daikon-pyspark <application image>
 
-You can then run the resulting image via:
-docker run <application image>
+You can then run the resulting image.
+
+To run, you must supply the name of a spark cluster to use (it
+will be created if it does not exist), the name of the
+specific python file from the source repository that should be
+passed to spark-submit, and the ip address of an oshinko rest controller.
+
+$ docker run -e OSHINKO_CLUSTER_NAME=mycluster -e OSHINKO_REST=<ip of an oshinko rest controller> -e APP_FILE=app.py <application image>
 EOF

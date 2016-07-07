@@ -12,9 +12,6 @@ that this image uses.
 
 ## producing a build image ##
 
-By default the Makefile will tag the docker image as `project/daikon-pyspark`.
-Edit the Makefile to modify this behavior.
-
 To produce a builder image:
 
     $ make build
@@ -23,6 +20,13 @@ Examine the resulting image, for example:
 
     $ sudo docker run -i -t <id from the make>
     bash-4.2$ cd /opt/app-root # take a look around
+
+To tag and push a builder image:
+
+    $ make push
+
+By default this will tag the image as `project/daikon-pyspark`,
+edit the Makefile and change the `IMAGE_NAME` to control this.
 
 ## s2i bin files ##
 
