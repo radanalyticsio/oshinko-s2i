@@ -16,7 +16,11 @@ To produce a builder image:
 
     $ make build
 
-Examine the resulting image, for example:
+To print usage information for the builder image:
+
+    $ sudo docker run -t <id from the make>
+
+To poke around inside the builder image:
 
     $ sudo docker run -i -t <id from the make>
     bash-4.2$ cd /opt/app-root # take a look around
