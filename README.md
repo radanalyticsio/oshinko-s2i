@@ -1,11 +1,17 @@
-# oshinko-s2i
+# oshinko-s2i #
 This is a place to put s2i images and utilities for spark application builders for openshift
+Look for additional README files in the subdirectories for more detail.
 
-## oshinko-get-cluster ##
+## common ##
 
-A small program to create a named cluster if it does not exist. This is needed by
-the startup scripts used by the various s2i images.
+Contains:
 
-## s2i/pyspark ##
+* a startup script
+* a small go program that checks for the existing of a cluster and creates it if not present,
+returns the spark master url 
 
-An s2i image for pyspark applications
+The components of common may be used by multiple s2i images.
+
+## pyspark ##
+
+Contains an s2i image for pyspark applications, uses common.
