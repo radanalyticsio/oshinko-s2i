@@ -23,4 +23,4 @@ fi
 # 1.5 is still in use.
 export GO15VENDOREXPERIMENT=1
 
-godep go $1 $GO_OPTIONS $OUTPUT_FLAG $TARGET
+go $1 $GO_OPTIONS $OUTPUT_FLAG $TARGET
