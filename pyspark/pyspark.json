@@ -70,7 +70,7 @@
                "sourceStrategy": {
                   "from": {
                      "kind": "ImageStreamTag",
-                     "name": "pyspark-s2i:latest"
+                     "name": "daikon-pyspark:latest"
                   },
                   "env": [
                      {
@@ -95,7 +95,7 @@
             "name": "${APPLICATION_NAME}"
          },
          "spec": {
-            "dockerImageRepository": "172.30.122.181:5000/oshinko-demo/${APPLICATION_NAME}",
+            "dockerImageRepository": "${APPLICATION_NAME}",
             "tags": [
                {
                   "name": "latest"
@@ -148,7 +148,7 @@
                   "containers": [
                      {
                         "name": "${APPLICATION_NAME}",
-                        "image": "172.30.122.181:5000/oshinko-demo/${APPLICATION_NAME}",
+                        "image": "${APPLICATION_NAME}",
                         "env": [
                            {
                               "name": "OSHINKO_CLUSTER_NAME",
