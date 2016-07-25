@@ -2,14 +2,14 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-pyspark",
+      "name": "oshinko-pyspark-dc",
       "annotations": {
-         "description": "Application template for oshinko pyspark using STI"
+         "description": "Oshinko pyspark using STI and an application submitted as a deploymentconfig"
       }
    },
    "labels": {
       "application": "oshinko-pyspark",
-      "createdBy": "template-oshinko-pyspark"
+      "createdBy": "template-oshinko-pyspark-dc"
    },
    "parameters": [
       {
@@ -30,6 +30,10 @@
          "description": "Name of the main py file to run",
          "name": "APP_FILE",
          "value": "app.py"
+      },
+      {
+         "description": "Command line arguments to pass to the spark application",
+         "name": "APP_ARGS"
       },
       {
          "description": "Git source URI for application",
@@ -114,7 +118,7 @@
          },
          "spec": {
             "strategy": {
-               "type": "Recreate"
+               "type": "Rolling"
             },
             "triggers": [
                {
@@ -153,6 +157,14 @@
                            {
                               "name": "OSHINKO_CLUSTER_NAME",
                               "value": "${OSHINKO_CLUSTER_NAME}"
+                           },
+                           {
+                              "name": "APP_ARGS",
+                              "value": "${APP_ARGS}"
+                           },
+                           {
+                              "name": "FROM_DEPLOYMENTCONFIG",
+                              "value": true
                            }
                         ],
                         "resources": {},

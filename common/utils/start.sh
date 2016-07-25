@@ -22,7 +22,7 @@ else
 fi
 
 # Sleep forever so the process does not complete
-if [ $FOREVER_LOOP ]
+if [ $FROM_DEPLOYMENTCONFIG ]
 then
     while true
     do
