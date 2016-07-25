@@ -22,7 +22,10 @@ else
 fi
 
 # Sleep forever so the process does not complete
-while :
-do
-    sleep 5
-done
+if [ $FOREVER_LOOP ]
+then
+    while true
+    do
+        sleep 5
+    done
+fi
