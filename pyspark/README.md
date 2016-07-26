@@ -32,11 +32,20 @@ To tag and push a builder image:
 By default this will tag the image as `project/daikon-pyspark`,
 edit the Makefile and change the `IMAGE_NAME` to control this.
 
-## sample template ##
+## sample templates ##
 
-The pyspark.json template is an example of how to use this
-builder image in a template which can be launched from the
-openshift console.
+There are a number of templates here that can be used
+as is or as examples for launching pyspark applications
+with this builder image:
+
+* pysparkbuildonly.json creates an imagestream with user source
+* pysparkjob.json creates an imagestream and then launches a job
+using the imagestream
+* pysparkdc.json creates an imagestream and then launches a
+deploymentconfig using the imagestream
+* ppysparkjobonly.json launches a job using the specified image
+* pysparkdconly.json launches a deploymentconfig using the
+specified image
 
 ## s2i bin files ##
 

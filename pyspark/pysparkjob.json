@@ -1,0 +1,165 @@
+{
+   "kind": "Template",
+   "apiVersion": "v1",
+   "metadata": {
+      "name": "oshinko-pyspark-job",
+      "annotations": {
+         "description": "Oshinko pyspark using STI and an application submitted as a job"
+      }
+   },
+   "labels": {
+      "application": "oshinko-pyspark",
+      "createdBy": "template-oshinko-pyspark-job"
+   },
+   "parameters": [
+      {
+         "description": "The name for the application.",
+         "name": "APPLICATION_NAME",
+         "generate": "expression",
+         "from": "pyspark-[a-z0-9]{4}",
+         "required": true
+      },
+      {
+         "description": "The IP address of the integrated registry where the generated image will be stored.",
+         "name": "REGISTRY",
+         "required": true
+      },
+      {
+         "description": "The current project where the generated image will be stored.",
+         "name": "PROJECT",
+         "required": true
+      },
+      {
+         "description": "Name of the spark cluster to use",
+         "name": "OSHINKO_CLUSTER_NAME",
+         "generate": "expression",
+         "from": "cluster-[a-z0-9]{4}",
+         "required": true
+      },
+      {
+         "description": "Name of the main py file to run",
+         "name": "APP_FILE",
+         "value": "app.py"
+      },
+      {
+         "description": "Command line arguments to pass to the application",
+         "name": "APP_ARGS"
+      },
+      {
+         "description": "Git source URI for application",
+         "name": "GIT_URI"
+      },
+      {
+         "description": "Git branch/tag reference",
+         "name": "GIT_REF",
+         "value": "master"
+      }
+   ],
+   "objects": [
+      {
+         "kind": "BuildConfig",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "triggers": [
+               {
+                  "type": "ImageChange",
+                  "imageChange": {}
+               },
+               {
+                  "type": "ConfigChange"
+               } 
+            ],
+            "source": {
+               "type": "Git",
+               "git": {
+                  "uri": "${GIT_URI}",
+                  "ref": "${GIT_REF}"
+               }
+            },
+            "strategy": {
+               "type": "Source",
+               "sourceStrategy": {
+                  "from": {
+                     "kind": "ImageStreamTag",
+                     "name": "daikon-pyspark:latest"
+                  },
+                  "env": [
+                     {
+                        "name": "APP_FILE",
+                        "value": "${APP_FILE}"
+                     }
+                  ]
+               }
+            },
+            "output": {
+               "to": {
+                  "kind": "ImageStreamTag",
+                  "name": "${APPLICATION_NAME}:latest"
+               }
+            }
+         }
+      },
+      {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "dockerImageRepository": "${APPLICATION_NAME}",
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      },
+      {
+          "apiVersion": "extensions/v1beta1",
+          "kind": "Job",
+          "metadata": {
+              "name": "${APPLICATION_NAME}"
+          },
+          "spec": {
+              "completions": 1,
+              "parallelism": 1,
+              "selector": {
+                  "matchLabels": {
+                      "app": "${APPLICATION_NAME}"
+                  }
+              },
+              "template": {
+                  "metadata": {
+                      "labels": {
+                          "app": "${APPLICATION_NAME}"
+                      },
+                      "name": "${APPLICATION_NAME}"
+                  },
+                  "spec": {
+                      "containers": [
+                          {
+                              "image": "${REGISTRY}/${PROJECT}/${APPLICATION_NAME}:latest",
+                              "name": "${APPLICATION_NAME}",
+                              "env": [
+                                {
+                                   "name": "OSHINKO_CLUSTER_NAME",
+                                   "value": "${OSHINKO_CLUSTER_NAME}"
+                                },
+                                {
+                                   "name": "APP_ARGS",
+                                   "value": "${APP_ARGS}"
+                                }
+                              ]
+                          }
+                      ],
+                      "restartPolicy": "Never"
+                  }
+              }
+          }
+      }
+
+   ]
+}
