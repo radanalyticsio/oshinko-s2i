@@ -20,7 +20,7 @@
          "required": true
       },
       {
-         "description": "The image to run.",
+         "description": "The image to run. This may be the name of an imagestream in the current project or a docker pull spec",
          "name": "IMAGE",
          "required": true
       },

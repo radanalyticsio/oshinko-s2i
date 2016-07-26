@@ -20,7 +20,7 @@
          "required": true
       },
       {
-         "description": "The image to run.",
+         "description": "The docker pull spec of the image to run",
          "name": "IMAGE",
          "required": true
       },
