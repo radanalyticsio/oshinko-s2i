@@ -22,7 +22,7 @@ else
 fi
 
 # Sleep forever so the process does not complete
-if [ $FROM_DEPLOYMENTCONFIG ]
+if [ -n "${FROM_DEPLOYMENTCONFIG+x}" ]
 then
     while true
     do
