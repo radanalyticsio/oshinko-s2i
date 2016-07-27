@@ -164,7 +164,7 @@
                            },
                            {
                               "name": "FROM_DEPLOYMENTCONFIG",
-                              "value": true
+                              "value": "true"
                            }
                         ],
                         "resources": {},
