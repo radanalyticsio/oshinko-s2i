@@ -4,7 +4,7 @@
    "metadata": {
       "name": "oshinko-pyspark-job",
       "annotations": {
-         "description": "Oshinko pyspark using STI and an application submitted as a job"
+         "description": "Generate a new pyspark imagestream with STI and then submit the application as a job"
       }
    },
    "labels": {

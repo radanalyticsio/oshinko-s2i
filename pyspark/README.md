@@ -47,6 +47,17 @@ deploymentconfig using the imagestream
 * pysparkdconly.json launches a deploymentconfig using the
 specified image
 
+To upload any of these templates to the current project so that
+they can be accessed from the Openshift console:
+
+    $ oc create -f <filename>
+
+To launch a template from the oc commandline, process the template with
+required and optional parameters specified and then pipe to create.
+Examine the template to see the parameter list. For example:
+
+    $ oc process -f pysparkdconly.json -v IMAGE=mypysparkimage,APPLICATION_NAME=myapp,APP_ARGS="these are args" | oc create -f -
+
 ## s2i bin files ##
 
 Do not forget to look in `./.s2i/bin`. This is where the

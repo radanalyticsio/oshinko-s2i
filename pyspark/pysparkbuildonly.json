@@ -4,7 +4,7 @@
    "metadata": {
       "name": "oshinko-pyspark-build",
       "annotations": {
-         "description": "Oshinko pyspark builder template"
+         "description": "Generate a new pyspark imagestream with STI"
       }
    },
    "labels": {

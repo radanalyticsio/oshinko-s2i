@@ -4,7 +4,7 @@
    "metadata": {
       "name": "oshinko-pyspark-job-only",
       "annotations": {
-         "description": "Submit a pyspark application as a job"
+         "description": "Submit a pyspark application as a job using an existing image"
       }
    },
    "labels": {

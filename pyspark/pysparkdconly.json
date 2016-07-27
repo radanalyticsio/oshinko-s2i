@@ -4,7 +4,7 @@
    "metadata": {
       "name": "oshinko-pyspark-dc-only",
       "annotations": {
-         "description": "Submit a pyspark application as a deploymentconfig"
+         "description": "Submit a pyspark application as a deploymentconfig using an existing imagestream"
       }
    },
    "labels": {
@@ -20,7 +20,7 @@
          "required": true
       },
       {
-         "description": "The image to run. This may be the name of an imagestream in the current project or a docker pull spec",
+         "description": "The imagestream to run (the 'latest' tag will be used')",
          "name": "IMAGE",
          "required": true
       },
