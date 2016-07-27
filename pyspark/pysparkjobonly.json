@@ -1,0 +1,85 @@
+{
+   "kind": "Template",
+   "apiVersion": "v1",
+   "metadata": {
+      "name": "oshinko-pyspark-job-only",
+      "annotations": {
+         "description": "Submit a pyspark application as a job using an existing image"
+      }
+   },
+   "labels": {
+      "application": "oshinko-pyspark",
+      "createdBy": "template-oshinko-pyspark-job-only"
+   },
+   "parameters": [
+      {
+         "description": "The name for the application.",
+         "name": "APPLICATION_NAME",
+         "generate": "expression",
+         "from": "pyspark-[a-z0-9]{4}",
+         "required": true
+      },
+      {
+         "description": "The docker pull spec of the image to run",
+         "name": "IMAGE",
+         "required": true
+      },
+      {
+         "description": "Name of the spark cluster to use",
+         "name": "OSHINKO_CLUSTER_NAME",
+         "generate": "expression",
+         "from": "cluster-[a-z0-9]{4}",
+         "required": true
+      },
+      {
+         "description": "Command line arguments to pass to the application",
+         "name": "APP_ARGS"
+      }
+   ],
+   "objects": [
+      {
+          "apiVersion": "extensions/v1beta1",
+          "kind": "Job",
+          "metadata": {
+              "name": "${APPLICATION_NAME}"
+          },
+          "spec": {
+              "completions": 1,
+              "parallelism": 1,
+              "selector": {
+                  "matchLabels": {
+                      "app": "${APPLICATION_NAME}"
+                  }
+              },
+              "template": {
+                  "metadata": {
+                      "labels": {
+                          "app": "${APPLICATION_NAME}"
+                      },
+                      "name": "${APPLICATION_NAME}"
+                  },
+                  "spec": {
+                      "containers": [
+                          {
+                              "image": "${IMAGE}",
+                              "name": "${APPLICATION_NAME}",
+                              "env": [
+                                {
+                                   "name": "OSHINKO_CLUSTER_NAME",
+                                   "value": "${OSHINKO_CLUSTER_NAME}"
+                                },
+                                {
+                                   "name": "APP_ARGS",
+                                   "value": "${APP_ARGS}"
+                                }
+                              ]
+                          }
+                      ],
+                      "restartPolicy": "Never"
+                  }
+              }
+          }
+      }
+
+   ]
+}

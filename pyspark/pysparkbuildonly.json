@@ -1,0 +1,100 @@
+{
+   "kind": "Template",
+   "apiVersion": "v1",
+   "metadata": {
+      "name": "oshinko-pyspark-build",
+      "annotations": {
+         "description": "Generate a new pyspark imagestream with STI"
+      }
+   },
+   "labels": {
+      "application": "oshinko-pyspark",
+      "createdBy": "template-oshinko-pyspark-job"
+   },
+   "parameters": [
+      {
+         "description": "The name to give to the generated application image.",
+         "name": "APPLICATION_NAME",
+         "generate": "expression",
+         "from": "pyspark-[a-z0-9]{4}",
+         "required": true
+      },
+      {
+         "description": "Name of the main py file to run",
+         "name": "APP_FILE",
+         "value": "app.py"
+      },
+      {
+         "description": "Git source URI for application",
+         "name": "GIT_URI"
+      },
+      {
+         "description": "Git branch/tag reference",
+         "name": "GIT_REF",
+         "value": "master"
+      }
+   ],
+   "objects": [
+      {
+         "kind": "BuildConfig",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "triggers": [
+               {
+                  "type": "ImageChange",
+                  "imageChange": {}
+               },
+               {
+                  "type": "ConfigChange"
+               } 
+            ],
+            "source": {
+               "type": "Git",
+               "git": {
+                  "uri": "${GIT_URI}",
+                  "ref": "${GIT_REF}"
+               }
+            },
+            "strategy": {
+               "type": "Source",
+               "sourceStrategy": {
+                  "from": {
+                     "kind": "ImageStreamTag",
+                     "name": "daikon-pyspark:latest"
+                  },
+                  "env": [
+                     {
+                        "name": "APP_FILE",
+                        "value": "${APP_FILE}"
+                     }
+                  ]
+               }
+            },
+            "output": {
+               "to": {
+                  "kind": "ImageStreamTag",
+                  "name": "${APPLICATION_NAME}:latest"
+               }
+            }
+         }
+      },
+      {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "dockerImageRepository": "${APPLICATION_NAME}",
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      }
+   ]
+}

@@ -2,14 +2,14 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-pyspark-dc",
+      "name": "oshinko-pyspark-job",
       "annotations": {
-         "description": "Generate a new pyspark imagestream with STI and then submit the application as a deploymentconfig"
+         "description": "Generate a new pyspark imagestream with STI and then submit the application as a job"
       }
    },
    "labels": {
       "application": "oshinko-pyspark",
-      "createdBy": "template-oshinko-pyspark-dc"
+      "createdBy": "template-oshinko-pyspark-job"
    },
    "parameters": [
       {
@@ -17,6 +17,16 @@
          "name": "APPLICATION_NAME",
          "generate": "expression",
          "from": "pyspark-[a-z0-9]{4}",
+         "required": true
+      },
+      {
+         "description": "The IP address of the integrated registry where the generated image will be stored.",
+         "name": "REGISTRY",
+         "required": true
+      },
+      {
+         "description": "The current project where the generated image will be stored.",
+         "name": "PROJECT",
          "required": true
       },
       {
@@ -32,7 +42,7 @@
          "value": "app.py"
       },
       {
-         "description": "Command line arguments to pass to the spark application",
+         "description": "Command line arguments to pass to the application",
          "name": "APP_ARGS"
       },
       {
@@ -108,75 +118,48 @@
          }
       },
       {
-         "kind": "DeploymentConfig",
-         "apiVersion": "v1",
-         "metadata": {
-            "name": "${APPLICATION_NAME}",
-            "labels": {
-               "deploymentConfig": "${APPLICATION_NAME}"
-            }
-         },
-         "spec": {
-            "strategy": {
-               "type": "Rolling"
-            },
-            "triggers": [
-               {
-                  "type": "ImageChange",
-                  "imageChangeParams": {
-                     "automatic": true,
-                     "containerNames": [
-                        "${APPLICATION_NAME}"
-                     ],
-                     "from": {
-                        "kind": "ImageStreamTag",
-                        "name": "${APPLICATION_NAME}:latest"
-                     }
+          "apiVersion": "extensions/v1beta1",
+          "kind": "Job",
+          "metadata": {
+              "name": "${APPLICATION_NAME}"
+          },
+          "spec": {
+              "completions": 1,
+              "parallelism": 1,
+              "selector": {
+                  "matchLabels": {
+                      "app": "${APPLICATION_NAME}"
                   }
-               },
-               {
-                  "type": "ConfigChange"
-               }
-            ],
-            "replicas": 1,
-            "selector": {
-               "deploymentConfig": "${APPLICATION_NAME}"
-            },
-            "template": {
-               "metadata": {
-                  "labels": {
-                     "deploymentConfig": "${APPLICATION_NAME}"
+              },
+              "template": {
+                  "metadata": {
+                      "labels": {
+                          "app": "${APPLICATION_NAME}"
+                      },
+                      "name": "${APPLICATION_NAME}"
+                  },
+                  "spec": {
+                      "containers": [
+                          {
+                              "image": "${REGISTRY}/${PROJECT}/${APPLICATION_NAME}:latest",
+                              "name": "${APPLICATION_NAME}",
+                              "env": [
+                                {
+                                   "name": "OSHINKO_CLUSTER_NAME",
+                                   "value": "${OSHINKO_CLUSTER_NAME}"
+                                },
+                                {
+                                   "name": "APP_ARGS",
+                                   "value": "${APP_ARGS}"
+                                }
+                              ]
+                          }
+                      ],
+                      "restartPolicy": "Never"
                   }
-               },
-               "spec": {
-                  "containers": [
-                     {
-                        "name": "${APPLICATION_NAME}",
-                        "image": "${APPLICATION_NAME}",
-                        "env": [
-                           {
-                              "name": "OSHINKO_CLUSTER_NAME",
-                              "value": "${OSHINKO_CLUSTER_NAME}"
-                           },
-                           {
-                              "name": "APP_ARGS",
-                              "value": "${APP_ARGS}"
-                           },
-                           {
-                              "name": "FROM_DEPLOYMENTCONFIG",
-                              "value": "true"
-                           }
-                        ],
-                        "resources": {},
-                        "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always"
-                     }
-                  ],
-                  "restartPolicy": "Always",
-                  "dnsPolicy": "ClusterFirst"
-               }
-            }
-         }
+              }
+          }
       }
+
    ]
 }

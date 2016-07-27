@@ -18,7 +18,11 @@ specified user application file will be launched using
 spark-submit.
 
 Currently the script will sleep forever in a loop after submitting
-the spark application to prevent the process from exiting.
+the spark application to prevent the process from exiting if the
+FROM_DEPLOYMENTCONFIG environment variable is set. This is to prevent
+a deploymentconfig from restarting the spark application after it
+completes (in general, a deploymentconfig may not be the best choice
+of openshift object for submitting a spark application)
 
 ## environment variables ##
 
@@ -42,3 +46,7 @@ spark-submit, *required*
 
 + SPARK_OPTIONS -- additional options to pass to spark-submit, *optional*. These options should
 not contain **--master** or **--class**.
+
+* FROM_DEPLOYMENTCONFIG -- set this variable to any value ("true" would be fine) when the container
+running the spark application is created by a deploymentconfig. This prevents the start.sh script
+from exiting after the spark application completes.
