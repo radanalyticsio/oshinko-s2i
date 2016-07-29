@@ -2,41 +2,123 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-pyspark-dc-only",
+      "name": "oshinko-pyspark-build-dc",
       "annotations": {
-         "description": "Submit a pyspark application as a deploymentconfig using an existing imagestream"
+         "description": "Create a buildconfig, imagestream and deploymentconfig using STI and pyspark source hosted in git"
       }
    },
    "labels": {
       "application": "oshinko-pyspark",
-      "createdBy": "template-oshinko-pyspark-dc"
+      "createdBy": "template-oshinko-pyspark-build-dc"
    },
    "parameters": [
       {
-         "description": "The name for the application.",
+         "description": "The name to use for the buildconfig, imagestream and deployment components",
          "name": "APPLICATION_NAME",
          "generate": "expression",
          "from": "pyspark-[a-z0-9]{4}",
          "required": true
       },
       {
-         "description": "The imagestream to run (the 'latest' tag will be used')",
-         "name": "IMAGE",
-         "required": true
-      },
-      {
-         "description": "Name of the spark cluster to use",
+         "description": "The name of the spark cluster to run against (it will be created if it does not exist)",
          "name": "OSHINKO_CLUSTER_NAME",
          "generate": "expression",
          "from": "cluster-[a-z0-9]{4}",
          "required": true
       },
       {
+         "description": "Name of the main py file to run",
+         "name": "APP_FILE",
+         "value": "app.py"
+      },
+      {
          "description": "Command line arguments to pass to the spark application",
          "name": "APP_ARGS"
+      },
+      {
+         "description": "Git source URI for application",
+         "name": "GIT_URI"
+      },
+      {
+         "description": "Git branch/tag reference",
+         "name": "GIT_REF",
+         "value": "master"
       }
    ],
    "objects": [
+      {
+         "kind": "BuildConfig",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "triggers": [
+               {
+                  "type": "ImageChange",
+                  "imageChange": {}
+               },
+               {
+                  "type": "ConfigChange"
+               },
+               {
+                  "type": "GitHub",
+                  "github": {
+                      "secret": "${APPLICATION_NAME}"
+                  }
+               },
+               {
+                  "type": "Generic",
+                  "generic": {
+                      "secret": "${APPLICATION_NAME}"
+                  }
+               }
+            ],
+            "source": {
+               "type": "Git",
+               "git": {
+                  "uri": "${GIT_URI}",
+                  "ref": "${GIT_REF}"
+               }
+            },
+            "strategy": {
+               "type": "Source",
+               "sourceStrategy": {
+                  "from": {
+                     "kind": "ImageStreamTag",
+                     "name": "daikon-pyspark:latest"
+                  },
+                  "env": [
+                     {
+                        "name": "APP_FILE",
+                        "value": "${APP_FILE}"
+                     }
+                  ]
+               }
+            },
+            "output": {
+               "to": {
+                  "kind": "ImageStreamTag",
+                  "name": "${APPLICATION_NAME}:latest"
+               }
+            }
+         }
+      },
+      {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "dockerImageRepository": "${APPLICATION_NAME}",
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      },
       {
          "kind": "DeploymentConfig",
          "apiVersion": "v1",
@@ -60,7 +142,7 @@
                      ],
                      "from": {
                         "kind": "ImageStreamTag",
-                        "name": "${IMAGE}:latest"
+                        "name": "${APPLICATION_NAME}:latest"
                      }
                   }
                },
@@ -82,7 +164,7 @@
                   "containers": [
                      {
                         "name": "${APPLICATION_NAME}",
-                        "image": "${IMAGE}",
+                        "image": "${APPLICATION_NAME}",
                         "env": [
                            {
                               "name": "OSHINKO_CLUSTER_NAME",
