@@ -38,14 +38,10 @@ There are a number of templates here that can be used
 as is or as examples for launching pyspark applications
 with this builder image:
 
-* pysparkbuildonly.json creates an imagestream with user source
-* pysparkjob.json creates an imagestream and then launches a job
-using the imagestream
-* pysparkdc.json creates an imagestream and then launches a
-deploymentconfig using the imagestream
-* ppysparkjobonly.json launches a job using the specified image
-* pysparkdconly.json launches a deploymentconfig using the
-specified image
+* pysparkbuild.json creates a buildconfig and imagestream with user source
+* pysparkjob.json creates a job using an existing imagestream
+* pysparkdc.json creates a deploymentconfig using an existing imagestream
+* pysparkbuilddc.json creates a buildconfig, imagestream, and deploymentconfig with user source
 
 To upload any of these templates to the current project so that
 they can be accessed from the Openshift console:
