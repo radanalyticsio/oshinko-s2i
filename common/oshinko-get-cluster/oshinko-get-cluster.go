@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"flag"
 	"fmt"
 	"regexp"
 	"strings"
@@ -70,10 +71,13 @@ func createCluster(client *oclient.OshinkoRest, name string) (*models.ClusterMod
         return res, err
 }
 
-func getServer(args []string) string {
-	if len(args) > 1 {
-		return args[1]
-	}
+func deleteCluster(client *oclient.OshinkoRest, name string) (error) {
+	params := clusters.NewDeleteSingleClusterParams().WithName(name)
+	_, err := client.Clusters.DeleteSingleCluster(params)
+	return err
+}
+
+func getServer() *string {
 
 	// Look in the environment for an oshinko rest service
 	// All env vars are in the form key=value
@@ -102,35 +106,65 @@ func getServer(args []string) string {
 			}
 		}
 	}
-	return server
+	return &server
 }
 
 
 func main() {
 
-	// Toss the invocation name
-	args := os.Args[1:]
+	server := flag.String("server", "", "ip address of the oshinko rest service")
+	create := flag.Bool("create", false, "create the specified cluster if it does not already exist")
+	delete := flag.Bool("delete", false, "delete the specified cluster")
+	flag.Parse()
+	if *create && *delete {
+		fmt.Println("The -delete flag and -create flag are mutually exclusive")
+		os.Exit(-1)
+	}
+	name := flag.Arg(0)
+	if *server == "" {
+		server = getServer()
+	}
 
-	server := getServer(args)
-
-	transport := httptransport.New(server, "/", []string{"http"})
+	transport := httptransport.New(*server, "/", []string{"http"})
 	c := oclient.New(transport, strfmt.Default)
 
-        cl, err := clusterExists(c, args[0])
+        cl, err := clusterExists(c, name)
 	if err != nil {
-		fmt.Println(err)
-	} else if cl == nil {
-		fmt.Println("creating")
-		cl, err = createCluster(c, args[0])
-		if err != nil {
+		// If it was a 404 ignore it
+		if strings.Index(err.Error(), "404") == -1 {
 			fmt.Println(err)
+			os.Exit(-1)
 		}
-	} else {
-		fmt.Println("exists")
 	}
-	if cl != nil {
-		fmt.Println(*cl.MasterURL)
+
+	if *delete {
+		if cl != nil {
+			fmt.Println("deleting")
+			err := deleteCluster(c, name)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(-1)
+			}
+		} else {
+			fmt.Println("does not exist")
+		}
+		os.Exit(0)
+	} else {
+		if cl != nil {
+			fmt.Println("exists")
+		} else if *create {
+			fmt.Println("creating")
+			cl, err = createCluster(c, name)
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			fmt.Println("does not exist")
+		}
+		if cl != nil {
+			fmt.Println(*cl.WorkerCount)
+			fmt.Println(*cl.MasterURL)
+		}
 		os.Exit(0)
 	}
-	os.Exit(-1)
 }
