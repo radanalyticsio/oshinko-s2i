@@ -112,7 +112,8 @@ func getServer() *string {
 
 func main() {
 
-	server := flag.String("server", "", "host:port of the oshinko rest service")
+	server := flag.String("server", "", "host:port of the oshinko rest service " +
+                              "(optional, normally the service can be determined from the pod environment")
 	create := flag.Bool("create", false, "create the specified cluster if it does not already exist")
 	delete := flag.Bool("delete", false, "delete the specified cluster")
 	flag.Parse()
