@@ -4,16 +4,16 @@
    "metadata": {
       "name": "oshinko-pyspark-build",
       "annotations": {
-         "description": "Generate a new pyspark imagestream with STI"
+         "description": "Create a buildconfig and imagestream using STI and pyspark source hosted in git"
       }
    },
    "labels": {
       "application": "oshinko-pyspark",
-      "createdBy": "template-oshinko-pyspark-job"
+      "createdBy": "template-oshinko-pyspark-build"
    },
    "parameters": [
       {
-         "description": "The name to give to the generated application image.",
+         "description": "The name to to use for the buildconfig and imagestream",
          "name": "APPLICATION_NAME",
          "generate": "expression",
          "from": "pyspark-[a-z0-9]{4}",
@@ -49,7 +49,19 @@
                },
                {
                   "type": "ConfigChange"
-               } 
+               },
+               {
+                  "type": "GitHub",
+                  "github": {
+                      "secret": "${APPLICATION_NAME}"
+                  }
+               },
+               {
+                  "type": "Generic",
+                  "generic": {
+                      "secret": "${APPLICATION_NAME}"
+                  }
+               }
             ],
             "source": {
                "type": "Git",
