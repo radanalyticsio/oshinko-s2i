@@ -54,6 +54,35 @@ Examine the template to see the parameter list. For example:
 
     $ oc process -f pysparkdconly.json -v IMAGE=mypysparkimage,APPLICATION_NAME=myapp,APP_ARGS="these are args" | oc create -f -
 
+## note on webhook secrets in sample templates ##
+
+The buildconfigs in the sample templates set up github and generic webhook
+triggers so that builds can be started when new source is pushed (github) or based
+on some other criteria (generic). For reference, a github webhook trigger in
+JSON looks like this:
+
+    {
+        "type": "GitHub",
+        "github": {
+            "secret": "mysecretvalue"
+        }
+    },
+
+
+The webhooks require that a secret value be specified which becomes part of the
+URL used in the trigger. The purpose of the secret value is to ensure uniqueness
+in the URL to prevent others from triggering the build. Since the standard URL
+used by OpenShift includes the namespace name and buildconfig name, these sample
+templates simply reuse the ${APPLICATION_NAME} value as the secret.
+
+To change this behavior, simply edit the pysparkbuild.json and/or the
+pysparkbuilddc.json and set the webook secret values to some other string value.
+To eliminate webhook triggers completely, simply remove the webhook trigger
+sections completely.
+
+See the OpenShift documentation for more information on
+webhook triggers.
+
 ## s2i bin files ##
 
 Do not forget to look in `./.s2i/bin`. This is where the
