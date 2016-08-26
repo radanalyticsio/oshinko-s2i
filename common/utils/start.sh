@@ -16,18 +16,21 @@ res=$?
 if [ $res -eq 0 ] && [ ! -z "$output" ]
 then
     # Since we called for create, then we are either going to get "Creating" or "Exists"
-    # followed by the worker count and the master url
+    # followed by the worker count, the master url, and the master web url
+    desired=${output[1]}
+    master=${output[2]}
+    masterweb=${output[3]}
+
     r=1
     while [ $r -ne 0 ]; do
         echo "Waiting for spark master to be available ..."
-        curl --connect-timeout 4 -s -X GET http://"$OSHINKO_CLUSTER_NAME"-ui:8080 > /dev/null
+        curl --connect-timeout 4 -s -X GET $masterweb > /dev/null
         r=$?
         sleep 1
     done
 
-    desired=${output[1]}
     while true; do
-        workers=$(curl -s -X GET http://"$OSHINKO_CLUSTER_NAME"-ui:8080 | grep -e "[Aa]live.*[Ww]orkers")
+        workers=$(curl -s -X GET $masterweb | grep -e "[Aa]live.*[Ww]orkers")
         cnt=($(echo $workers | sed "s,[^0-9],\\ ,g"))
         if [ ${cnt[-1]} -eq "$desired" ]; then
 	    break
@@ -37,7 +40,6 @@ then
     done
     echo "All spark workers alive"
 
-    master=${output[2]}
     if [ -n "$APP_MAIN_CLASS" ]; then
         CLASS_OPTION="--class $APP_MAIN_CLASS"
     fi
