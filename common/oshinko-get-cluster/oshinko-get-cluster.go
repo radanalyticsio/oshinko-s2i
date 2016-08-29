@@ -165,6 +165,7 @@ func main() {
 		if cl != nil {
 			fmt.Println(*cl.WorkerCount)
 			fmt.Println(*cl.MasterURL)
+			fmt.Println(*cl.MasterWebURL)
 		}
 		os.Exit(0)
 	}
