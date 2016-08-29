@@ -5,6 +5,7 @@ package models
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/validate"
@@ -22,6 +23,12 @@ type ClusterModel struct {
 	Required: true
 	*/
 	MasterURL *string `json:"masterUrl"`
+
+	/* URL to the spark master web UI
+
+	Required: true
+	*/
+	MasterWebURL *string `json:"masterWebUrl"`
 
 	/* Pods that make up the cluster
 
@@ -48,6 +55,10 @@ func (m *ClusterModel) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateMasterWebURL(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validatePods(formats); err != nil {
 		res = append(res, err)
 	}
@@ -71,10 +82,34 @@ func (m *ClusterModel) validateMasterURL(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *ClusterModel) validateMasterWebURL(formats strfmt.Registry) error {
+
+	if err := validate.Required("masterWebUrl", "body", m.MasterWebURL); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *ClusterModel) validatePods(formats strfmt.Registry) error {
 
 	if err := validate.Required("pods", "body", m.Pods); err != nil {
 		return err
+	}
+
+	for i := 0; i < len(m.Pods); i++ {
+
+		if swag.IsZero(m.Pods[i]) { // not required
+			continue
+		}
+
+		if m.Pods[i] != nil {
+
+			if err := m.Pods[i].Validate(formats); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil

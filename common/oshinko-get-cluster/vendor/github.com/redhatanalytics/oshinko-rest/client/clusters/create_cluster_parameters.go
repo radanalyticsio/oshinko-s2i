@@ -4,8 +4,11 @@ package clusters
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"time"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
+	cr "github.com/go-openapi/runtime/client"
 
 	strfmt "github.com/go-openapi/strfmt"
 
@@ -16,7 +19,20 @@ import (
 // with the default values initialized.
 func NewCreateClusterParams() *CreateClusterParams {
 	var ()
-	return &CreateClusterParams{}
+	return &CreateClusterParams{
+
+		timeout: cr.DefaultTimeout,
+	}
+}
+
+// NewCreateClusterParamsWithTimeout creates a new CreateClusterParams object
+// with the default values initialized, and the ability to set a timeout on a request
+func NewCreateClusterParamsWithTimeout(timeout time.Duration) *CreateClusterParams {
+	var ()
+	return &CreateClusterParams{
+
+		timeout: timeout,
+	}
 }
 
 /*CreateClusterParams contains all the parameters to send to the API endpoint
@@ -29,6 +45,8 @@ type CreateClusterParams struct {
 
 	*/
 	Cluster *models.NewCluster
+
+	timeout time.Duration
 }
 
 // WithCluster adds the cluster to the create cluster params
@@ -40,6 +58,7 @@ func (o *CreateClusterParams) WithCluster(Cluster *models.NewCluster) *CreateClu
 // WriteToRequest writes these params to a swagger request
 func (o *CreateClusterParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
+	r.SetTimeout(o.timeout)
 	var res []error
 
 	if o.Cluster == nil {

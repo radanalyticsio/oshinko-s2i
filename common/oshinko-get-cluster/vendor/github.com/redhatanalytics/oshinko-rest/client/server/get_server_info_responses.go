@@ -123,6 +123,18 @@ type GetServerInfoOKBodyApplication struct {
 	Required: true
 	*/
 	Version *string `json:"version"`
+
+	/* Oshinko Web Service Name
+
+	Required: true
+	*/
+	WebServiceName *string `json:"web-service-name"`
+
+	/* Oshinko Web URL
+
+	Required: true
+	*/
+	WebURL *string `json:"web-url"`
 }
 
 // Validate validates this get server info o k body application
@@ -135,6 +147,16 @@ func (o *GetServerInfoOKBodyApplication) Validate(formats strfmt.Registry) error
 	}
 
 	if err := o.validateVersion(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := o.validateWebServiceName(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := o.validateWebURL(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -157,6 +179,24 @@ func (o *GetServerInfoOKBodyApplication) validateName(formats strfmt.Registry) e
 func (o *GetServerInfoOKBodyApplication) validateVersion(formats strfmt.Registry) error {
 
 	if err := validate.Required("getServerInfoOK"+"."+"application"+"."+"version", "body", o.Version); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *GetServerInfoOKBodyApplication) validateWebServiceName(formats strfmt.Registry) error {
+
+	if err := validate.Required("getServerInfoOK"+"."+"application"+"."+"web-service-name", "body", o.WebServiceName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *GetServerInfoOKBodyApplication) validateWebURL(formats strfmt.Registry) error {
+
+	if err := validate.Required("getServerInfoOK"+"."+"application"+"."+"web-url", "body", o.WebURL); err != nil {
 		return err
 	}
 
