@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 
 	strfmt "github.com/go-openapi/strfmt"
@@ -124,6 +125,12 @@ type ClustersItems0 struct {
 	*/
 	MasterURL *string `json:"masterUrl"`
 
+	/* URL to the spark master web UI
+
+	Required: true
+	*/
+	MasterWebURL *string `json:"masterWebUrl"`
+
 	/* Name of the cluster
 
 	Required: true
@@ -153,6 +160,11 @@ func (o *ClustersItems0) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := o.validateMasterURL(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := o.validateMasterWebURL(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -190,6 +202,15 @@ func (o *ClustersItems0) validateHref(formats strfmt.Registry) error {
 func (o *ClustersItems0) validateMasterURL(formats strfmt.Registry) error {
 
 	if err := validate.Required("masterUrl", "body", o.MasterURL); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *ClustersItems0) validateMasterWebURL(formats strfmt.Registry) error {
+
+	if err := validate.Required("masterWebUrl", "body", o.MasterWebURL); err != nil {
 		return err
 	}
 
@@ -255,6 +276,21 @@ func (o *FindClustersOKBodyBody) validateClusters(formats strfmt.Registry) error
 
 	if err := validate.Required("findClustersOK"+"."+"clusters", "body", o.Clusters); err != nil {
 		return err
+	}
+
+	for i := 0; i < len(o.Clusters); i++ {
+
+		if swag.IsZero(o.Clusters[i]) { // not required
+			continue
+		}
+
+		if o.Clusters[i] != nil {
+
+			if err := o.Clusters[i].Validate(formats); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil

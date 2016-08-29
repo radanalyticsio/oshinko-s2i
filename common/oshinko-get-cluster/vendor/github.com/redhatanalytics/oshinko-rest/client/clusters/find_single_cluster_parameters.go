@@ -4,8 +4,11 @@ package clusters
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"time"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
+	cr "github.com/go-openapi/runtime/client"
 
 	strfmt "github.com/go-openapi/strfmt"
 )
@@ -14,7 +17,20 @@ import (
 // with the default values initialized.
 func NewFindSingleClusterParams() *FindSingleClusterParams {
 	var ()
-	return &FindSingleClusterParams{}
+	return &FindSingleClusterParams{
+
+		timeout: cr.DefaultTimeout,
+	}
+}
+
+// NewFindSingleClusterParamsWithTimeout creates a new FindSingleClusterParams object
+// with the default values initialized, and the ability to set a timeout on a request
+func NewFindSingleClusterParamsWithTimeout(timeout time.Duration) *FindSingleClusterParams {
+	var ()
+	return &FindSingleClusterParams{
+
+		timeout: timeout,
+	}
 }
 
 /*FindSingleClusterParams contains all the parameters to send to the API endpoint
@@ -27,6 +43,8 @@ type FindSingleClusterParams struct {
 
 	*/
 	Name string
+
+	timeout time.Duration
 }
 
 // WithName adds the name to the find single cluster params
@@ -38,6 +56,7 @@ func (o *FindSingleClusterParams) WithName(Name string) *FindSingleClusterParams
 // WriteToRequest writes these params to a swagger request
 func (o *FindSingleClusterParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
+	r.SetTimeout(o.timeout)
 	var res []error
 
 	// path param name

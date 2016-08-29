@@ -4,8 +4,11 @@ package clusters
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"time"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
+	cr "github.com/go-openapi/runtime/client"
 
 	strfmt "github.com/go-openapi/strfmt"
 )
@@ -14,7 +17,20 @@ import (
 // with the default values initialized.
 func NewDeleteSingleClusterParams() *DeleteSingleClusterParams {
 	var ()
-	return &DeleteSingleClusterParams{}
+	return &DeleteSingleClusterParams{
+
+		timeout: cr.DefaultTimeout,
+	}
+}
+
+// NewDeleteSingleClusterParamsWithTimeout creates a new DeleteSingleClusterParams object
+// with the default values initialized, and the ability to set a timeout on a request
+func NewDeleteSingleClusterParamsWithTimeout(timeout time.Duration) *DeleteSingleClusterParams {
+	var ()
+	return &DeleteSingleClusterParams{
+
+		timeout: timeout,
+	}
 }
 
 /*DeleteSingleClusterParams contains all the parameters to send to the API endpoint
@@ -27,6 +43,8 @@ type DeleteSingleClusterParams struct {
 
 	*/
 	Name string
+
+	timeout time.Duration
 }
 
 // WithName adds the name to the delete single cluster params
@@ -38,6 +56,7 @@ func (o *DeleteSingleClusterParams) WithName(Name string) *DeleteSingleClusterPa
 // WriteToRequest writes these params to a swagger request
 func (o *DeleteSingleClusterParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
+	r.SetTimeout(o.timeout)
 	var res []error
 
 	// path param name

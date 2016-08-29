@@ -5,6 +5,7 @@ package models
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/validate"
@@ -49,6 +50,21 @@ func (m *ErrorResponse) validateErrors(formats strfmt.Registry) error {
 
 	if err := validate.MinItems("errors", "body", iErrorsSize, 1); err != nil {
 		return err
+	}
+
+	for i := 0; i < len(m.Errors); i++ {
+
+		if swag.IsZero(m.Errors[i]) { // not required
+			continue
+		}
+
+		if m.Errors[i] != nil {
+
+			if err := m.Errors[i].Validate(formats); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil
