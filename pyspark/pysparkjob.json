@@ -34,6 +34,10 @@
       {
          "description": "Command line arguments to pass to the pyspark application",
          "name": "APP_ARGS"
+      },
+      {
+         "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here"
+         "name": "SPARK_OPTIONS"
       }
    ],
    "objects": [
@@ -71,6 +75,10 @@
                                 {
                                    "name": "APP_ARGS",
                                    "value": "${APP_ARGS}"
+                                },
+                                {
+                                   "name": "SPARK_OPTIONS",
+                                   "value": "${SPARK_OPTIONS}"
                                 }
                               ]
                           }
