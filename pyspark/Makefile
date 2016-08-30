@@ -6,7 +6,7 @@ build: utils
 	sudo docker build -t daikon-pyspark .
 
 clean:
-	sudo docker rmi daikon-pyspark
+	-sudo docker rmi daikon-pyspark
 	rm -rf utils
 
 push: build
