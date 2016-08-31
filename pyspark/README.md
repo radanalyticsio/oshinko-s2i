@@ -1,4 +1,4 @@
-# daikon_pyspark #
+# radanalytics_pyspark #
 
 This is a builder image for a pyspark application. It is
 meant to be used in an openshift project which contains
@@ -29,7 +29,7 @@ To tag and push a builder image:
 
     $ make push
 
-By default this will tag the image as `project/daikon-pyspark`,
+By default this will tag the image as `project/radanalytics-pyspark`,
 edit the Makefile and change the `IMAGE_NAME` to control this.
 
 ## sample templates ##

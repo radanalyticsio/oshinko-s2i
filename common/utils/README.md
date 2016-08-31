@@ -1,6 +1,6 @@
 # start.sh #
 
-A common startup script for daikon spark applications.
+A common startup script for radanalytics spark applications.
 This script is meant to be used in a container launched
 from openshift and expects arguments specified through
 environment variables (which should be set in the 
