@@ -1,15 +1,15 @@
-# s2i-test
+# radanalytics-pyspark
 FROM centos:latest
 
 MAINTAINER Trevor McKay tmckay@redhat.com
  
-ENV DAIKON_PYSPARK 1.0
+ENV RADANALYTICS_PYSPARK 1.0
 
-LABEL io.k8s.description="Platform for building a daikon pyspark app" \
-      io.k8s.display-name="daikon pyspark" \
+LABEL io.k8s.description="Platform for building a radanalytics pyspark app" \
+      io.k8s.display-name="radanalytics pyspark" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
-      io.openshift.tags="builder,daikon,pyspark"
+      io.openshift.tags="builder,radanalytics,pyspark"
 
 #############
 # This is a duplicate of what the base openshift spark 2 image does

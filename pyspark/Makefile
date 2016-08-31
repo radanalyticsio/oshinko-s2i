@@ -1,16 +1,16 @@
-IMAGE_NAME = project/daikon-pyspark
+IMAGE_NAME = project/radanalytics-pyspark
 
 .PHONY: build clean push test
 
 build: utils
-	sudo docker build -t daikon-pyspark .
+	sudo docker build -t radanalytics-pyspark .
 
 clean:
-	sudo docker rmi daikon-pyspark
+	sudo docker rmi radanalytics-pyspark
 	rm -rf utils
 
 push: build
-	sudo docker tag -f daikon-pyspark $(IMAGE_NAME)
+	sudo docker tag -f radanalytics-pyspark $(IMAGE_NAME)
 	sudo docker push $(IMAGE_NAME)
 
 utils:

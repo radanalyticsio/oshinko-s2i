@@ -90,7 +90,7 @@
                "sourceStrategy": {
                   "from": {
                      "kind": "ImageStreamTag",
-                     "name": "daikon-pyspark:latest"
+                     "name": "radanalytics-pyspark:latest"
                   },
                   "env": [
                      {
