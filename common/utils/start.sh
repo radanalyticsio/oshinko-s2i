@@ -21,6 +21,10 @@ then
     master=${output[2]}
     masterweb=${output[3]}
 
+    # Now that we know what the master url is, export it so that the
+    # app can use it if it likes.
+    export OSHINKO_SPARK_MASTER=$master
+
     r=1
     while [ $r -ne 0 ]; do
         echo "Waiting for spark master to be available ..."
