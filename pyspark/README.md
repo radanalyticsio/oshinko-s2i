@@ -4,6 +4,9 @@ This is a builder image for a pyspark application. It is
 meant to be used in an openshift project which contains
 an oshinko rest controller.
 
+The base image specified in the Dockerfile is expected
+to be a python2.7 s2i image with openshift-spark installed.
+
 The final image will have spark installed along with user
 specified pyspark source, a startup script and associated
 utilities to create a cluster and launch the application.
@@ -27,7 +30,7 @@ To poke around inside the builder image:
 
 To tag and push a builder image:
 
-    $ make push
+    $ sudo make push
 
 By default this will tag the image as `project/radanalytics-pyspark`,
 edit the Makefile and change the `IMAGE_NAME` to control this.
@@ -85,6 +88,6 @@ webhook triggers.
 
 ## s2i bin files ##
 
-Do not forget to look in `./.s2i/bin`. This is where the
-s2i assemble and run scripts are located (save-artifacts is
-present but unused).
+Do not forget to look in `./s2i/bin`. This is where the
+s2i run and usage scripts are located. The other s2i
+scripts are inherited from the python2.7 s2i base image.

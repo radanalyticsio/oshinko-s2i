@@ -7,4 +7,4 @@
 #	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
 #
 
-$APP_ROOT/start.sh
+$APP_ROOT/src/start.sh

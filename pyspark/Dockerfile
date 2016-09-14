@@ -1,5 +1,9 @@
 # radanalytics-pyspark
-FROM centos:latest
+
+# The base image used here is expected to contain
+# a spark installation and a python2.7 s2i assemble script
+# (see https://github.com/sclorg/s2i-python-container)
+FROM openshift-spark-py27-s2i
 
 MAINTAINER Trevor McKay tmckay@redhat.com
  
@@ -11,46 +15,17 @@ LABEL io.k8s.description="Platform for building a radanalytics pyspark app" \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
       io.openshift.tags="builder,radanalytics,pyspark"
 
-#############
-# This is a duplicate of what the base openshift spark 2 image does
-# When we have a well-known docker registry location for the spark
-# image we can change the base image and remove these instructions
+ENV APP_ROOT /opt/app-root
 
-RUN yum install -y epel-release tar java && \
-    yum clean all
+# Default python file to run will be app.py but that may be
+# overridden at image build time
+ENV APP_FILE app.py
 
-RUN cd /opt && \
-    curl https://dist.apache.org/repos/dist/release/spark/spark-2.0.0/spark-2.0.0-bin-hadoop2.7.tgz | \
-        tar -zx && \
-    ln -s spark-2.0.0-bin-hadoop2.7 spark
+USER root
+COPY ./utils/ $APP_ROOT/src
+RUN chown -R 1001:0 $APP_ROOT/src/*
 
-# SPARK_WORKER_DIR defaults to SPARK_HOME/work and is created on
-# Worker startup if it does not exist. instead of making SPARK_HOME
-# world writable, create SPARK_HOME/work.
-RUN mkdir /opt/spark/work && chmod a+rwx /opt/spark/work
+COPY ./s2i/bin/ $STI_SCRIPTS_PATH
 
-# when the containers are not run w/ uid 0, the uid may not map in
-# /etc/passwd and it may not be possible to modify things like
-# /etc/hosts. nss_wrapper provides an LD_PRELOAD way to modify passwd
-# and hosts.
-RUN yum install -y nss_wrapper && yum clean all
-ENV LD_PRELOAD=libnss_wrapper.so
-ENV PATH $PATH:/opt/spark/bin
-
-##############
-
-ENV APP_ROOT=/opt/app-root
-COPY ./utils/ $APP_ROOT
-
-COPY ./.s2i/bin/ /usr/libexec/s2i
-
-RUN chown -R 1001:1001 /opt/app-root
-
-# This default user is created in the openshift/base-centos7 image
 USER 1001
-
-# Set the default port for applications built using this image
-EXPOSE 8080
-
-# TODO: Set the default CMD for the image
-CMD ["/usr/libexec/s2i/usage"]
+CMD $STI_SCRIPTS_PATH/usage

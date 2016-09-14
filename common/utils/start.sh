@@ -3,13 +3,14 @@
 echo "version 1"
 
 # Set up the env for the spark user
-source $APP_ROOT/common.sh
+# This script is supplied by the python s2i base
+source $APP_ROOT/etc/generate_container_user
 
 # Create the cluster through oshinko-rest if it does not exist
 # First line will say "creating" if it is creating the cluster
 # Second line will be the url of the spark master
 # If OSHINKO_REST is defined it will be used, otherwise the env will be scanned to find the rest server
-output=($($APP_ROOT/oshinko-get-cluster -create -server=$OSHINKO_REST $OSHINKO_CLUSTER_NAME))
+output=($($APP_ROOT/src/oshinko-get-cluster -create -server=$OSHINKO_REST $OSHINKO_CLUSTER_NAME))
 res=$?
 
 # Build the spark-submit command and execute
@@ -47,12 +48,12 @@ then
     if [ -n "$APP_MAIN_CLASS" ]; then
         CLASS_OPTION="--class $APP_MAIN_CLASS"
     fi
-    echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/$APP_FILE $APP_ARGS
-    spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/$APP_FILE $APP_ARGS
+    echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
+    spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
 
     if [ ${output[0]} == "creating" ] && [ "${OSHINKO_DEL_CLUSTER}" == "yes" ]; then
         echo "Deleting cluster"
-        $APP_ROOT/oshinko-get-cluster -delete -server=$OSHINKO_REST $OSHINKO_CLUSTER_NAME
+        $APP_ROOT/src/oshinko-get-cluster -delete -server=$OSHINKO_REST $OSHINKO_CLUSTER_NAME
     fi
 else
     echo "$output"

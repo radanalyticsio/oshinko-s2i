@@ -1,22 +1,23 @@
-IMAGE_NAME = project/radanalytics-pyspark
+LOCAL_IMAGE=radanalytics-pyspark
+PUSH_IMAGE=myproject/radanalytics-pyspark
 
 .PHONY: build clean push test
 
 build: utils
-	sudo docker build -t radanalytics-pyspark .
+	sudo docker build -t $(LOCAL_IMAGE) .
 
 clean:
-	sudo docker rmi radanalytics-pyspark
+	sudo docker rmi $(LOCAL_IMAGE)
 	rm -rf utils
 
 push: build
-	sudo docker tag -f radanalytics-pyspark $(IMAGE_NAME)
-	sudo docker push $(IMAGE_NAME)
+	sudo docker tag -f $(LOCAL_IMAGE) $(PUSH_IMAGE)
+	sudo docker push $(PUSH_IMAGE)
 
 utils:
 	cd ../common && make build
 	cp -r ../common/utils .
 
 test:
-	docker build -t $(IMAGE_NAME)-candidate .
-	IMAGE_NAME=$(IMAGE_NAME)-candidate test/run
+	docker build -t $(PUSH_IMAGE)-candidate .
+	IMAGE_NAME=$(PUSH_IMAGE)-candidate test/run
