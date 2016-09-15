@@ -3,7 +3,7 @@
 # The base image used here is expected to contain
 # a spark installation and a python2.7 s2i assemble script
 # (see https://github.com/sclorg/s2i-python-container)
-FROM openshift-spark-py27-s2i
+FROM openshift-spark-py27-sti
 
 MAINTAINER Trevor McKay tmckay@redhat.com
  
