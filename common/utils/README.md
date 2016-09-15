@@ -28,7 +28,9 @@ of openshift object for submitting a spark application)
 
 The start.sh script expects the following environment variables:
 
-+ APP_ROOT -- the path of the directory containg the startup script and application code, *required*
++ APP_ROOT -- path of the application root directory. In the standard s2i
+images, this will be /opt/app-root. Application source will be located at
+$APP_ROOT/src, and start.sh may reference scripts in $APP_ROOT/etc. *required*
 
 + OSHINKO_CLUSTER_NAME -- the name of the cluster to use for this application, *required*
 
