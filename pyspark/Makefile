@@ -1,5 +1,9 @@
 LOCAL_IMAGE=radanalytics-pyspark
-PUSH_IMAGE=myproject/radanalytics-pyspark
+
+# If you are going to push the built image to a registry
+# using the "push" make target then you should replace
+# "project" with an appropriate path for your registry and/or project
+PUSH_IMAGE=project/radanalytics-pyspark
 
 .PHONY: build clean push test
 

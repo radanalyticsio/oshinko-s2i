@@ -33,7 +33,7 @@ To tag and push a builder image:
     $ sudo make push
 
 By default this will tag the image as `project/radanalytics-pyspark`,
-edit the Makefile and change the `IMAGE_NAME` to control this.
+edit the Makefile and change `PUSH_IMAGE` to control this.
 
 ## sample templates ##
 
