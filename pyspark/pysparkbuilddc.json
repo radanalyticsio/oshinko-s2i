@@ -36,7 +36,11 @@
          "name": "APP_ARGS"
       },
       {
-         "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here"
+         "description": "Application main class for jar-based applications",
+         "name": "APP_MAIN_CLASS"
+      },
+      {
+          "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
          "name": "SPARK_OPTIONS"
       },
       {
@@ -180,7 +184,11 @@
                            },
                            {
                               "name": "SPARK_OPTIONS",
-                              "value": "${SPARK_OPTIONS}"
+                               "value": "${SPARK_OPTIONS}"
+			   },
+                           {
+                              "name": "APP_MAIN_CLASS",
+                              "value": "${APP_MAIN_CLASS}"
                            },
                            {
                               "name": "FROM_DEPLOYMENTCONFIG",
