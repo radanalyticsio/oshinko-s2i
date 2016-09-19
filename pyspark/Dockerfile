@@ -1,9 +1,5 @@
 # radanalytics-pyspark
-
-# The base image used here is expected to contain
-# a spark installation and a python2.7 s2i assemble script
-# (see https://github.com/sclorg/s2i-python-container)
-FROM openshift-spark-py27-sti
+FROM centos/python-27-centos7:latest
 
 MAINTAINER Trevor McKay tmckay@redhat.com
  
@@ -15,13 +11,29 @@ LABEL io.k8s.description="Platform for building a radanalytics pyspark app" \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
       io.openshift.tags="builder,radanalytics,pyspark"
 
-ENV APP_ROOT /opt/app-root
+USER root
+RUN yum install -y epel-release tar java && \
+    yum clean all
+
+RUN cd /opt && \
+    curl https://dist.apache.org/repos/dist/release/spark/spark-2.0.0/spark-2.0.0-bin-hadoop2.7.tgz | \
+        tar -zx && \
+    ln -s spark-2.0.0-bin-hadoop2.7 spark
+
+ENV PATH=$PATH:/opt/spark/bin
+ENV SPARK_HOME=/opt/spark
+
+# Add scripts used to configure the image
+COPY scripts /tmp/scripts
+
+# Custom scripts
+RUN bash -x /tmp/scripts/spark/install && rm -rf /tmp/scripts
 
 # Default python file to run will be app.py but that may be
 # overridden at image build time
+ENV APP_ROOT /opt/app-root
 ENV APP_FILE app.py
 
-USER root
 COPY ./utils/ $APP_ROOT/src
 RUN chown -R 1001:0 $APP_ROOT/src/*
 
