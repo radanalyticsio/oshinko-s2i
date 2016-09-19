@@ -11,9 +11,9 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 	httptransport "github.com/go-openapi/runtime/client"
-	oclient "github.com/redhatanalytics/oshinko-rest/client"
-	"github.com/redhatanalytics/oshinko-rest/client/clusters"
-	"github.com/redhatanalytics/oshinko-rest/models"
+	oclient "github.com/radanalyticsio/oshinko-rest/client"
+	"github.com/radanalyticsio/oshinko-rest/client/clusters"
+	"github.com/radanalyticsio/oshinko-rest/models"
 )
 
 func getCluster(client *oclient.OshinkoRest, name string) (*clusters.FindSingleClusterOK, error) {
