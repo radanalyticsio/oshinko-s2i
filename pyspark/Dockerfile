@@ -26,6 +26,7 @@ COPY ./utils/ $APP_ROOT/src
 RUN chown -R 1001:0 $APP_ROOT/src/*
 
 COPY ./s2i/bin/ $STI_SCRIPTS_PATH
+RUN chmod 775 $STI_SCRIPTS_PATH/*
 
 USER 1001
 CMD $STI_SCRIPTS_PATH/usage
