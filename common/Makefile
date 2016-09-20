@@ -12,6 +12,6 @@ clean: oshinko-get-cluster
 	rm -f utils/oshinko-get-cluster
 
 oshinko-get-cluster:
-	${MAKE} -C $@ $(CMD)
+	cd $@; ${MAKE} $(CMD)
 
 .PHONY: oshinko-get-cluster

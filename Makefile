@@ -10,6 +10,6 @@ clean: $(alldirs)
 push: $(pushdirs)
 
 $(alldirs):
-	${MAKE} -C $@ $(CMD)
+	cd $@; ${MAKE} $(CMD)
 
 .PHONY: build clean push $(alldirs)
