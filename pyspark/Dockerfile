@@ -12,7 +12,7 @@ LABEL io.k8s.description="Platform for building a radanalytics pyspark app" \
       io.openshift.tags="builder,radanalytics,pyspark"
 
 USER root
-RUN yum install -y epel-release tar java && \
+RUN yum install -y tar java && \
     yum clean all
 
 RUN cd /opt && \
@@ -22,12 +22,6 @@ RUN cd /opt && \
 
 ENV PATH=$PATH:/opt/spark/bin
 ENV SPARK_HOME=/opt/spark
-
-# Add scripts used to configure the image
-COPY scripts /tmp/scripts
-
-# Custom scripts
-RUN bash -x /tmp/scripts/spark/install && rm -rf /tmp/scripts
 
 # Default python file to run will be app.py but that may be
 # overridden at image build time
