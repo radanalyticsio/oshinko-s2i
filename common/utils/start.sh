@@ -51,7 +51,8 @@ then
     echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
     spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
 
-    if [ ${output[0]} == "creating" ] && [ "${OSHINKO_DEL_CLUSTER}" == "yes" ]; then
+
+    if [ ${output[0]} == "creating" ] && [ ${OSHINKO_DEL_CLUSTER:-yes} == yes ]; then
         echo "Deleting cluster"
         $APP_ROOT/src/oshinko-get-cluster -delete -server=$OSHINKO_REST $OSHINKO_CLUSTER_NAME
     fi

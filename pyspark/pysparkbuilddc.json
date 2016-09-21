@@ -29,7 +29,8 @@
       {
          "description": "If a cluster is created on-demand, delete the cluster when the application finishes if this option is set to 'yes'",
          "name": "OSHINKO_DEL_CLUSTER",
-         "value": "yes"
+         "value": "yes",
+         "required": true
       },
       {
          "description": "Name of the main py file to run",
