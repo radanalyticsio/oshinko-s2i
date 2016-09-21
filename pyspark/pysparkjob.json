@@ -87,6 +87,10 @@
                                 {
                                    "name": "APP_MAIN_CLASS",
                                    "value": "${APP_MAIN_CLASS}"
+                                },
+                                {
+                                   "name": "APP_EXIT",
+                                   "value": "true"
                                 }
                               ]
                           }

@@ -42,8 +42,13 @@
       {
          "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
          "name": "SPARK_OPTIONS"
+      },
+      {
+         "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
+         "name": "APP_EXIT",
+         "value": "false",
+         "required": true
       }
-
    ],
    "objects": [
       {
@@ -110,8 +115,8 @@
                               "value": "${APP_MAIN_CLASS}"
                            },
                            {
-                              "name": "FROM_DEPLOYMENTCONFIG",
-                              "value": "true"
+                              "name": "APP_EXIT",
+                              "value": "${APP_EXIT}"
                            }
                         ],
                         "resources": {},
