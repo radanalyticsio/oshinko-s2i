@@ -32,6 +32,11 @@
          "required": true
       },
       {
+         "description": "If a cluster is created on-demand, delete the cluster when the application finishes if this option is set to 'yes'",
+         "name": "OSHINKO_DEL_CLUSTER",
+         "value": "yes"
+      },
+      {
          "description": "Command line arguments to pass to the spark application",
          "name": "APP_ARGS"
       },
@@ -112,6 +117,10 @@
                            {
                               "name": "FROM_DEPLOYMENTCONFIG",
                               "value": "true"
+                           },
+                           {
+                             "name": "OSHINKO_DEL_CLUSTER",
+                             "value": "${OSHINKO_DEL_CLUSTER}"
                            }
                         ],
                         "resources": {},

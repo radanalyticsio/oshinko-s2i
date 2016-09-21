@@ -27,6 +27,11 @@
          "required": true
       },
       {
+         "description": "If a cluster is created on-demand, delete the cluster when the application finishes if this option is set to 'yes'",
+         "name": "OSHINKO_DEL_CLUSTER",
+         "value": "yes"
+      },
+      {
          "description": "Name of the main py file to run",
          "name": "APP_FILE",
          "value": "app.py"
@@ -193,6 +198,10 @@
                            {
                               "name": "FROM_DEPLOYMENTCONFIG",
                               "value": "true"
+                           },
+                           {
+                             "name": "OSHINKO_DEL_CLUSTER",
+                             "value": "${OSHINKO_DEL_CLUSTER}"
                            }
                         ],
                         "resources": {},
