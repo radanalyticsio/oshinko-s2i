@@ -52,7 +52,7 @@ then
 
     if [ ${output[0]} == "creating" ] && [ "${OSHINKO_DEL_CLUSTER}" == "yes" ]; then
         echo "Deleting cluster"
-        $APP_ROOT/src/oshinko-get-cluster -delete -server=$OSHINKO_REST $OSHINKO_CLUSTER_NAME
+        $APP_ROOT/src/oshinko-get-cluster -delete $OSHINKO_CLUSTER_NAME
     fi
 else
     echo "$output"
