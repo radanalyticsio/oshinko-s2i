@@ -24,9 +24,9 @@ RUN yum install -y golang && \
     yum clean all
 
 ENV GOPATH /go
-ADD . /go/src/github.com/radanalyticsio/oshink-s2i
+ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
 
-WORKDIR /go/src/github.com/radanalyticsio/oshink-s2i/pyspark
+WORKDIR /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark
 RUN make utils
 
 ENV PATH=$PATH:/opt/spark/bin
