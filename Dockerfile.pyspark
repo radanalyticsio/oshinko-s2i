@@ -34,13 +34,12 @@ ENV APP_FILE app.py
 RUN cd /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark && \
     make utils && \
     cp utils/* $APP_ROOT/src && \
-    chmod a+rwX $APP_ROOT/src && \
+    chown -R 1001:0 $APP_ROOT && \
+    chmod a+rwX $APP_ROOT && \
     cp s2i/bin/* $STI_SCRIPTS_PATH
 
 ENV PATH=$PATH:/opt/spark/bin
 ENV SPARK_HOME=/opt/spark
-
-RUN chown -R 1001:0 $APP_ROOT/src/*
 
 USER 1001
 CMD $STI_SCRIPTS_PATH/usage
