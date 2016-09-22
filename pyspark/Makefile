@@ -5,10 +5,13 @@ LOCAL_IMAGE=radanalytics-pyspark
 # "project" with an appropriate path for your registry and/or project
 PUSH_IMAGE=project/radanalytics-pyspark
 
+DOCKERFILE=../Dockerfile.pyspark
+DOCKERFILE_CONTEXT=..
+
 .PHONY: build clean push test
 
-build: utils
-	sudo docker build -t $(LOCAL_IMAGE) .
+build:
+	sudo docker build -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
 
 clean:
 	sudo docker rmi $(LOCAL_IMAGE)
@@ -23,5 +26,5 @@ utils:
 	cp -r ../common/utils .
 
 test:
-	docker build -t $(PUSH_IMAGE)-candidate .
+	docker build -t $(PUSH_IMAGE)-candidate -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
 	IMAGE_NAME=$(PUSH_IMAGE)-candidate test/run
