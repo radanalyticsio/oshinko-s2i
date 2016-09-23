@@ -9,8 +9,7 @@ source $APP_ROOT/etc/generate_container_user
 # Create the cluster through oshinko-rest if it does not exist
 # First line will say "creating" if it is creating the cluster
 # Second line will be the url of the spark master
-# If OSHINKO_REST is defined it will be used, otherwise the env will be scanned to find the rest server
-output=($($APP_ROOT/src/oshinko-get-cluster -create -server=$OSHINKO_REST $OSHINKO_CLUSTER_NAME))
+output=($($APP_ROOT/src/oshinko-get-cluster -create $OSHINKO_CLUSTER_NAME))
 res=$?
 
 # Build the spark-submit command and execute
@@ -53,7 +52,7 @@ then
 
     if [ ${output[0]} == "creating" ] && [ "${OSHINKO_DEL_CLUSTER}" == "yes" ]; then
         echo "Deleting cluster"
-        $APP_ROOT/src/oshinko-get-cluster -delete -server=$OSHINKO_REST $OSHINKO_CLUSTER_NAME
+        $APP_ROOT/src/oshinko-get-cluster -delete $OSHINKO_CLUSTER_NAME
     fi
 else
     echo "$output"
