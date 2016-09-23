@@ -19,10 +19,11 @@ spark-submit.
 
 Currently the script will sleep forever in a loop after submitting
 the spark application to prevent the process from exiting if the
-FROM_DEPLOYMENTCONFIG environment variable is set. This is to prevent
-a deploymentconfig from restarting the spark application after it
-completes (in general, a deploymentconfig may not be the best choice
-of openshift object for submitting a spark application)
+APP_EXIT environment variable is unset or set to "false". This is
+to prevent a deploymentconfig from restarting the spark application
+after it completes (in general, a deploymentconfig may not be the
+best choice of openshift object for submitting a spark application
+intended to run once to completion).
 
 ## environment variables ##
 

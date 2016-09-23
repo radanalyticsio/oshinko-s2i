@@ -54,6 +54,12 @@
          "description": "Git branch/tag reference",
          "name": "GIT_REF",
          "value": "master"
+      },
+      {
+         "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
+         "name": "APP_EXIT",
+         "value": "false",
+         "required": true
       }
    ],
    "objects": [
@@ -194,12 +200,11 @@
                               "value": "${APP_MAIN_CLASS}"
                            },
                            {
-                              "name": "FROM_DEPLOYMENTCONFIG",
-                              "value": "true"
-                           },
-                           {
                              "name": "OSHINKO_DEL_CLUSTER",
                              "value": "${OSHINKO_DEL_CLUSTER}"
+                           },
+                           {  "name": "APP_EXIT",
+                              "value": "${APP_EXIT}"
                            }
                         ],
                         "resources": {},
