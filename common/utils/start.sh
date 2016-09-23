@@ -6,6 +6,10 @@ echo "version 1"
 # This script is supplied by the python s2i base
 source $APP_ROOT/etc/generate_container_user
 
+if [ -z ${OSHINKO_CLUSTER_NAME} ]; then
+    OSHINKO_CLUSTER_NAME=cluster-`cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
+fi
+
 # Create the cluster through oshinko-rest if it does not exist
 # First line will say "creating" if it is creating the cluster
 # Second line will be the url of the spark master
