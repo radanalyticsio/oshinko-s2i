@@ -28,4 +28,7 @@ optional environment variables which can be set when the application is launched
     OSHINKO_DEL_CLUSTER  -- if a new cluster is created and this flag is set to "true" then the
                             cluster will be deleted when the python application completes. The
                             default behavior is to leave the cluster.
+    APP_EXIT             -- if this value is unset or set to "false" then the script will
+                            loop forever after the spark application completes. To have the
+                            script exit, set this value to "true"
 EOF

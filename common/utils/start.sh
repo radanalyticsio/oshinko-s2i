@@ -64,8 +64,7 @@ else
 fi
 
 # Sleep forever so the process does not complete
-if [ -n "${FROM_DEPLOYMENTCONFIG+x}" ]
-then
+if [ ${APP_EXIT:-false} == false ]; then
     while true
     do
         sleep 5
