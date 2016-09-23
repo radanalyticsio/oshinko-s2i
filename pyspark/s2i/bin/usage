@@ -25,7 +25,7 @@ optional environment variables which can be set when the application is launched
     OSHINKO_REST         -- ip of the oshinko-rest controller, required
     SPARK_OPTIONS        -- options to spark-submit, e.g.  "--conf spark.executor.memory=2G --conf spark.driver.memory=2G"
     APP_ARGS             -- arguments to the python application (if the app takes arguments)
-    OSHINKO_DEL_CLUSTER  -- if a new cluster is created and this flag is set to "yes" then the
+    OSHINKO_DEL_CLUSTER  -- if a new cluster is created and this flag is set to "true" then the
                             cluster will be deleted when the python application completes. The
                             default behavior is to leave the cluster.
 EOF
