@@ -20,18 +20,26 @@ RUN cd /opt && \
         tar -zx && \
     ln -s spark-2.0.0-bin-hadoop2.7 spark
 
-ENV PATH=$PATH:/opt/spark/bin
-ENV SPARK_HOME=/opt/spark
+RUN yum install -y golang && \
+    yum clean all
+
+ENV GOPATH /go
+ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
 
 # Default python file to run will be app.py but that may be
 # overridden at image build time
 ENV APP_ROOT /opt/app-root
 ENV APP_FILE app.py
 
-COPY ./utils/ $APP_ROOT/src
-RUN chown -R 1001:0 $APP_ROOT/src/*
+RUN cd /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark && \
+    make utils && \
+    cp utils/* $APP_ROOT/src && \
+    chown -R 1001:0 $APP_ROOT && \
+    chmod a+rwX -R $APP_ROOT && \
+    cp s2i/bin/* $STI_SCRIPTS_PATH
 
-COPY ./s2i/bin/ $STI_SCRIPTS_PATH
+ENV PATH=$PATH:/opt/spark/bin
+ENV SPARK_HOME=/opt/spark
 
 USER 1001
 CMD $STI_SCRIPTS_PATH/usage
