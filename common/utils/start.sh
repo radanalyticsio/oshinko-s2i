@@ -11,16 +11,19 @@ if [ -z ${OSHINKO_CLUSTER_NAME} ]; then
 fi
 
 # Create the cluster through oshinko-rest if it does not exist
-# First line will say "creating" if it is creating the cluster
-# Second line will be the url of the spark master
+# The first line will say "creating" or "exists"
+# The second line will be the number of workers
+# The third line will be the url of the spark master
+# The fourth line will be the url of the spark master webui
+# Split the output by line and store in an array
+SAVEIFS=$IFS; IFS=$'\n'
 output=($($APP_ROOT/src/oshinko-get-cluster -create $OSHINKO_CLUSTER_NAME))
 res=$?
 
 # Build the spark-submit command and execute
-if [ $res -eq 0 ] && [ ! -z "$output" ]
+if [ $res -eq 0 ] && [ -n "$output" ]
 then
-    # Since we called for create, then we are either going to get "Creating" or "Exists"
-    # followed by the worker count, the master url, and the master web url
+    IFS=$SAVEIFS
     desired=${output[1]}
     master=${output[2]}
     masterweb=${output[3]}
@@ -38,6 +41,8 @@ then
     done
 
     while true; do
+        # Scrape the master web UI for the number of alive workers
+        # This may be replaced with something based on metrics ...
         workers=$(curl -s -X GET $masterweb | grep -e "[Aa]live.*[Ww]orkers")
         cnt=($(echo $workers | sed "s,[^0-9],\\ ,g"))
         if [ ${cnt[-1]} -eq "$desired" ]; then
@@ -60,7 +65,9 @@ then
         $APP_ROOT/src/oshinko-get-cluster -delete $OSHINKO_CLUSTER_NAME
     fi
 else
-    echo "$output"
+    echo "Error, output from oshinko-get-cluster follows:"
+    echo "${output[*]}"
+    IFS=$SAVEIFS
 fi
 
 # Sleep forever so the process does not complete
