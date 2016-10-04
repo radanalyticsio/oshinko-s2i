@@ -22,7 +22,7 @@ type FindClustersReader struct {
 	formats strfmt.Registry
 }
 
-// ReadResponse reads a server response into the recieved o.
+// ReadResponse reads a server response into the received o.
 func (o *FindClustersReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
 
@@ -102,6 +102,58 @@ func (o *FindClustersDefault) readResponse(response runtime.ClientResponse, cons
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
+	}
+
+	return nil
+}
+
+/*FindClustersOKBodyBody find clusters o k body body
+
+swagger:model FindClustersOKBodyBody
+*/
+type FindClustersOKBodyBody struct {
+
+	/* clusters
+
+	Required: true
+	*/
+	Clusters []*ClustersItems0 `json:"clusters"`
+}
+
+// Validate validates this find clusters o k body body
+func (o *FindClustersOKBodyBody) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.validateClusters(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *FindClustersOKBodyBody) validateClusters(formats strfmt.Registry) error {
+
+	if err := validate.Required("findClustersOK"+"."+"clusters", "body", o.Clusters); err != nil {
+		return err
+	}
+
+	for i := 0; i < len(o.Clusters); i++ {
+
+		if swag.IsZero(o.Clusters[i]) { // not required
+			continue
+		}
+
+		if o.Clusters[i] != nil {
+
+			if err := o.Clusters[i].Validate(formats); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -239,58 +291,6 @@ func (o *ClustersItems0) validateWorkerCount(formats strfmt.Registry) error {
 
 	if err := validate.Required("workerCount", "body", o.WorkerCount); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-/*FindClustersOKBodyBody find clusters o k body body
-
-swagger:model FindClustersOKBodyBody
-*/
-type FindClustersOKBodyBody struct {
-
-	/* clusters
-
-	Required: true
-	*/
-	Clusters []*ClustersItems0 `json:"clusters"`
-}
-
-// Validate validates this find clusters o k body body
-func (o *FindClustersOKBodyBody) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := o.validateClusters(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (o *FindClustersOKBodyBody) validateClusters(formats strfmt.Registry) error {
-
-	if err := validate.Required("findClustersOK"+"."+"clusters", "body", o.Clusters); err != nil {
-		return err
-	}
-
-	for i := 0; i < len(o.Clusters); i++ {
-
-		if swag.IsZero(o.Clusters[i]) { // not required
-			continue
-		}
-
-		if o.Clusters[i] != nil {
-
-			if err := o.Clusters[i].Validate(formats); err != nil {
-				return err
-			}
-		}
-
 	}
 
 	return nil

@@ -31,17 +31,16 @@ func clusterExists(client *oclient.OshinkoRest, name string) (*models.ClusterMod
 	return cl.Payload.Cluster, nil
 }
 
-func createCluster(client *oclient.OshinkoRest, name string) (*models.ClusterModel, error) {
+func createCluster(client *oclient.OshinkoRest, name, config string) (*models.ClusterModel, error) {
 
 	var res *models.ClusterModel
 	res = nil
 
 	c := models.NewCluster{}
-	m := int64(1)
-	w := int64(3)
-	c.MasterCount = &m
-	c.WorkerCount = &w
 	c.Name = &name
+	c.Config = &models.NewClusterConfig{}
+	c.Config.Name = config
+
 	params := clusters.NewCreateClusterParams().WithCluster(&c)
 	cl, err := client.Clusters.CreateCluster(params)
 	if err == nil && cl != nil {
@@ -55,7 +54,7 @@ func createCluster(client *oclient.OshinkoRest, name string) (*models.ClusterMod
 		if err != nil || res == nil {
 			return nil, err
 		}
-		if int64(len(res.Pods)) != m + w {
+		if int64(len(res.Pods)) != res.Config.MasterCount + res.Config.WorkerCount {
 			time.Sleep(time.Second * 1)
 		} else {
 			break
@@ -134,7 +133,7 @@ func handleDeleteError(err error) {
 }
 
 func printCluster(cl *models.ClusterModel) {
-	fmt.Println(*cl.WorkerCount)
+	fmt.Println(cl.Config.WorkerCount)
 	fmt.Println(*cl.MasterURL)
 	fmt.Println(*cl.MasterWebURL)
 }
@@ -145,6 +144,9 @@ func main() {
                               "(optional, normally the service can be determined from the pod environment")
 	create := flag.Bool("create", false, "create the specified cluster if it does not already exist")
 	delete := flag.Bool("delete", false, "delete the specified cluster")
+	config := flag.String("config", "", "named cluster configuration to use " +
+			"(optional, if unspecified oshinko will use the 'default' named configuration")
+
 	flag.Parse()
 	if *create && *delete {
 		fmt.Println("The -delete flag and -create flag are mutually exclusive")
@@ -189,7 +191,7 @@ func main() {
 			printCluster(cl)
 		} else if *create {
 			fmt.Println("creating")
-			cl, err = createCluster(c, name)
+			cl, err = createCluster(c, name, *config)
 			if err != nil {
 				handleCreateError(err)
 				os.Exit(-1)

@@ -21,7 +21,7 @@ func NewHTTPClient(formats strfmt.Registry) *OshinkoRest {
 	if formats == nil {
 		formats = strfmt.Default
 	}
-	transport := httptransport.New("localhost", "/", []string{"http"})
+	transport := httptransport.New("localhost", "/", []string{"https"})
 	return New(transport, formats)
 }
 

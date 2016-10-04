@@ -50,8 +50,8 @@ type CreateClusterParams struct {
 }
 
 // WithCluster adds the cluster to the create cluster params
-func (o *CreateClusterParams) WithCluster(Cluster *models.NewCluster) *CreateClusterParams {
-	o.Cluster = Cluster
+func (o *CreateClusterParams) WithCluster(cluster *models.NewCluster) *CreateClusterParams {
+	o.Cluster = cluster
 	return o
 }
 

@@ -55,14 +55,14 @@ type UpdateSingleClusterParams struct {
 }
 
 // WithCluster adds the cluster to the update single cluster params
-func (o *UpdateSingleClusterParams) WithCluster(Cluster *models.NewCluster) *UpdateSingleClusterParams {
-	o.Cluster = Cluster
+func (o *UpdateSingleClusterParams) WithCluster(cluster *models.NewCluster) *UpdateSingleClusterParams {
+	o.Cluster = cluster
 	return o
 }
 
 // WithName adds the name to the update single cluster params
-func (o *UpdateSingleClusterParams) WithName(Name string) *UpdateSingleClusterParams {
-	o.Name = Name
+func (o *UpdateSingleClusterParams) WithName(name string) *UpdateSingleClusterParams {
+	o.Name = name
 	return o
 }
 
