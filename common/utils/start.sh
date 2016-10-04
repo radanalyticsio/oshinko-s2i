@@ -13,7 +13,7 @@ fi
 # Create the cluster through oshinko-rest if it does not exist
 # First line will say "creating" if it is creating the cluster
 # Second line will be the url of the spark master
-output=($($APP_ROOT/src/oshinko-get-cluster -create $OSHINKO_CLUSTER_NAME))
+output=($($APP_ROOT/src/oshinko-get-cluster -create -config $OSHINKO_NAMED_CONFIG $OSHINKO_CLUSTER_NAME))
 res=$?
 
 # Build the spark-submit command and execute

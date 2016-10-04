@@ -5,6 +5,7 @@ package models
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/validate"
@@ -16,40 +17,27 @@ swagger:model NewCluster
 */
 type NewCluster struct {
 
-	/* The count of master nodes requested in the cluster
-
-	Required: true
-	*/
-	MasterCount *int64 `json:"masterCount"`
+	/* config
+	 */
+	Config *NewClusterConfig `json:"config,omitempty"`
 
 	/* Unique name for the cluster
 
 	Required: true
 	*/
 	Name *string `json:"name"`
-
-	/* The count of worker nodes requested in the cluster
-
-	Required: true
-	*/
-	WorkerCount *int64 `json:"workerCount"`
 }
 
 // Validate validates this new cluster
 func (m *NewCluster) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateMasterCount(formats); err != nil {
+	if err := m.validateConfig(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateName(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateWorkerCount(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -60,10 +48,17 @@ func (m *NewCluster) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *NewCluster) validateMasterCount(formats strfmt.Registry) error {
+func (m *NewCluster) validateConfig(formats strfmt.Registry) error {
 
-	if err := validate.Required("masterCount", "body", m.MasterCount); err != nil {
-		return err
+	if swag.IsZero(m.Config) { // not required
+		return nil
+	}
+
+	if m.Config != nil {
+
+		if err := m.Config.Validate(formats); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -78,11 +73,31 @@ func (m *NewCluster) validateName(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *NewCluster) validateWorkerCount(formats strfmt.Registry) error {
+/*NewClusterConfig Cluster configuration values
 
-	if err := validate.Required("workerCount", "body", m.WorkerCount); err != nil {
-		return err
+swagger:model NewClusterConfig
+*/
+type NewClusterConfig struct {
+
+	/* The count of master nodes requested in the cluster (must be > 0)
+	 */
+	MasterCount int64 `json:"masterCount,omitempty"`
+
+	/* The name of a stored cluster configuration
+	 */
+	Name interface{} `json:"name,omitempty"`
+
+	/* The count of worker nodes requested in the cluster (must be > 0)
+	 */
+	WorkerCount int64 `json:"workerCount,omitempty"`
+}
+
+// Validate validates this new cluster config
+func (m *NewClusterConfig) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
 	}
-
 	return nil
 }
