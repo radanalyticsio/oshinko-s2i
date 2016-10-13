@@ -109,6 +109,35 @@ func getServer() *string {
 	return &server
 }
 
+func handleCreateError(err error) {
+	r, found := err.(*clusters.CreateClusterDefault)
+	if found {
+		fmt.Println(fmt.Sprintf("Create cluster failed: status %d", r.Code()))
+		for _, val := range r.Payload.Errors {
+			fmt.Println(*val.Details)
+		}
+	} else {
+		fmt.Println(err)
+	}
+}
+
+func handleDeleteError(err error) {
+	r, found := err.(*clusters.DeleteSingleClusterDefault)
+	if found {
+		fmt.Println(fmt.Sprintf("Delete cluster failed: status %d", r.Code()))
+		for _, val := range r.Payload.Errors {
+			fmt.Println(*val.Details)
+		}
+	} else {
+		fmt.Println(err)
+	}
+}
+
+func printCluster(cl *models.ClusterModel) {
+	fmt.Println(*cl.WorkerCount)
+	fmt.Println(*cl.MasterURL)
+	fmt.Println(*cl.MasterWebURL)
+}
 
 func main() {
 
@@ -125,13 +154,17 @@ func main() {
 	if *server == "" {
 		server = getServer()
 	}
+ 	if *server == "" {
+		fmt.Println("Unable to determine server from environment")
+		os.Exit(-1)
+	}
 
 	transport := httptransport.New(*server, "/", []string{"http"})
 	c := oclient.New(transport, strfmt.Default)
 
         cl, err := clusterExists(c, name)
 	if err != nil {
-		// If it was a 404 ignore it
+		// If it was a 404 ignore it. the cluster does not exist
 		if strings.Index(err.Error(), "404") == -1 {
 			fmt.Println(err)
 			os.Exit(-1)
@@ -143,30 +176,27 @@ func main() {
 			fmt.Println("deleting")
 			err := deleteCluster(c, name)
 			if err != nil {
-				fmt.Println(err)
+				handleDeleteError(err)
 				os.Exit(-1)
 			}
 		} else {
 			fmt.Println("does not exist")
 		}
-		os.Exit(0)
 	} else {
+		// We're either creating if it does not exist, or just checking for existence
 		if cl != nil {
 			fmt.Println("exists")
+			printCluster(cl)
 		} else if *create {
 			fmt.Println("creating")
 			cl, err = createCluster(c, name)
 			if err != nil {
-				fmt.Println(err)
+				handleCreateError(err)
+				os.Exit(-1)
 			}
+			printCluster(cl)
 		} else {
 			fmt.Println("does not exist")
 		}
-		if cl != nil {
-			fmt.Println(*cl.WorkerCount)
-			fmt.Println(*cl.MasterURL)
-			fmt.Println(*cl.MasterWebURL)
-		}
-		os.Exit(0)
 	}
 }
