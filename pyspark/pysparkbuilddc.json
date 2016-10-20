@@ -24,7 +24,7 @@
          "name": "OSHINKO_CLUSTER_NAME"
       },
       {
-         "description": "The name of a stored cluster configuration to use for this cluster, default is 'default'",
+         "description": "The name of a configuration to use for this cluster, default is 'default'. The list of named configurations is stored in the configmap 'oshinko-cluster-configs'" ,
          "name": "OSHINKO_NAMED_CONFIG"
       },
       {
