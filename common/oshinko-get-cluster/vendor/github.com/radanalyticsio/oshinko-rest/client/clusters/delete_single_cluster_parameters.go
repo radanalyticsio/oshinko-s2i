@@ -48,8 +48,8 @@ type DeleteSingleClusterParams struct {
 }
 
 // WithName adds the name to the delete single cluster params
-func (o *DeleteSingleClusterParams) WithName(Name string) *DeleteSingleClusterParams {
-	o.Name = Name
+func (o *DeleteSingleClusterParams) WithName(name string) *DeleteSingleClusterParams {
+	o.Name = name
 	return o
 }
 

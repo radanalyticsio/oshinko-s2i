@@ -17,7 +17,7 @@ fi
 # The fourth line will be the url of the spark master webui
 # Split the output by line and store in an array
 SAVEIFS=$IFS; IFS=$'\n'
-output=($($APP_ROOT/src/oshinko-get-cluster -create $OSHINKO_CLUSTER_NAME))
+output=($($APP_ROOT/src/oshinko-get-cluster -create -config $OSHINKO_NAMED_CONFIG $OSHINKO_CLUSTER_NAME))
 res=$?
 
 # Build the spark-submit command and execute

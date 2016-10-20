@@ -37,7 +37,7 @@ func (a *Client) CreateCluster(params *CreateClusterParams) (*CreateClusterCreat
 		PathPattern:        "/clusters",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
+		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &CreateClusterReader{formats: a.formats},
 	})
@@ -62,7 +62,7 @@ func (a *Client) DeleteSingleCluster(params *DeleteSingleClusterParams) (*Delete
 		PathPattern:        "/clusters/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
+		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &DeleteSingleClusterReader{formats: a.formats},
 	})
@@ -87,7 +87,7 @@ func (a *Client) FindClusters(params *FindClustersParams) (*FindClustersOK, erro
 		PathPattern:        "/clusters",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
+		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &FindClustersReader{formats: a.formats},
 	})
@@ -112,7 +112,7 @@ func (a *Client) FindSingleCluster(params *FindSingleClusterParams) (*FindSingle
 		PathPattern:        "/clusters/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
+		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &FindSingleClusterReader{formats: a.formats},
 	})
@@ -137,7 +137,7 @@ func (a *Client) UpdateSingleCluster(params *UpdateSingleClusterParams) (*Update
 		PathPattern:        "/clusters/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
+		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &UpdateSingleClusterReader{formats: a.formats},
 	})

@@ -37,7 +37,7 @@ func (a *Client) GetServerInfo(params *GetServerInfoParams) (*GetServerInfoOK, e
 		PathPattern:        "/",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
+		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &GetServerInfoReader{formats: a.formats},
 	})
