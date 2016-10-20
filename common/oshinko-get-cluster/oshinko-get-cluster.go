@@ -34,35 +34,39 @@ func clusterExists(client *oclient.OshinkoRest, name string) (*models.ClusterMod
 func createCluster(client *oclient.OshinkoRest, name, config string) (*models.ClusterModel, error) {
 
 	var res *models.ClusterModel
+        var configgedMasterCount int64
+        var configgedWorkerCount int64
 	res = nil
 
 	c := models.NewCluster{}
-	c.Name = &name
+        if name != "" {
+		c.Name = &name
+        }
 	c.Config = &models.NewClusterConfig{}
 	c.Config.Name = config
 
 	params := clusters.NewCreateClusterParams().WithCluster(&c)
 	cl, err := client.Clusters.CreateCluster(params)
-	if err == nil && cl != nil {
-		res = cl.Payload.Cluster
-	}
+        if err != nil || cl == nil {
+                return nil, err
+        }
+        res = cl.Payload.Cluster
+        configgedMasterCount = res.Config.MasterCount
+        configgedWorkerCount = res.Config.WorkerCount
 
-	// Wait for pods to be there
+	// Wait for configuration counts to match
+        // This means that the RCs have been created and the replicas count has been set
 	var i, maxwait int
 	maxwait = 120
 	for i = 0; i < maxwait; i++ {
+		res, err = clusterExists(client, name)
 		if err != nil || res == nil {
 			return nil, err
 		}
-		if int64(len(res.Pods)) != res.Config.MasterCount + res.Config.WorkerCount {
-			time.Sleep(time.Second * 1)
-		} else {
-			break
+		if res.Config.MasterCount == configgedMasterCount && res.Config.WorkerCount == configgedWorkerCount {
+                        break
 		}
-		res, err = clusterExists(client, name)
-		if err != nil {
-			return res, err
-		}
+                time.Sleep(time.Second * 1)
 	}
 	if i == maxwait {
 		return nil, errors.New("Timed out waiting for pods")
@@ -192,6 +196,9 @@ func main() {
 		} else if *create {
 			fmt.Println("creating")
 			cl, err = createCluster(c, name, *config)
+                        if err == nil && cl == nil {
+                                err = errors.New("Cluster creation failed for unknown reason")
+                        }
 			if err != nil {
 				handleCreateError(err)
 				os.Exit(-1)

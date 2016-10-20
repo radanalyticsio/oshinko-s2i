@@ -6,7 +6,7 @@ echo "version 1"
 # This script is supplied by the python s2i base
 source $APP_ROOT/etc/generate_container_user
 
-if [ -z ${OSHINKO_CLUSTER_NAME} ]; then
+if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
     OSHINKO_CLUSTER_NAME=cluster-`cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
 fi
 
@@ -17,7 +17,11 @@ fi
 # The fourth line will be the url of the spark master webui
 # Split the output by line and store in an array
 SAVEIFS=$IFS; IFS=$'\n'
-output=($($APP_ROOT/src/oshinko-get-cluster -create -config $OSHINKO_NAMED_CONFIG $OSHINKO_CLUSTER_NAME))
+if [ -n "${OSHINKO_NAMED_CONFIG}" ]; then
+    output=($($APP_ROOT/src/oshinko-get-cluster -create -config $OSHINKO_NAMED_CONFIG $OSHINKO_CLUSTER_NAME))
+else
+    output=($($APP_ROOT/src/oshinko-get-cluster -create $OSHINKO_CLUSTER_NAME))
+fi
 res=$?
 
 # Build the spark-submit command and execute
@@ -58,7 +62,6 @@ then
     fi
     echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
     spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
-
 
     if [ ${output[0]} == "creating" ] && [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
         echo "Deleting cluster"
