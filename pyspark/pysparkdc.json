@@ -29,6 +29,10 @@
          "name": "OSHINKO_CLUSTER_NAME"
       },
       {
+         "description": "The name of a configuration to use for this cluster, default is 'default'. The list of named configurations is stored in the configmap 'oshinko-cluster-configs'" ,
+         "name": "OSHINKO_NAMED_CONFIG"
+      },
+      {
          "description": "If a cluster is created on-demand, delete the cluster when the application finishes if this option is set to 'true'",
          "name": "OSHINKO_DEL_CLUSTER",
          "value": "true",
@@ -124,6 +128,10 @@
                            {
                               "name": "APP_EXIT",
                               "value": "${APP_EXIT}"
+                           },
+                           {
+                              "name": "OSHINKO_NAMED_CONFIG",
+                              "value": "${OSHINKO_NAMED_CONFIG}"
                            }
                         ],
                         "resources": {},

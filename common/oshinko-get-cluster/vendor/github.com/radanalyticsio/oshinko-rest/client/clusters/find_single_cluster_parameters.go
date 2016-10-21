@@ -48,8 +48,8 @@ type FindSingleClusterParams struct {
 }
 
 // WithName adds the name to the find single cluster params
-func (o *FindSingleClusterParams) WithName(Name string) *FindSingleClusterParams {
-	o.Name = Name
+func (o *FindSingleClusterParams) WithName(name string) *FindSingleClusterParams {
+	o.Name = name
 	return o
 }
 

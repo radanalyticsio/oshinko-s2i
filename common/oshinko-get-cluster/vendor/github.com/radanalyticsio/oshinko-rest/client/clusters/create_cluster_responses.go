@@ -19,7 +19,7 @@ type CreateClusterReader struct {
 	formats strfmt.Registry
 }
 
-// ReadResponse reads a server response into the recieved o.
+// ReadResponse reads a server response into the received o.
 func (o *CreateClusterReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
 
@@ -49,7 +49,7 @@ func NewCreateClusterCreated() *CreateClusterCreated {
 Cluster create response
 */
 type CreateClusterCreated struct {
-	/*URL of the cluster, this is oshinko specific
+	/*URL of the cluster detail page within the oshinko rest server
 	 */
 	Location string
 

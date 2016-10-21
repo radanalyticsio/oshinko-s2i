@@ -31,39 +31,42 @@ func clusterExists(client *oclient.OshinkoRest, name string) (*models.ClusterMod
 	return cl.Payload.Cluster, nil
 }
 
-func createCluster(client *oclient.OshinkoRest, name string) (*models.ClusterModel, error) {
+func createCluster(client *oclient.OshinkoRest, name, config string) (*models.ClusterModel, error) {
 
 	var res *models.ClusterModel
+        var configgedMasterCount int64
+        var configgedWorkerCount int64
 	res = nil
 
 	c := models.NewCluster{}
-	m := int64(1)
-	w := int64(3)
-	c.MasterCount = &m
-	c.WorkerCount = &w
-	c.Name = &name
+        if name != "" {
+		c.Name = &name
+        }
+	c.Config = &models.NewClusterConfig{}
+	c.Config.Name = config
+
 	params := clusters.NewCreateClusterParams().WithCluster(&c)
 	cl, err := client.Clusters.CreateCluster(params)
-	if err == nil && cl != nil {
-		res = cl.Payload.Cluster
-	}
+        if err != nil || cl == nil {
+                return nil, err
+        }
+        res = cl.Payload.Cluster
+        configgedMasterCount = res.Config.MasterCount
+        configgedWorkerCount = res.Config.WorkerCount
 
-	// Wait for pods to be there
+	// Wait for configuration counts to match
+        // This means that the RCs have been created and the replicas count has been set
 	var i, maxwait int
 	maxwait = 120
 	for i = 0; i < maxwait; i++ {
+		res, err = clusterExists(client, name)
 		if err != nil || res == nil {
 			return nil, err
 		}
-		if int64(len(res.Pods)) != m + w {
-			time.Sleep(time.Second * 1)
-		} else {
-			break
+		if res.Config.MasterCount == configgedMasterCount && res.Config.WorkerCount == configgedWorkerCount {
+                        break
 		}
-		res, err = clusterExists(client, name)
-		if err != nil {
-			return res, err
-		}
+                time.Sleep(time.Second * 1)
 	}
 	if i == maxwait {
 		return nil, errors.New("Timed out waiting for pods")
@@ -134,7 +137,7 @@ func handleDeleteError(err error) {
 }
 
 func printCluster(cl *models.ClusterModel) {
-	fmt.Println(*cl.WorkerCount)
+	fmt.Println(cl.Config.WorkerCount)
 	fmt.Println(*cl.MasterURL)
 	fmt.Println(*cl.MasterWebURL)
 }
@@ -145,6 +148,9 @@ func main() {
                               "(optional, normally the service can be determined from the pod environment")
 	create := flag.Bool("create", false, "create the specified cluster if it does not already exist")
 	delete := flag.Bool("delete", false, "delete the specified cluster")
+	config := flag.String("config", "", "named cluster configuration to use " +
+			"(optional, if unspecified oshinko will use the 'default' named configuration")
+
 	flag.Parse()
 	if *create && *delete {
 		fmt.Println("The -delete flag and -create flag are mutually exclusive")
@@ -189,7 +195,10 @@ func main() {
 			printCluster(cl)
 		} else if *create {
 			fmt.Println("creating")
-			cl, err = createCluster(c, name)
+			cl, err = createCluster(c, name, *config)
+                        if err == nil && cl == nil {
+                                err = errors.New("Cluster creation failed for unknown reason")
+                        }
 			if err != nil {
 				handleCreateError(err)
 				os.Exit(-1)
