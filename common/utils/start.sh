@@ -2,6 +2,36 @@
 
 echo "version 1"
 
+# For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
+# is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
+# For Python applications, look for a single .py file
+if [ -z "$APP_FILE" ]
+then
+    if [ -n "$APP_MAIN_CLASS" ]
+    then
+        files=$(ls $APP_ROOT/src/*.jar | wc -l)
+        if [ "$files" -eq "1" ]
+        then
+            APP_FILE=$(ls $APP_ROOT/src/*.jar)
+        else
+            echo "APP_MAIN_CLASS specified but no APP_FILE set and $files JAR file(s) found"
+        fi
+    else
+        files=$(ls $APP_ROOT/src/*.py | wc -l)
+        if [ "$files" -eq "1" ]
+        then
+            APP_FILE=$(ls $APP_ROOT/src/*.py)
+        else
+            echo "APP_MAIN_CLASS not specified but no APP_FILE set and $files py file(s) found"
+        fi   
+    fi
+fi
+
+if [ -z "$APP_FILE" ]
+then
+    echo "No APP_FILE set"
+fi
+
 # Set up the env for the spark user
 # This script is supplied by the python s2i base
 source $APP_ROOT/etc/generate_container_user
