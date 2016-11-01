@@ -21,8 +21,7 @@ RUN cd /opt && \
         tar -zx && \
     ln -s spark-2.0.1-bin-hadoop2.7 spark
 
-RUN yum install -y golang make && \
-    yum install -y nss_wrapper && \
+RUN yum install -y golang make nss_wrapper && \
     yum clean all
 
 ENV GOPATH /go

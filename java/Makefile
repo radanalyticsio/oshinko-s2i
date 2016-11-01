@@ -1,9 +1,9 @@
-LOCAL_IMAGE=tmckay/radanalytics-java-spark
+LOCAL_IMAGE=radanalytics-java-spark
 
 # If you are going to push the built image to a registry
 # using the "push" make target then you should replace
 # "project" with an appropriate path for your registry and/or project
-PUSH_IMAGE=172.30.100.159:5000/tmckay-oshinko/radanalytics-java-spark
+PUSH_IMAGE=project/radanalytics-java-spark
 
 DOCKERFILE=../Dockerfile.java
 DOCKERFILE_CONTEXT=..

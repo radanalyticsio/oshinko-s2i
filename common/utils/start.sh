@@ -2,6 +2,18 @@
 
 echo "version 1"
 
+function app_exit {
+    # Sleep forever so the process does not complete
+    if [ ${APP_EXIT:-false} == false ]; then
+        while true
+        do
+            sleep 5
+        done
+    else
+        exit
+    fi
+}
+
 # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
 # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
 # For Python applications, look for a single .py file
@@ -14,7 +26,8 @@ then
         then
             APP_FILE=$(ls $APP_ROOT/src/*.jar)
         else
-            echo "APP_MAIN_CLASS specified but no APP_FILE set and $files JAR file(s) found"
+            echo "Error, $files JAR file(s) found"
+            app_exit
         fi
     else
         files=$(ls $APP_ROOT/src/*.py | wc -l)
@@ -22,14 +35,10 @@ then
         then
             APP_FILE=$(ls $APP_ROOT/src/*.py)
         else
-            echo "APP_MAIN_CLASS not specified but no APP_FILE set and $files py file(s) found"
+            echo "Error, no APP_FILE set and $files py file(s) found"
+            app_exit
         fi   
     fi
-fi
-
-if [ -z "$APP_FILE" ]
-then
-    echo "No APP_FILE set"
 fi
 
 # Set up the env for the spark user
@@ -68,7 +77,7 @@ then
 
     r=1
     while [ $r -ne 0 ]; do
-        echo "Waiting for spark master to be available ..."
+        echo "Waiting for spark master $masterweb to be available ..."
         curl --connect-timeout 4 -s -X GET $masterweb > /dev/null
         r=$?
         sleep 1
@@ -89,7 +98,7 @@ then
 
     if [ -n "$APP_MAIN_CLASS" ]; then
         CLASS_OPTION="--class $APP_MAIN_CLASS"
-    fi
+    fipost office open on halloween
     echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
     spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
 
@@ -103,10 +112,4 @@ else
     IFS=$SAVEIFS
 fi
 
-# Sleep forever so the process does not complete
-if [ ${APP_EXIT:-false} == false ]; then
-    while true
-    do
-        sleep 5
-    done
-fi
+app_exit

@@ -34,9 +34,8 @@
          "required": true
       },
       {
-         "description": "Name of the main py file to run",
-         "name": "APP_FILE",
-         "value": "app.py"
+         "description": "Name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
+         "name": "APP_FILE"
       },
       {
          "description": "Command line arguments to pass to the spark application",
