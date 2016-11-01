@@ -36,6 +36,21 @@
    ],
    "objects": [
       {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "dockerImageRepository": "${APPLICATION_NAME}",
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      },
+      {
          "kind": "BuildConfig",
          "apiVersion": "v1",
          "metadata": {
@@ -91,21 +106,6 @@
                   "name": "${APPLICATION_NAME}:latest"
                }
             }
-         }
-      },
-      {
-         "kind": "ImageStream",
-         "apiVersion": "v1",
-         "metadata": {
-            "name": "${APPLICATION_NAME}"
-         },
-         "spec": {
-            "dockerImageRepository": "${APPLICATION_NAME}",
-            "tags": [
-               {
-                  "name": "latest"
-               }
-            ]
          }
       }
    ]
