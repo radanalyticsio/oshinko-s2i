@@ -26,7 +26,7 @@ then
         then
             APP_FILE=$(ls $APP_ROOT/src/*.jar)
         else
-            echo "Error, $files JAR file(s) found"
+            echo "Error, no APP_FILE set and $files JAR file(s) found"
             app_exit
         fi
     else
