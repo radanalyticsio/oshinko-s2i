@@ -20,7 +20,7 @@
          "required": true
       },
       {
-         "description": "Name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
+         "description": "The name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
          "name": "APP_FILE"
       },
       {

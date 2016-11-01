@@ -34,7 +34,7 @@
          "required": true
       },
       {
-         "description": "Name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
+         "description": "The name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
          "name": "APP_FILE"
       },
       {
@@ -43,7 +43,8 @@
       },
       {
          "description": "Application main class for jar-based applications",
-         "name": "APP_MAIN_CLASS"
+         "name": "APP_MAIN_CLASS",
+         "required": true
       },
       {
           "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
