@@ -121,8 +121,8 @@
                "type": "Source",
                "sourceStrategy": {
                   "from": {
-                     "kind": "ImageStreamTag",
-                     "name": "radanalytics-pyspark:latest"
+                     "kind": "DockerImage",
+                     "name": "radanalyticsio/radanalytics-pyspark"
                   },
                   "env": [
                      {
