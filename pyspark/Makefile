@@ -26,5 +26,5 @@ utils:
 	cp -r ../common/utils .
 
 test:
-	docker build -t $(PUSH_IMAGE)-candidate -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
+	sudo docker build -t $(PUSH_IMAGE)-candidate -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
 	IMAGE_NAME=$(PUSH_IMAGE)-candidate test/run
