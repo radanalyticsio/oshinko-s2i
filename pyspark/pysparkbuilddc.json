@@ -24,8 +24,14 @@
          "name": "OSHINKO_CLUSTER_NAME"
       },
       {
-         "description": "The name of a configuration to use for this cluster, default is 'default'. The list of named configurations is stored in the configmap 'oshinko-cluster-configs'" ,
+         "description": "The name of a configuration to use for a newly created spark cluster, default is 'default'. The list of named configurations is stored in the configmap 'oshinko-cluster-configs'" ,
          "name": "OSHINKO_NAMED_CONFIG"
+      },
+      {
+         "description": "The name of a ConfigMap to use for the spark configuration of the driver. If this ConfigMap is empty the default spark configuration will be used.",
+         "name": "OSHINKO_SPARK_DRIVER_CONFIG",
+         "value": "oshinko-spark-driver-config",
+         "required": true
       },
       {
          "description": "If a cluster is created on-demand, delete the cluster when the application finishes if this option is set to 'true'",
@@ -217,11 +223,26 @@
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always"
+                        "imagePullPolicy": "Always",
+                        "volumeMounts": [
+                           {
+                              "mountPath": "/etc/oshinko-spark-configs",
+                              "name": "spark-driver-config",
+                              "readOnly": true
+                           }
+                        ]
                      }
                   ],
                   "restartPolicy": "Always",
-                  "dnsPolicy": "ClusterFirst"
+                  "dnsPolicy": "ClusterFirst",
+                  "volumes": [
+                      {
+                          "name": "spark-driver-config",
+                          "configMap": {
+                              "name": "${OSHINKO_SPARK_DRIVER_CONFIG}"
+                          }
+                      }
+                  ]
                }
             }
          }

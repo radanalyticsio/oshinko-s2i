@@ -41,7 +41,22 @@ then
     fi
 fi
 
-# Set up the env for the spark user
+# Determine SPARK_CONF_DIR. If a non-empty config has been given then use it
+ls -1 /etc/oshinko-spark-configs &> /dev/null
+if [ $? -eq 0 ]
+then
+    sparkconfs=$(ls -1 /etc/oshinko-spark-configs | wc -l)
+    if [ "${sparkconfs}" -ne "0" ]
+    then
+        echo "Setting SPARK_CONF_DIR to /etc/oshinko-spark-configs"
+        export SPARK_CONF_DIR=/etc/oshinko-spark-configs
+    else
+        echo "/etc/oshinko-spark-configs is empty, using default SPARK_CONF_DIR"
+    fi
+else
+    echo "/etc/oshinko-spark-configs does not exist, using default SPARK_CONF_DIR"
+fi
+
 # This script is supplied by the python s2i base
 source $APP_ROOT/etc/generate_container_user
 
