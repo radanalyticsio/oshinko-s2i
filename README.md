@@ -15,3 +15,7 @@ The components of common may be used by multiple s2i images.
 ## pyspark ##
 
 Contains an s2i image for pyspark applications, uses common.
+
+## java ##
+
+Contains an s2i image for java spark applications, uses common.

@@ -1,0 +1,38 @@
+#!/bin/bash -e
+cat <<EOF
+This is the radanalytics-java-spark S2I builder image. It will build
+a java spark application image using the maven project in the specified
+github repository and the resulting image may be used to run your spark
+application.
+
+By default, this s2i image will build the maven project with the following
+command:
+
+   $ mvn package dependency:copy-dependencies -Popenshift -DskipTests -e
+
+See https://docs.openshift.org/latest/using_images/s2i_images/java.html for more
+information on maven options.
+
+To use it, first install S2I: https://github.com/openshift/source-to-image
+
+Usage: s2i build <github repo> radanalytics-java-spark <application image name>
+
+Example:
+
+    $ s2i build git://github.com/mygithub/wordcount.git radanalytics-java-spark mynewapp
+
+The resulting application image contains a startup script that expects the following required and
+optional environment variables which can be set when the application is launched:
+
+    OSHINKO_CLUSTER_NAME -- name of the spark cluster to use or create, required
+    OSHINKO_REST         -- ip of the oshinko-rest controller, required
+    SPARK_OPTIONS        -- options to spark-submit, e.g.  "--conf spark.executor.memory=2G --conf spark.driver.memory=2G"
+    APP_MAIN_CLASS       -- name of the main class, required
+    APP_ARGS             -- arguments to the python application (if the app takes arguments)
+    OSHINKO_DEL_CLUSTER  -- if a new cluster is created and this flag is set to "true" then the
+                            cluster will be deleted when the python application completes. The
+                            default behavior is to leave the cluster.
+    APP_EXIT             -- if this value is unset or set to "false" then the script will
+                            loop forever after the spark application completes. To have the
+                            script exit, set this value to "true"
+EOF

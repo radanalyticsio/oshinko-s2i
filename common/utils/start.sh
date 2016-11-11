@@ -2,6 +2,45 @@
 
 echo "version 1"
 
+function app_exit {
+    # Sleep forever so the process does not complete
+    if [ ${APP_EXIT:-false} == false ]; then
+        while true
+        do
+            sleep 5
+        done
+    else
+        exit
+    fi
+}
+
+# For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
+# is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
+# For Python applications, look for a single .py file
+if [ -z "$APP_FILE" ]
+then
+    if [ -n "$APP_MAIN_CLASS" ]
+    then
+        files=$(ls $APP_ROOT/src/*.jar | wc -l)
+        if [ "$files" -eq "1" ]
+        then
+            APP_FILE=$(ls $APP_ROOT/src/*.jar)
+        else
+            echo "Error, no APP_FILE set and $files JAR file(s) found"
+            app_exit
+        fi
+    else
+        files=$(ls $APP_ROOT/src/*.py | wc -l)
+        if [ "$files" -eq "1" ]
+        then
+            APP_FILE=$(ls $APP_ROOT/src/*.py)
+        else
+            echo "Error, no APP_FILE set and $files py file(s) found"
+            app_exit
+        fi   
+    fi
+fi
+
 # Set up the env for the spark user
 # This script is supplied by the python s2i base
 source $APP_ROOT/etc/generate_container_user
@@ -38,7 +77,7 @@ then
 
     r=1
     while [ $r -ne 0 ]; do
-        echo "Waiting for spark master to be available ..."
+        echo "Waiting for spark master $masterweb to be available ..."
         curl --connect-timeout 4 -s -X GET $masterweb > /dev/null
         r=$?
         sleep 1
@@ -73,10 +112,4 @@ else
     IFS=$SAVEIFS
 fi
 
-# Sleep forever so the process does not complete
-if [ ${APP_EXIT:-false} == false ]; then
-    while true
-    do
-        sleep 5
-    done
-fi
+app_exit
