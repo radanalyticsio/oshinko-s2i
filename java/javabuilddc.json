@@ -106,9 +106,10 @@
                "type": "Source",
                "sourceStrategy": {
                   "from": {
-                     "kind": "ImageStreamTag",
-                     "name": "radanalytics-java-spark:latest"
+                     "kind": "ImageStream",
+                     "name": "radanalytics-java-spark"
                   },
+                  "forcePull": true,
                   "env": [
                      {
                         "name": "APP_FILE",
