@@ -119,6 +119,7 @@
                      "kind": "DockerImage",
                      "name": "radanalyticsio/radanalytics-pyspark"
                   },
+                  "forcePull": true,
                   "env": [
                      {
                         "name": "APP_FILE",
