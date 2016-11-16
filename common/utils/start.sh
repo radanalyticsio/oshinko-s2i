@@ -14,8 +14,6 @@ function app_exit {
     fi
 }
 
-
-
 # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
 # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
 # For Python applications, look for a single .py file
@@ -31,7 +29,6 @@ then
             echo "Error, no APP_FILE set and $cnt JAR file(s) found"
             app_exit
         fi
-        echo $APP_FILE
     else
         cnt=$(cd $APP_ROOT/src/; ls -1 *.py | wc -l)
         if [ "$cnt" -eq "1" ]
