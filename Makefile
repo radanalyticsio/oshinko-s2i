@@ -1,5 +1,5 @@
-alldirs = common pyspark
-pushdirs = pyspark
+alldirs = common pyspark java
+pushdirs = pyspark java
 
 build: CMD=build
 push: CMD=push
