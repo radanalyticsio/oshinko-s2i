@@ -7,3 +7,4 @@ services:
 
 script:
   - docker build -f Dockerfile.pyspark .
+    docker build -f Dockerfile.java .
