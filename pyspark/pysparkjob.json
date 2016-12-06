@@ -28,12 +28,12 @@
          "description": "The name of the spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
          "name": "OSHINKO_CLUSTER_NAME"
       },
-      {
-         "description": "The name of a configuration to use for a newly created spark cluster, default is 'default'. The list of named configurations is stored in the configmap 'oshinko-cluster-configs'" ,
+       {
+	  "description": "The name of a configuration to use for this cluster, default is 'default'. Each configuration is stored in a configmap with a matching name.",
          "name": "OSHINKO_NAMED_CONFIG"
       },
       {
-         "description": "The name of a ConfigMap to use for the spark configuration of the driver. If this ConfigMap is empty the default spark configuration will be used.",
+         "description": "The name of a configmap to use for the spark configuration of the driver. If this configmap is empty the default spark configuration will be used.",
          "name": "OSHINKO_SPARK_DRIVER_CONFIG",
          "value": "oshinko-spark-driver-config",
          "required": true
