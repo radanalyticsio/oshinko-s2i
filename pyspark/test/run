@@ -147,8 +147,9 @@ run_test_application &
 # Wait for the container to write its CID file
 wait_for_cid
 
-test_connection
-check_result $?
+# The pyspark s2i builder does not create an image with any necessary port
+#test_connection
+#check_result $?
 
 cleanup
 
