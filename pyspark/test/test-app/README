@@ -1,3 +1,4 @@
-The source in this directory is not meant to actuall run at
+The source in this directory is not meant to actually run at
 this time during the s2i test. It is merely here
-to provide a download.
+to provide a download, and an error is expected from
+oshinko-get-cluster.
