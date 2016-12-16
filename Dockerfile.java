@@ -24,6 +24,8 @@ RUN cd /opt && \
 RUN yum install -y golang make nss_wrapper && \
     yum clean all
 
+RUN yum install -y patch git && yum clean all
+
 ENV GOPATH /go
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
 

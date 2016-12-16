@@ -1,17 +1,25 @@
 build: CMD=build
 clean: CMD=clean
 
+.PHONY: oshinko-cli
+
+export GOPATH = $(CURDIR)/oshinko-cli
+clonepath = $(CURDIR)/oshinko-cli/src/github.com/radanalyticsio
+makepath = $(clonepath)/oshinko-cli
+
 # At this point utils is a simple directory which is copied
 # by other components, so handle it here rather than give it
 # a Makefile which we would want to exclude on a copy
 
-build: oshinko-get-cluster
-	cp oshinko-get-cluster/_output/oshinko-get-cluster utils
+build: oshinko-cli
+	cp $(makepath)/_output/oshinko-cli utils
 
-clean: oshinko-get-cluster
-	rm -f utils/oshinko-get-cluster
+clean: 
+	rm -f utils/oshinko-cli
 
-oshinko-get-cluster:
-	cd $@; ${MAKE} $(CMD)
+oshinko-cli:
+	- mkdir -p $(clonepath)
+	- cd $(clonepath) && git clone https://github.com/radanalyticsio/oshinko-cli
+	cd $(makepath) && patch -p1 < $(CURDIR)/pkg.patch && make build
 
 .PHONY: oshinko-get-cluster

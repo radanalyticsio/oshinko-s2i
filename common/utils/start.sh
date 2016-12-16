@@ -64,24 +64,43 @@ if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
     OSHINKO_CLUSTER_NAME=cluster-`cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
 fi
 
-# Create the cluster through oshinko-rest if it does not exist
-# The first line will say "creating" or "exists"
-# The second line will be the number of workers
-# The third line will be the url of the spark master
-# The fourth line will be the url of the spark master webui
-# Split the output by line and store in an array
-SAVEIFS=$IFS; IFS=$'\n'
-if [ -n "${OSHINKO_NAMED_CONFIG}" ]; then
-    output=($($APP_ROOT/src/oshinko-get-cluster -create -config $OSHINKO_NAMED_CONFIG $OSHINKO_CLUSTER_NAME))
-else
-    output=($($APP_ROOT/src/oshinko-get-cluster -create $OSHINKO_CLUSTER_NAME))
-fi
+# Create the cluster through oshinko-cli if it does not exist
+CLI=$APP_ROOT/src/oshinko-cli
+CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+KUBE="$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
+SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
+CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA"
+CREATED=false
+
+# Have to deal with this when the CLI handles named configs
+#if [ -n "${OSHINKO_NAMED_CONFIG}" ]; then
+#fi
+
+# See if the cluster already exists
+line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS)
 res=$?
+if [ "$res" -eq 0 ] && [ -z "$line" ]; then
+    # get returned no error, but there is no cluster so we make it
+    line=$($CLI create $OSHINKO_CLUSTER_NAME $CLI_ARGS)
+    res=$?
+    if [ "$res" -eq 0 ]; then
+       CREATED=true
+       for i in {1..60} # wait up to 30 seconds
+       do
+            line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS)
+            res=$?
+            if [ "$res" -ne 0 ] || [ -n "$line" ]; then
+                break
+            fi
+            sleep 0.5
+        done
+    fi
+fi
 
 # Build the spark-submit command and execute
-if [ $res -eq 0 ] && [ -n "$output" ]
+if [ "$res" -eq 0 ] && [ -n "$line" ]
 then
-    IFS=$SAVEIFS
+    output=($(echo $line))
     desired=${output[1]}
     master=${output[2]}
     masterweb=${output[3]}
@@ -117,14 +136,12 @@ then
     echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
     spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
 
-    if [ ${output[0]} == "creating" ] && [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
+    if [ "$CREATED" == true ] && [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
         echo "Deleting cluster"
-        $APP_ROOT/src/oshinko-get-cluster -delete $OSHINKO_CLUSTER_NAME
+        $CLI delete $OSHINKO_CLUSTER_NAME $CLI_ARGS
     fi
 else
-    echo "Error, output from oshinko-get-cluster follows:"
-    echo "${output[*]}"
-    IFS=$SAVEIFS
+    echo "Error, unable to find or create cluster. Output from oshinko-cli"
+    echo "$line"
 fi
-
 app_exit
