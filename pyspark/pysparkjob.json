@@ -125,6 +125,7 @@
                           }
                       ],
                       "restartPolicy": "Never",
+                      "serviceAccount": "oshinko",
                       "volumes": [
                           {
                               "name": "spark-driver-config",

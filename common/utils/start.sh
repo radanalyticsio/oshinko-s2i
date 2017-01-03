@@ -17,13 +17,10 @@ function app_exit {
 # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
 # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
 # For Python applications, look for a single .py file
-if [ -z "$APP_FILE" ]
-then
-    if [ -n "$APP_MAIN_CLASS" ]
-    then
+if [ -z "$APP_FILE" ]; then
+    if [ -n "$APP_MAIN_CLASS" ]; then
         cnt=$(cd $APP_ROOT/src/; ls -1 *.jar | wc -l)
-        if [ "$cnt" -eq "1" ]
-        then
+        if [ "$cnt" -eq "1" ]; then
             APP_FILE=$(cd $APP_ROOT/src/; ls *.jar)
         else
             echo "Error, no APP_FILE set and $cnt JAR file(s) found"
@@ -31,8 +28,7 @@ then
         fi
     else
         cnt=$(cd $APP_ROOT/src/; ls -1 *.py | wc -l)
-        if [ "$cnt" -eq "1" ]
-        then
+        if [ "$cnt" -eq "1" ]; then
             APP_FILE=$(cd $APP_ROOT/src/; ls *.py)
         else
             echo "Error, no APP_FILE set and $cnt py file(s) found"
@@ -43,11 +39,9 @@ fi
 
 # Determine SPARK_CONF_DIR. If a non-empty config has been given then use it
 ls -1 /etc/oshinko-spark-configs &> /dev/null
-if [ $? -eq 0 ]
-then
+if [ $? -eq 0 ]; then
     sparkconfs=$(ls -1 /etc/oshinko-spark-configs | wc -l)
-    if [ "${sparkconfs}" -ne "0" ]
-    then
+    if [ "${sparkconfs}" -ne "0" ]; then
         echo "Setting SPARK_CONF_DIR to /etc/oshinko-spark-configs"
         export SPARK_CONF_DIR=/etc/oshinko-spark-configs
     else
@@ -72,34 +66,53 @@ SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
 CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA"
 CREATED=false
 
-# Have to deal with this when the CLI handles named configs
-#if [ -n "${OSHINKO_NAMED_CONFIG}" ]; then
-#fi
-
 # See if the cluster already exists
-line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS)
+line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
 res=$?
-if [ "$res" -eq 0 ] && [ -z "$line" ]; then
-    # get returned no error, but there is no cluster so we make it
-    line=$($CLI create $OSHINKO_CLUSTER_NAME $CLI_ARGS)
+if [ "$res" -ne 0 ]; then
+    echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating..."
+    line=$($CLI create $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $CLI_ARGS 2>&1)
     res=$?
     if [ "$res" -eq 0 ]; then
-       CREATED=true
-       for i in {1..60} # wait up to 30 seconds
-       do
-            line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS)
+        CREATED=true
+        for i in {1..60}; do # wait up to 30 seconds
+            line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
             res=$?
-            if [ "$res" -ne 0 ] || [ -n "$line" ]; then
-                break
+            # If for some reason the get failed, keep trying
+            # Since create reported success, it's extremely unlikely
+            # that the get will ever fail but just in case ...
+            if [ "$res" -eq 0 ]; then
+                if [ -n "$line" ]; then
+                    output=($(echo $line))
+                    count=${output[1]}
+                    # Empirically, worker count will jump from 0 to
+                    # full number of workers when the pods are initialized
+                    # without any intermediate counts. Verify this in kube
+                    # code (or community)
+                    if [ "$count" -ne 0 ]; then
+                        break
+                    fi
+                else
+                    # uh oh, cli is broken, success but no output
+                    break
+                fi
             fi
             sleep 0.5
         done
     fi
 fi
 
-# Build the spark-submit command and execute
-if [ "$res" -eq 0 ] && [ -n "$line" ]
-then
+# If res is not 0 then create or get failed (possibly repeatedly)
+if [ "$res" -ne 0 ]; then
+    echo "Error, unable to find or create cluster, output from oshinko-cli:"
+    echo "$line"
+
+# Just in case a change breaks the CLI, test for output
+elif [ -z "$line" ]; then
+    echo "Error, the cli returned success on 'get' but gave no output, giving up"
+
+else
+    # Build the spark-submit command and execute
     output=($(echo $line))
     desired=${output[1]}
     master=${output[2]}
@@ -110,7 +123,7 @@ then
     export OSHINKO_SPARK_MASTER=$master
 
     r=1
-    while [ $r -ne 0 ]; do
+    while [ "$r" -ne 0 ]; do
         echo "Waiting for spark master $masterweb to be available ..."
         curl --connect-timeout 4 -s -X GET $masterweb > /dev/null
         r=$?
@@ -138,10 +151,11 @@ then
 
     if [ "$CREATED" == true ] && [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
         echo "Deleting cluster"
-        $CLI delete $OSHINKO_CLUSTER_NAME $CLI_ARGS
+        line=$($CLI delete $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
+        if [ "$?" -ne 0 ]; then
+           echo "Error, cluster deletion returned error, output from oshinko-cli:"
+           echo "$line"
+        fi
     fi
-else
-    echo "Error, unable to find or create cluster. Output from oshinko-cli"
-    echo "$line"
 fi
 app_exit

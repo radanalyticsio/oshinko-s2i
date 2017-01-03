@@ -21,10 +21,8 @@ RUN cd /opt && \
         tar -zx && \
     ln -s spark-2.0.1-bin-hadoop2.7 spark
 
-RUN yum install -y golang make nss_wrapper && \
+RUN yum install -y golang make nss_wrapper git && \
     yum clean all
-
-RUN yum install -y patch git && yum clean all
 
 ENV GOPATH /go
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i

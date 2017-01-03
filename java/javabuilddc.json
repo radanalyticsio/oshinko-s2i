@@ -222,6 +222,7 @@
                      }
                   ],
                   "restartPolicy": "Always",
+                  "serviceAccount": "oshinko",
                   "dnsPolicy": "ClusterFirst"
                }
             }
