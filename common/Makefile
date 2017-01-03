@@ -16,10 +16,11 @@ build: oshinko-cli
 
 clean: 
 	rm -f utils/oshinko-cli
+	rm -rf $(clonepath)
 
 oshinko-cli:
 	- mkdir -p $(clonepath)
 	- cd $(clonepath) && git clone https://github.com/radanalyticsio/oshinko-cli
-	cd $(makepath) && patch -p1 < $(CURDIR)/pkg.patch && make build
+	cd $(makepath) && make build
 
 .PHONY: oshinko-get-cluster
