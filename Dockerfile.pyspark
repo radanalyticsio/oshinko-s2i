@@ -23,8 +23,6 @@ RUN cd /opt && \
 RUN yum install -y golang python27-numpy && \
     yum clean all
 
-RUN yum install -y patch && yum clean all
-
 ENV GOPATH /go
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
 
