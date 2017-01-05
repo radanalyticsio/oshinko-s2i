@@ -22,5 +22,3 @@ oshinko-cli:
 	- mkdir -p $(clonepath)
 	- cd $(clonepath) && git clone https://github.com/radanalyticsio/oshinko-cli
 	cd $(makepath) && make build
-
-.PHONY: oshinko-get-cluster
