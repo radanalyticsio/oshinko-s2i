@@ -37,20 +37,6 @@ if [ -z "$APP_FILE" ]; then
     fi
 fi
 
-# Determine SPARK_CONF_DIR. If a non-empty config has been given then use it
-ls -1 /etc/oshinko-spark-configs &> /dev/null
-if [ $? -eq 0 ]; then
-    sparkconfs=$(ls -1 /etc/oshinko-spark-configs | wc -l)
-    if [ "${sparkconfs}" -ne "0" ]; then
-        echo "Setting SPARK_CONF_DIR to /etc/oshinko-spark-configs"
-        export SPARK_CONF_DIR=/etc/oshinko-spark-configs
-    else
-        echo "/etc/oshinko-spark-configs is empty, using default SPARK_CONF_DIR"
-    fi
-else
-    echo "/etc/oshinko-spark-configs does not exist, using default SPARK_CONF_DIR"
-fi
-
 # This script is supplied by the python s2i base
 source $APP_ROOT/etc/generate_container_user
 
@@ -59,12 +45,29 @@ if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
 fi
 
 # Create the cluster through oshinko-cli if it does not exist
-CLI=$APP_ROOT/src/oshinko-cli
+CLI=$APP_ROOT/src/oshinko-clix
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 KUBE="$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
 SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
 CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA"
 CREATED=false
+
+# If a spark driver configmap has been named, use the cli to get it
+# and the helper process-driver-config to write the files to SPARK_HOME/conf
+if [ -n "$OSHINKO_SPARK_DRIVER_CONFIG" ]; then
+    echo "Looking for spark driver config files in configmap $OSHINKO_SPARK_DRIVER_CONFIG"
+    tmpfile=$(mktemp)
+    $($CLI configmap $OSHINKO_SPARK_DRIVER_CONFIG $CLI_ARGS -o json > $tmpfile)
+    if [ "$?" -eq 0 ]; then
+        $APP_ROOT/src/process-driver-config $tmpfile
+        if [ "$?" -eq 0 ]; then
+            echo "Spark configuration updated"
+        fi
+    else
+        echo "Unable to read spark driver config $OSHINKO_SPARK_DRIVER_CONFIG"
+    fi
+    rm $tmpfile
+fi
 
 # See if the cluster already exists
 line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
