@@ -10,7 +10,7 @@ function app_exit {
             sleep 5
         done
     else
-        exit
+        exit 0
     fi
 }
 
