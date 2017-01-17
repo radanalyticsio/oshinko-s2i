@@ -1,7 +1,7 @@
 build: CMD=build
 clean: CMD=clean
 
-.PHONY: oshinko-cli
+.PHONY: oshinko-clix process-driver-config
 
 export GOPATH = $(CURDIR)/oshinko-cli
 clonepath = $(CURDIR)/oshinko-cli/src/github.com/radanalyticsio
@@ -11,14 +11,20 @@ makepath = $(clonepath)/oshinko-cli
 # by other components, so handle it here rather than give it
 # a Makefile which we would want to exclude on a copy
 
-build: oshinko-cli
-	cp $(makepath)/_output/oshinko-cli utils
+build: oshinko-clix process-driver-config
+	cp $(makepath)/_output/oshinko-clix utils
+	cp process-driver-config/process-driver-config utils
 
 clean: 
-	rm -f utils/oshinko-cli
+	rm -f utils/oshinko-clix
+	rm -f utils/process-driver-config
 	rm -rf $(clonepath)
 
-oshinko-cli:
+oshinko-clix:
 	- mkdir -p $(clonepath)
 	- cd $(clonepath) && git clone https://github.com/radanalyticsio/oshinko-cli
-	cd $(makepath) && make build
+	cd $(makepath) && make build-extended
+
+process-driver-config:
+	unset GOPATH
+	cd process-driver-config && go build

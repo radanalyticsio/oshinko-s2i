@@ -29,9 +29,7 @@
       },
       {
          "description": "The name of a configmap to use for the spark configuration of the driver. If this configmap is empty the default spark configuration will be used.",
-         "name": "OSHINKO_SPARK_DRIVER_CONFIG",
-         "value": "oshinko-spark-driver-config",
-         "required": true
+         "name": "OSHINKO_SPARK_DRIVER_CONFIG"
       },
       {
          "description": "If a cluster is created on-demand, delete the cluster when the application finishes if this option is set to 'true'",
@@ -211,31 +209,20 @@
                            {
                               "name": "OSHINKO_NAMED_CONFIG",
                               "value": "${OSHINKO_NAMED_CONFIG}"
+                           },
+                           {
+                              "name": "OSHINKO_SPARK_DRIVER_CONFIG",
+                              "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
                            }
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always",
-                        "volumeMounts": [
-                           {
-                              "mountPath": "/etc/oshinko-spark-configs",
-                              "name": "spark-driver-config",
-                              "readOnly": true
-                           }
-                        ]
+                        "imagePullPolicy": "Always"
                      }
                   ],
                   "restartPolicy": "Always",
                   "serviceAccount": "oshinko",
-                  "dnsPolicy": "ClusterFirst",
-                  "volumes": [
-                      {
-                          "name": "spark-driver-config",
-                          "configMap": {
-                              "name": "${OSHINKO_SPARK_DRIVER_CONFIG}"
-                          }
-                      }
-                  ]
+                  "dnsPolicy": "ClusterFirst"
                }
             }
          }

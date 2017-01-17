@@ -36,7 +36,10 @@ RUN mkdir -p $APP_ROOT/src && mkdir $APP_ROOT/etc && \
     cp generate_container_user $APP_ROOT/etc && \
     chown -R 1001:0 $APP_ROOT && \
     chmod a+rwX -R $APP_ROOT && \
-    cp s2i/bin/* /usr/local/s2i
+    cp s2i/bin/* /usr/local/s2i && \
+    chown -R 1001:0 /opt/spark/conf && \
+    chmod g+rw -R /opt/spark/conf && \
+    rm -rf /go/src/github.com/radanalyticsio/oshinko-s2i/common/oshinko-cli
 
 ENV PATH=$PATH:/opt/spark/bin
 ENV SPARK_HOME=/opt/spark
