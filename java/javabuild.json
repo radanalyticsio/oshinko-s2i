@@ -73,8 +73,8 @@
                "type": "Source",
                "sourceStrategy": {
                   "from": {
-                     "kind": "ImageStream",
-                     "name": "radanalytics-java-spark"
+                     "kind": "DockerImage",
+                     "name": "radanalyticsio/radanalytics-java-spark"
                   },
                   "forcePull": true,
                   "env": [

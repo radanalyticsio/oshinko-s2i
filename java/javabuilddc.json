@@ -68,6 +68,21 @@
    ],
    "objects": [
       {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "dockerImageRepository": "${APPLICATION_NAME}",
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      },
+      {
          "kind": "BuildConfig",
          "apiVersion": "v1",
          "metadata": {
@@ -106,8 +121,8 @@
                "type": "Source",
                "sourceStrategy": {
                   "from": {
-                     "kind": "ImageStream",
-                     "name": "radanalytics-java-spark"
+                     "kind": "DockerImage",
+                     "name": "radanalyticsio/radanalytics-java-spark"
                   },
                   "forcePull": true,
                   "env": [
@@ -124,21 +139,6 @@
                   "name": "${APPLICATION_NAME}:latest"
                }
             }
-         }
-      },
-      {
-         "kind": "ImageStream",
-         "apiVersion": "v1",
-         "metadata": {
-            "name": "${APPLICATION_NAME}"
-         },
-         "spec": {
-            "dockerImageRepository": "${APPLICATION_NAME}",
-            "tags": [
-               {
-                  "name": "latest"
-               }
-            ]
          }
       },
       {
