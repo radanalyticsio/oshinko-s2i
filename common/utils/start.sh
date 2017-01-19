@@ -45,7 +45,7 @@ if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
 fi
 
 # Create the cluster through oshinko-cli if it does not exist
-CLI=$APP_ROOT/src/oshinko-clix
+CLI=$APP_ROOT/src/oshinko-cli
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 KUBE="$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
 SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
