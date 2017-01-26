@@ -18,8 +18,7 @@
       },
       {
          "description": "Git branch/tag reference",
-         "name": "GIT_REF",
-         "value": "master"
+         "name": "GIT_REF"
       },
       {
          "description": "The name to use for the buildconfig, imagestream and deployment components",
