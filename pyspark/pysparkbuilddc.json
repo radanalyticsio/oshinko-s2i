@@ -4,6 +4,7 @@
    "metadata": {
       "name": "oshinko-pyspark-build-dc",
       "annotations": {
+         "openshift.io/display-name": "PySpark",
          "description": "Create a buildconfig, imagestream and deploymentconfig using STI and pyspark source hosted in git"
       }
    },
@@ -13,12 +14,13 @@
    },
    "parameters": [
       {
-         "description": "Git source URI for application",
-         "name": "GIT_URI",
-         "required": true
+         "displayName": "Git Repository URL",
+         "description": "The URL of the repository with your application source code",
+         "name": "GIT_URI"
       },
       {
-         "description": "Git branch/tag reference",
+         "displayName": "Git Reference",
+         "description": "Optional branch, tag or commit",
          "name": "GIT_REF"
       },
       {
