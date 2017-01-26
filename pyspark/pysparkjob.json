@@ -39,10 +39,8 @@
          "name": "OSHINKO_NAMED_CONFIG"
       },
       {
-         "description": "The name of a configmap to use for the spark configuration of the driver. If this configmap is empty the default spark configuration will be used.",
-         "name": "OSHINKO_SPARK_DRIVER_CONFIG",
-         "value": "oshinko-spark-driver-config",
-         "required": true
+         "description": "The name of a configmap to use for the spark configuration of the driver.",
+         "name": "OSHINKO_SPARK_DRIVER_CONFIG"
       },
       {
 
@@ -120,26 +118,11 @@
                                    "name": "OSHINKO_NAMED_CONFIG",
                                    "value": "${OSHINKO_NAMED_CONFIG}"
                                 }
-                              ],
-                              "volumeMounts": [
-                                 {
-                                    "mountPath": "/etc/oshinko-spark-configs",
-                                    "name": "spark-driver-config",
-                                    "readOnly": true
-                                 }
                               ]
                           }
                       ],
                       "restartPolicy": "Never",
-                      "serviceAccount": "oshinko",
-                      "volumes": [
-                          {
-                              "name": "spark-driver-config",
-                              "configMap": {
-                                  "name": "${OSHINKO_SPARK_DRIVER_CONFIG}"
-                              }
-                          }
-                      ]
+                      "serviceAccount": "oshinko"
                   }
               }
           }
