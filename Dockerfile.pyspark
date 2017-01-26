@@ -39,7 +39,6 @@ RUN cd /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark && \
     chown -R 1001:0 /opt/spark/conf && \
     chmod -R g+rw /opt/spark/conf && \
     rm -rf /go/src/github.com/radanalyticsio/oshinko-s2i/common/oshinko-cli
-    
 
 ENV PATH=$PATH:/opt/spark/bin
 ENV SPARK_HOME=/opt/spark
