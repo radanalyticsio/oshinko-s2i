@@ -24,7 +24,7 @@
          "name": "OSHINKO_CLUSTER_NAME"
       },
       {
-	  "description": "The name of a stored cluster configuration to use if a cluster is created, default is 'default'.",
+         "description": "The name of a stored cluster configuration to use if a cluster is created, default is 'default'.",
          "name": "OSHINKO_NAMED_CONFIG"
       },
       {
@@ -200,7 +200,7 @@
                            {
                               "name": "SPARK_OPTIONS",
                                "value": "${SPARK_OPTIONS}"
-			   },
+                           },
                            {
                              "name": "OSHINKO_DEL_CLUSTER",
                              "value": "${OSHINKO_DEL_CLUSTER}"
