@@ -14,7 +14,8 @@
    "parameters": [
       {
          "description": "Git source URI for application",
-         "name": "GIT_URI"
+         "name": "GIT_URI",
+         "required": true
       },
       {
          "description": "Git branch/tag reference",
