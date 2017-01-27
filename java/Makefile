@@ -11,7 +11,7 @@ DOCKERFILE_CONTEXT=..
 .PHONY: build clean push test
 
 build:
-	sudo docker build -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
+	sudo docker build --pull -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
 
 clean:
 	- sudo docker rmi $(LOCAL_IMAGE)
