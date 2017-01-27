@@ -33,12 +33,11 @@ ENV APP_FILE app.py
 
 RUN cd /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark && \
     make utils && \
-    cp utils/* $APP_ROOT/src && \
-    chown -R 1001:0 $APP_ROOT && \
-    chmod a+rwX -R $APP_ROOT && \
+    chown -R 1001:0 utils/* && \
+    cp -rp utils/* $APP_ROOT/src && \
     cp s2i/bin/* $STI_SCRIPTS_PATH && \
     chown -R 1001:0 /opt/spark/conf && \
-    chmod g+rw -R /opt/spark/conf && \
+    chmod -R g+rw /opt/spark/conf && \
     rm -rf /go/src/github.com/radanalyticsio/oshinko-s2i/common/oshinko-cli
     
 
