@@ -20,8 +20,9 @@ RUN cd /opt && \
         tar -zx && \
     ln -s spark-2.1.0-bin-hadoop2.7 spark
 
-RUN yum install -y golang python27-numpy && \
-    yum clean all
+RUN yum install -y golang && yum clean all
+
+RUN source /opt/app-root/bin/activate && pip install numpy
 
 ENV GOPATH /go
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
