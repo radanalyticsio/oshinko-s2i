@@ -1,25 +1,22 @@
 #!/bin/bash -e
 cat <<EOF
-This is the radanalytics-java-spark S2I builder image. It will build
-a java spark application image using the maven project in the specified
-github repository and the resulting image may be used to run your spark
+This is the radanalytics-scala-spark S2I builder image. It will build
+a Scala Spark application image using a SBT build file project in the specified
+github repository and the resulting image may be used to run your Spark
 application.
 
-By default, this s2i image will build the maven project with the following
+By default, this s2i image will build the SBT project with the following
 command:
 
-   $ mvn package dependency:copy-dependencies -Popenshift -DskipTests -e
-
-See https://docs.openshift.org/latest/using_images/s2i_images/java.html for more
-information on maven options.
+   $ sbt package
 
 To use it, first install S2I: https://github.com/openshift/source-to-image
 
-Usage: s2i build <github repo> radanalytics-java-spark <application image name>
+Usage: s2i build <github repo> radanalytics-scala-spark <application image name>
 
 Example:
 
-    $ s2i build git://github.com/mygithub/wordcount.git radanalytics-java-spark mynewapp
+    $ s2i build git://github.com/mygithub/wordcount.git radanalytics-scala-spark mynewapp
 
 The resulting application image contains a startup script that expects the following required and
 optional environment variables which can be set when the application is launched:
