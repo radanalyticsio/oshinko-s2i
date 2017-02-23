@@ -4,7 +4,7 @@
    "metadata": {
       "name": "oshinko-scala-spark-build-dc",
       "annotations": {
-         "description": "Create a buildconfig, imagestream and deploymentconfig using STI and java spark source hosted in git"
+         "description": "Create a buildconfig, imagestream and deploymentconfig using STI and Scala Spark source hosted in git"
       }
    },
    "labels": {

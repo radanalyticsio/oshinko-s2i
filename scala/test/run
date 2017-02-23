@@ -63,7 +63,7 @@ prepare() {
 }
 
 run_test_application() {
-  docker run --rm --cidfile=${cid_file} -p ${test_port} -e APP_MAIN_CLASS=com.mycompany.app.JavaSparkPi ${IMAGE_NAME}-testapp
+  docker run --rm --cidfile=${cid_file} -p ${test_port} -e APP_MAIN_CLASS=org.apache.spark.examples.SparkPi ${IMAGE_NAME}-testapp
 }
 
 cleanup() {
