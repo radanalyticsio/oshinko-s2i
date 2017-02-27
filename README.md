@@ -23,3 +23,7 @@ Contains an s2i image for pyspark applications, uses common.
 ## java ##
 
 Contains an s2i image for java spark applications, uses common.
+
+## scala ##
+
+Contains an s2i image for Scala Spark applications, uses common.

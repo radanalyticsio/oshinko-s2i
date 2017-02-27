@@ -1,11 +1,11 @@
 # radanalytics-scala-spark
-FROM centos:7
+FROM fabric8/s2i-java
 
 MAINTAINER Pete MacKinnon pmackinn@redhat.com
  
 ENV RADANALYTICS_SCALA_SPARK 1.0
 
-LABEL io.k8s.description="Platform for building a radanalytics scala spark app" \
+LABEL io.k8s.description="Platform for building a radanalytics Scala Spark app" \
       io.k8s.display-name="radanalytics scala_spark" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/local/s2i" \
@@ -43,8 +43,7 @@ ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
 
 ENV APP_ROOT /opt/app-root
 
-RUN mkdir -p /usr/local/s2i && \
-    mkdir -p $APP_ROOT/src && mkdir $APP_ROOT/etc && \
+RUN mkdir -p $APP_ROOT/src && mkdir $APP_ROOT/etc && \
     cd /go/src/github.com/radanalyticsio/oshinko-s2i/scala && \
     make utils && \
     cp utils/* $APP_ROOT/src && \
