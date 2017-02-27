@@ -20,29 +20,29 @@ RUN cd /opt && \
         tar -zx && \
     ln -s spark-2.1.0-bin-hadoop2.7 spark
 
-RUN yum install -y golang python27-numpy && \
-    yum clean all
+RUN yum install -y golang && yum clean all
 
-ENV GOPATH /go
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
+
+RUN cp /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark/s2i/bin/* $STI_SCRIPTS_PATH && \
+    chmod -R g+rw /opt/spark/conf && \
+    chown -R 1001:0 /opt/spark/conf && \
+    chown -R 1001:0 /go/src/github.com/radanalyticsio
 
 # Default python file to run will be app.py but that may be
 # overridden at image build time
+ENV GOPATH /go
 ENV APP_ROOT /opt/app-root
 ENV APP_FILE app.py
-
-RUN cd /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark && \
-    make utils && \
-    chown -R 1001:0 utils/* && \
-    cp -rp utils/* $APP_ROOT/src && \
-    cp s2i/bin/* $STI_SCRIPTS_PATH && \
-    chown -R 1001:0 /opt/spark/conf && \
-    chmod -R g+rw /opt/spark/conf && \
-    rm -rf /go/src/github.com/radanalyticsio/oshinko-s2i/common/oshinko-cli
-    
-
 ENV PATH=$PATH:/opt/spark/bin
 ENV SPARK_HOME=/opt/spark
 
 USER 1001
+RUN cd /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark && \
+    make utils && \
+    cp -rp utils/* $APP_ROOT/src && \
+    rm -rf /go/src/github.com/radanalyticsio/oshinko-s2i
+
+RUN source /opt/app-root/bin/activate && pip install numpy
+
 CMD $STI_SCRIPTS_PATH/usage
