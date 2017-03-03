@@ -18,7 +18,7 @@ clean:
 	rm -rf utils
 
 push: build
-	sudo docker tag -f $(LOCAL_IMAGE) $(PUSH_IMAGE)
+	sudo docker tag $(LOCAL_IMAGE) $(PUSH_IMAGE)
 	sudo docker push $(PUSH_IMAGE)
 
 utils:
