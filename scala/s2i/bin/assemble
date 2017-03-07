@@ -1,0 +1,8 @@
+#!/bin/bash
+
+env
+
+# build application artifacts
+cd /tmp/src
+sbt package
+find target/ -name '*.jar' -exec cp {} /opt/app-root/src \;

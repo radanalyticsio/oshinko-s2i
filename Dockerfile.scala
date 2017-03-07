@@ -1,5 +1,5 @@
 # radanalytics-scala-spark
-FROM fabric8/s2i-java
+FROM radanalyticsio/openshift-spark
 
 MAINTAINER Pete MacKinnon pmackinn@redhat.com
  
@@ -15,11 +15,6 @@ USER root
 
 RUN yum install -y epel-release tar java && \
     yum clean all
-
-RUN cd /opt && \
-    curl -L https://dist.apache.org/repos/dist/release/spark/spark-2.1.0/spark-2.1.0-bin-hadoop2.7.tgz | \
-        tar -zx && \
-    ln -s spark-2.1.0-bin-hadoop2.7 spark
 
 RUN cd /opt && \
     curl -L http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz  | \
@@ -43,14 +38,16 @@ ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
 
 ENV APP_ROOT /opt/app-root
 
-RUN mkdir -p $APP_ROOT/src && mkdir $APP_ROOT/etc && \
+RUN mkdir -p /usr/local/s2i && \
+    mkdir -p $APP_ROOT/src && mkdir $APP_ROOT/etc && \
     cd /go/src/github.com/radanalyticsio/oshinko-s2i/scala && \
     make utils && \
     cp utils/* $APP_ROOT/src && \
     cp generate_container_user $APP_ROOT/etc && \
+    cp s2i/bin/* /usr/local/s2i && \
+    chmod a+x /usr/local/s2i/* && \
     chown -R 1001:0 $APP_ROOT && \
     chmod a+rwX -R $APP_ROOT && \
-    cp s2i/bin/* /usr/local/s2i && \
     chown -R 1001:0 /opt/spark/conf && \
     chmod g+rw -R /opt/spark/conf && \
     chown -R 1001:0 /opt/sbt/conf && \
