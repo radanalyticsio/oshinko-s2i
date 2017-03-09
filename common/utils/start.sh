@@ -49,7 +49,8 @@ CLI=$APP_ROOT/src/oshinko-cli
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 KUBE="$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
 SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
-CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA"
+NS=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
+CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA --namespace=$NS"
 CREATED=false
 
 # If a spark driver configmap has been named, use the cli to get it
