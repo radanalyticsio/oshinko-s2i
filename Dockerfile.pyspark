@@ -23,6 +23,7 @@ RUN cd /opt && \
 RUN yum install -y golang && yum clean all
 
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
+ADD ./common/spark-conf/* /opt/spark/conf/
 
 RUN cp /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark/s2i/bin/* $STI_SCRIPTS_PATH && \
     chmod -R g+rw /opt/spark/conf && \
