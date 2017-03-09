@@ -26,6 +26,7 @@ RUN yum install -y golang make nss_wrapper git gcc \
 
 ENV GOPATH /go
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
+ADD ./common/spark-conf/* /opt/spark/conf/
 
 ENV APP_ROOT /opt/app-root
 
