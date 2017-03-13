@@ -14,6 +14,15 @@ function app_exit {
     fi
 }
 
+function check_reverse_proxy {
+    grep -e "^spark\.ui\.reverseProxy" $SPARK_HOME/conf/spark-defaults.conf &> /dev/null
+    if [ "$?" -ne 0 ]; then
+        echo "Appending default reverse proxy config to spark-defaults.conf"
+        echo "spark.ui.reverseProxy              true" >> $SPARK_HOME/conf/spark-defaults.conf
+        echo "spark.ui.reverseProxyUrl           /" >> $SPARK_HOME/conf/spark-defaults.conf
+    fi
+}
+
 # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
 # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
 # For Python applications, look for a single .py file
@@ -69,6 +78,10 @@ if [ -n "$OSHINKO_SPARK_DRIVER_CONFIG" ]; then
     fi
     rm $tmpfile
 fi
+
+# As a final check on spark config, add the reverse proxy settings if
+# the configuration does not already contain values for them
+check_reverse_proxy
 
 # See if the cluster already exists
 line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
