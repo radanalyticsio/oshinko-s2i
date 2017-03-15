@@ -22,7 +22,7 @@ clean:
 
 oshinko-cli:
 	- mkdir -p $(clonepath)
-	- cd $(clonepath) && git clone -b v0.2.0 https://github.com/radanalyticsio/oshinko-cli
+	- cd $(clonepath) && git clone -b v0.2.1 https://github.com/radanalyticsio/oshinko-cli
 	cd $(makepath) && make extended
 
 process-driver-config:
