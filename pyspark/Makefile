@@ -14,7 +14,7 @@ build:
 	sudo docker build --pull -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
 
 clean:
-	sudo docker rmi $(LOCAL_IMAGE)
+	- sudo docker rmi $(LOCAL_IMAGE)
 	rm -rf utils
 
 push: build
