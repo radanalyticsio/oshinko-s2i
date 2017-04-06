@@ -23,6 +23,25 @@ function check_reverse_proxy {
     fi
 }
 
+function delete_ephemeral {
+    if [ "$CREATED" == true ] && [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
+        echo "Deleting cluster"
+        line=$($CLI delete $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
+        if [ "$?" -ne 0 ]; then
+           echo "Error, cluster deletion returned error, output from oshinko-cli:"
+           echo "$line"
+        fi
+	CREATED=false
+    fi
+}
+
+function handle_term {
+    delete_ephemeral
+    exit 0
+}
+
+trap handle_term SIGTERM SIGINT
+
 # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
 # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
 # For Python applications, look for a single .py file
@@ -172,14 +191,6 @@ else
     fi
     echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
     spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
-
-    if [ "$CREATED" == true ] && [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
-        echo "Deleting cluster"
-        line=$($CLI delete $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
-        if [ "$?" -ne 0 ]; then
-           echo "Error, cluster deletion returned error, output from oshinko-cli:"
-           echo "$line"
-        fi
-    fi
+    delete_ephemeral
 fi
 app_exit
