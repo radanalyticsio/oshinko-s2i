@@ -2,9 +2,7 @@
 USER_ID=$(id -u)
 GROUP_ID=$(id -g)
 
-grep -e '^[^:]*:[^:]*:'$USER_ID':' /etc/passwd
-if [ "$?" != 0 ]; then
-
+if ! getent passwd $USER_ID &> /dev/null; then
     NSS_WRAPPER_PASSWD=/opt/app-root/etc/passwd
     NSS_WRAPPER_GROUP=/etc/group
 
