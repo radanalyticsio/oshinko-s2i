@@ -35,15 +35,15 @@ RUN yum install -y golang make nss_wrapper git gcc \
 
 ENV GOPATH /go
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
+ADD ./common/generate_container_user /opt/app-root/etc/
 
 ENV APP_ROOT /opt/app-root
 
 RUN mkdir -p /usr/local/s2i && \
-    mkdir -p $APP_ROOT/src && mkdir $APP_ROOT/etc && \
+    mkdir -p $APP_ROOT/src && \
     cd /go/src/github.com/radanalyticsio/oshinko-s2i/scala && \
     make utils && \
     cp utils/* $APP_ROOT/src && \
-    cp generate_container_user $APP_ROOT/etc && \
     cp s2i/bin/* /usr/local/s2i && \
     chmod a+x /usr/local/s2i/* && \
     chown -R 1001:0 $APP_ROOT && \

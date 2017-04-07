@@ -24,11 +24,14 @@ RUN yum install -y golang && yum clean all
 
 ADD . /go/src/github.com/radanalyticsio/oshinko-s2i
 ADD ./common/spark-conf/* /opt/spark/conf/
+ADD ./common/generate_container_user /opt/app-root/etc/
 
 RUN cp /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark/s2i/bin/* $STI_SCRIPTS_PATH && \
     chmod -R g+rw /opt/spark/conf && \
+    chmod g+r /opt/app-root/etc/generate_container_user
     chown -R 1001:0 /opt/spark/conf && \
     chown -R 1001:0 /go/src/github.com/radanalyticsio
+
 
 # Default python file to run will be app.py but that may be
 # overridden at image build time
