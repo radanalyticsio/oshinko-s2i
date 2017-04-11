@@ -17,4 +17,4 @@ if [ -d $APP_ROOT/src/spark-conf ]; then
     fi
 fi
 
-$APP_ROOT/src/start.sh
+exec $APP_ROOT/src/start.sh
