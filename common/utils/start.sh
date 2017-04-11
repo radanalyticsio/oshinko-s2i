@@ -36,11 +36,20 @@ function delete_ephemeral {
 }
 
 function handle_term {
+    echo "Received a termination signal"
+    # If we've saved a PID for a subprocess, kill that first before
+    # trying to delete the cluster
+    if ! [ -z ${PID+x} ]; then
+        echo "Stopping subprocess $PID"
+        kill -TERM $PID
+        wait $PID
+        echo "Subprocess stopped"
+    fi
     delete_ephemeral
     exit 0
 }
 
-trap handle_term SIGTERM SIGINT
+trap handle_term TERM INT
 
 # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
 # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
@@ -183,7 +192,10 @@ else
         CLASS_OPTION="--class $APP_MAIN_CLASS"
     fi
     echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
-    spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
+    spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
+    PID=$!
+    wait $PID
+    PID=
     delete_ephemeral
 fi
 app_exit
