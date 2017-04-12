@@ -25,7 +25,7 @@ function check_reverse_proxy {
 
 function delete_ephemeral {
     if [ "$CREATED" == true ] && [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
-        echo "Deleting cluster"
+        echo "Deleting cluster $OSHINKO_CLUSTER_NAME"
         line=$($CLI delete $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
         if [ "$?" -ne 0 ]; then
            echo "Error, cluster deletion returned error, output from oshinko-cli:"
@@ -195,7 +195,7 @@ else
     spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
     PID=$!
     wait $PID
-    PID=
+    unset PID
     delete_ephemeral
 fi
 app_exit
