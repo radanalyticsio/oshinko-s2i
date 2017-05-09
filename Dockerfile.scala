@@ -26,11 +26,11 @@ RUN cd /opt && \
         tar -zx && \
     ln -s sbt-launcher-packaging-0.13.13 sbt
 
-ENV SBT_OPTS "-Dsbt.global.base=/tmp/.sbt -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"
+ENV SBT_OPTS "-Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"
 
 RUN /opt/sbt/bin/sbt
 
-RUN yum install -y golang make nss_wrapper git gcc \
+RUN yum install -y golang make nss_wrapper git gcc && \
     yum clean all
 
 ENV GOPATH /go
@@ -45,6 +45,7 @@ RUN mkdir -p /usr/local/s2i && \
     make utils && \
     cp utils/* $APP_ROOT/src && \
     cp s2i/bin/* /usr/local/s2i && \
+    cp -R s2i/sbt/plugins /tmp/.sbt/0.13 && \
     chmod a+x /usr/local/s2i/* && \
     chown -R 1001:0 $APP_ROOT && \
     chmod a+rwX -R $APP_ROOT && \
