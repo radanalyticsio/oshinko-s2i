@@ -14,6 +14,15 @@ function app_exit {
     fi
 }
 
+function check_reverse_proxy {
+    grep -e "^spark\.ui\.reverseProxy" $SPARK_HOME/conf/spark-defaults.conf &> /dev/null
+    if [ "$?" -ne 0 ]; then
+        echo "Appending default reverse proxy config to spark-defaults.conf"
+        echo "spark.ui.reverseProxy              true" >> $SPARK_HOME/conf/spark-defaults.conf
+        echo "spark.ui.reverseProxyUrl           /" >> $SPARK_HOME/conf/spark-defaults.conf
+    fi
+}
+
 # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
 # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
 # For Python applications, look for a single .py file
@@ -49,7 +58,8 @@ CLI=$APP_ROOT/src/oshinko-cli
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 KUBE="$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
 SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
-CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA"
+NS=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
+CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA --namespace=$NS"
 CREATED=false
 
 # If a spark driver configmap has been named, use the cli to get it
@@ -68,6 +78,10 @@ if [ -n "$OSHINKO_SPARK_DRIVER_CONFIG" ]; then
     fi
     rm $tmpfile
 fi
+
+# As a final check on spark config, add the reverse proxy settings if
+# the configuration does not already contain values for them
+check_reverse_proxy
 
 # See if the cluster already exists
 line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
