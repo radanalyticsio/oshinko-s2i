@@ -1,4 +1,4 @@
-alldirs = common pyspark java scala
+alldirs =  pyspark java scala
 pushdirs = pyspark java scala
 
 build: CMD=build
@@ -12,4 +12,7 @@ push: $(pushdirs)
 $(alldirs):
 	cd $@; ${MAKE} $(CMD)
 
-.PHONY: build clean push $(alldirs)
+test-cmd: 
+	hack/test-cmd.sh
+
+.PHONY: build clean push $(alldirs) test-cmd

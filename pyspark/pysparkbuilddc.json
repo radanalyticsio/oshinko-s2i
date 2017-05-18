@@ -145,10 +145,7 @@
          "kind": "DeploymentConfig",
          "apiVersion": "v1",
          "metadata": {
-            "name": "${APPLICATION_NAME}",
-            "labels": {
-               "deploymentConfig": "${APPLICATION_NAME}"
-            }
+            "name": "${APPLICATION_NAME}"
          },
          "spec": {
             "strategy": {
@@ -174,12 +171,12 @@
             ],
             "replicas": 1,
             "selector": {
-               "deploymentConfig": "${APPLICATION_NAME}"
+               "deploymentconfig": "${APPLICATION_NAME}"
             },
             "template": {
                "metadata": {
                   "labels": {
-                     "deploymentConfig": "${APPLICATION_NAME}"
+                     "deploymentconfig": "${APPLICATION_NAME}"
                   }
                },
                "spec": {
@@ -214,11 +211,49 @@
                            {
                               "name": "OSHINKO_SPARK_DRIVER_CONFIG",
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
-                           }
+                           },
+                           {
+                              "name": "POD_NAME",
+                              "valueFrom":
+                                {
+                                   "fieldRef":
+                                      {
+                                         "fieldPath": "metadata.name"
+                                      }
+                                }
+                            }
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always"
+                        "imagePullPolicy": "Always",
+                        "volumeMounts": [
+                           {
+                              "mountPath": "/etc/podinfo",
+                              "name": "podinfo",
+                              "readOnly": false
+                           }
+                        ]
+                     }
+                  ],
+                  "volumes": [
+                     {
+                        "downwardAPI": {
+                           "items": [
+                              {
+                                 "fieldRef": {
+                                    "fieldPath": "metadata.labels"
+                                 },
+                                 "path": "labels"
+                              },
+                              {
+                                 "fieldRef": {
+                                    "fieldPath": "metadata.annotations"
+                                 },
+                                 "path": "annotations"
+                              }
+                           ]
+                        },
+                        "name": "podinfo"
                      }
                   ],
                   "restartPolicy": "Always",

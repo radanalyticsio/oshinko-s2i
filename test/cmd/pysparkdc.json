@@ -53,8 +53,11 @@
       {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
          "name": "APP_EXIT",
-         "value": "false",
-         "required": true
+         "value": "false"
+      },
+      { "description": "Puts the start.sh script in test mode which alters things like timing in the signal handlers so logs can be collected",
+        "name": "TEST_MODE",
+        "value": "false"
       }
    ],
    "objects": [
@@ -121,6 +124,10 @@
                            {
                               "name": "APP_EXIT",
                               "value": "${APP_EXIT}"
+                           },
+                           {
+                              "name": "TEST_MODE",
+                              "value": "${TEST_MODE}"
                            },
                            {
                               "name": "OSHINKO_NAMED_CONFIG",
