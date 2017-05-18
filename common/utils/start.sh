@@ -1,17 +1,15 @@
 #!/bin/bash
+trap handle_term TERM INT
 
 echo "version 1"
 
 function app_exit {
     # Sleep forever so the process does not complete
-    if [ ${APP_EXIT:-false} == false ]; then
-        while true
-        do
-            sleep 5
-        done
-    else
-        exit 0
-    fi
+    while [ ${APP_EXIT:-false} == false ]
+    do
+        sleep 1
+    done
+    exit 0
 }
 
 function check_reverse_proxy {
@@ -23,20 +21,24 @@ function check_reverse_proxy {
     fi
 }
 
+function get_deployment_config {
+    DEPLOYMENT_CONFIG=$(grep "^deploymentconfig=" /etc/podinfo/labels | cut -d'=' -f2- | tr -d '"')
+}
+
+function get_deployment {
+    DEPLOYMENT=$(grep "^deployment=" /etc/podinfo/labels | cut -d'=' -f2- | tr -d '"')
+}
+get_deployment
+
 function delete_ephemeral {
-    if [ "$CREATED" == true ] && [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
-        echo "Deleting cluster $OSHINKO_CLUSTER_NAME"
-        line=$($CLI delete $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
-        if [ "$?" -ne 0 ]; then
-           echo "Error, cluster deletion returned error, output from oshinko-cli:"
-           echo "$line"
-        fi
-	CREATED=false
-    fi
+    local appstatus=$1
+    echo "Deleting cluster $OSHINKO_CLUSTER_NAME"
+    line=$($CLI delete $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
+    echo $line
 }
 
 function handle_term {
-    echo "Received a termination signal"
+    echo Received a termination signal
     # If we've saved a PID for a subprocess, kill that first before
     # trying to delete the cluster
     if ! [ -z ${PID+x} ]; then
@@ -45,11 +47,28 @@ function handle_term {
         wait $PID
         echo "Subprocess stopped"
     fi
-    delete_ephemeral
+
+    # Tell delete_ephemeral that we are calling because of a signal received
+    # before or during the spark-submit call.
+    delete_ephemeral terminated
+    if [  ${TEST_MODE:-false} == true ]; then
+        echo Test mode delaying 10 seconds before exit
+        sleep 10
+    fi
     exit 0
 }
 
-trap handle_term TERM INT
+function exit_flag {
+    # Set APP_EXIT to true and ignore the signal, so the normal loop will fall out
+    echo Received a termination signal
+    if [  ${TEST_MODE:-false} == true ]; then
+        echo Test mode delaying 10 seconds before exit
+        sleep 10
+    fi
+    echo Setting app_exit true on signal handler
+    APP_EXIT=true
+}
+
 
 # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
 # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
@@ -77,10 +96,6 @@ fi
 # This script is supplied by the python s2i base
 source $APP_ROOT/etc/generate_container_user
 
-if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
-    OSHINKO_CLUSTER_NAME=cluster-`cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
-fi
-
 # Create the cluster through oshinko-cli if it does not exist
 CLI=$APP_ROOT/src/oshinko-cli
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
@@ -95,7 +110,17 @@ KUBE="$KUBE_SCHEME://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
 SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
 NS=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
 CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA --namespace=$NS"
-CREATED=false
+
+if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
+    lookup=$($CLI get --app=$DEPLOYMENT $CLI_ARGS 2>&1)
+    if [ "$?" -eq 0 ]; then
+        output=($(echo $lookup))
+        OSHINKO_CLUSTER_NAME=${output[0]}
+        echo using stored cluster name $OSHINKO_CLUSTER_NAME
+    else
+        OSHINKO_CLUSTER_NAME=cluster-`cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
+    fi
+fi
 
 # If a spark driver configmap has been named, use the cli to get it
 # and the helper process-driver-config to write the files to SPARK_HOME/conf
@@ -122,11 +147,16 @@ check_reverse_proxy
 line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
 res=$?
 if [ "$res" -ne 0 ]; then
-    echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating..."
-    line=$($CLI create $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $CLI_ARGS 2>&1)
+    if [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
+        echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster" 
+        APP_FLAG="--app=$POD_NAME --ephemeral"
+    else
+        echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating long-running cluster"
+        APP_FLAG="--app=$POD_NAME"
+    fi
+    line=$($CLI create $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $APP_FLAG $CLI_ARGS 2>&1)
     res=$?
     if [ "$res" -eq 0 ]; then
-        CREATED=true
         for i in {1..60}; do # wait up to 30 seconds
             line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
             res=$?
@@ -136,7 +166,7 @@ if [ "$res" -ne 0 ]; then
             if [ "$res" -eq 0 ]; then
                 if [ -n "$line" ]; then
                     output=($(echo $line))
-                    count=${output[1]}
+                    count=${output[2]}
                     # Empirically, worker count will jump from 0 to
                     # full number of workers when the pods are initialized
                     # without any intermediate counts. Verify this in kube
@@ -152,6 +182,8 @@ if [ "$res" -ne 0 ]; then
             sleep 0.5
         done
     fi
+else
+    echo "Found cluster $OSHINKO_CLUSTER_NAME"
 fi
 
 # If res is not 0 then create or get failed (possibly repeatedly)
@@ -167,8 +199,19 @@ else
     # Build the spark-submit command and execute
     output=($(echo $line))
     desired=${output[1]}
-    master=${output[2]}
-    masterweb=${output[3]}
+    master=${output[3]}
+    masterweb=${output[4]}
+    ephemeral=${output[6]}
+
+    if [ "$ephemeral" != "$DEPLOYMENT" -a "$ephemeral" != "shared" ]; then
+        echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this is "$DEPLOYMENT", exiting"
+        app_exit
+    fi
+    if [ "$ephemeral" == "shared" ]; then
+        echo Using long-running cluster $OSHINKO_CLUSTER_NAME
+    else
+        echo Using ephemeral cluster $OSHINKO_CLUSTER_NAME
+    fi
 
     # Now that we know what the master url is, export it so that the
     # app can use it if it likes.
@@ -202,7 +245,19 @@ else
     spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
     PID=$!
     wait $PID
-    unset PID
-    delete_ephemeral
+
+    # At this point the subprocess completed and we are about to clean up the cluster.
+    # Switch to a signal handler that just sets a flag, so that we can delete the cluster
+    # without interruption and then loop in app_exit depending on the settings. app_exit
+    # will return if the flag is changed by the signal handler.
+
+    # Note that the cluster MUST be cleaned up here, because once this pod exits there is not
+    # guaranteed to be an agent to do cleanup.  Consider the case of a job, where no new instance
+    # of this driver will be scheduled, or the case of a dc where the dc is deleted while the pod
+    # is in the COMPLETED or crash loop backoff state. The cluster would be orhpaned. So, since the
+    # app completed, we take the cluster with us, as long as our repl count is 0 or 1 (if it's more
+    # then someone scaled the driver and we have to leave the cluster anyway).
+    trap exit_flag TERM INT
+    delete_ephemeral completed
 fi
 app_exit
