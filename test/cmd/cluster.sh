@@ -53,6 +53,25 @@ function run_app() {
     WORKER_DC=$GEN_CLUSTER_NAME-w
 }
 
+function run_job() {
+    # Launch the app using the service account and create a cluster
+    IMAGE_NAME=$(oc get is play --template="{{index .status \"dockerImageRepository\"}}")
+    GEN_CLUSTER_NAME=$1
+    os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
+    echo Using cluster name $GEN_CLUSTER_NAME
+    MASTER_DC=$GEN_CLUSTER_NAME-m
+    WORKER_DC=$GEN_CLUSTER_NAME-w
+}
+
+function del_job_pod() {
+    echo running del_job_pod with cluster $GEN_CLUSTER_NAME
+    DRIVER=$(oc get pod -l app=bob --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_text 'oc log "$DRIVER"' 'Cound not create an ephemeral cluster, created a shared cluster instead'
+    os::cmd::try_until_text 'oc log "$DRIVER"' "$1"
+    os::cmd::expect_success 'oc delete pod "$DRIVER"'
+    os::cmd::try_until_text 'oc log "$DRIVER"' 'cluster not deleted'
+}
+
 function del_dc() {
     echo running del_dc
     set_spark_sleep
@@ -241,8 +260,6 @@ function redeploy_cluster_removed() {
     os::cmd::try_until_text 'oc logs "$DRIVER"' "Didn't find cluster"
 }
 
-
-
 function cleanup_app() {
 
     echo cleanup_app called
@@ -255,7 +272,6 @@ function cleanup_app() {
     fi
 }
 
-
 function cleanup_cluster() {
     echo cleanup_cluster called with cluster $GEN_CLUSTER_NAME
     os::cmd::expect_success 'oc delete dc "$MASTER_DC"'
@@ -267,7 +283,6 @@ function cleanup_cluster() {
     os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
     os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
 } 
-
 
 source "${SCRIPT_DIR}/../../hack/lib/init.sh"
 trap os::test::junit::reconcile_output EXIT
@@ -390,6 +405,14 @@ run_app "bob"
 clear_test_mode
 redeploy_cluster_removed
 cleanup_app wait_for_cluster
+
+echo "Running job test"
+set_ephemeral
+set_test_mode # we want the signal handler to delay so that we can read the pod logs after the pod is deleted
+run_job "bob"
+clear_test_mode
+del_job_pod "spark-submit"
+cleanup_cluster
 
 os::cmd::expect_success 'oc delete project "$PROJECT"'
 os::test::junit::declare_suite_end
