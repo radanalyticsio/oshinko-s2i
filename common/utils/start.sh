@@ -21,11 +21,9 @@ function check_reverse_proxy {
     fi
 }
 
-function get_deployment_config {
-    DEPLOYMENT_CONFIG=$(grep "^deploymentconfig=" /etc/podinfo/labels | cut -d'=' -f2- | tr -d '"')
-}
-
 function get_deployment {
+    # If this fails because the file is not there or the label isn't present, then
+    # DEPLOYMENT will be an empty string
     DEPLOYMENT=$(grep "^deployment=" /etc/podinfo/labels | cut -d'=' -f2- | tr -d '"')
 }
 get_deployment
@@ -144,14 +142,16 @@ fi
 check_reverse_proxy
 
 # See if the cluster already exists
+CREATED_EPHEMERAL=false
 line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
 res=$?
 if [ "$res" -ne 0 ]; then
     if [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
         echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster" 
         APP_FLAG="--app=$POD_NAME --ephemeral"
+        CREATED_EPHEMERAL=true
     else
-        echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating long-running cluster"
+        echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating shared cluster"
         APP_FLAG="--app=$POD_NAME"
     fi
     line=$($CLI create $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $APP_FLAG $CLI_ARGS 2>&1)
@@ -203,12 +203,19 @@ else
     masterweb=${output[4]}
     ephemeral=${output[6]}
 
-    if [ "$ephemeral" != "$DEPLOYMENT" -a "$ephemeral" != "shared" ]; then
-        echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this is "$DEPLOYMENT", exiting"
+    if [ "$ephemeral" != "$DEPLOYMENT" -a "$ephemeral" != "<shared>" ]; then
+        if [ "$DEPLOYMENT" == "" ]; then
+            echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this driver is not part of a deployment, exiting"
+        else
+            echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this is "$DEPLOYMENT", exiting"
+        fi
         app_exit
     fi
-    if [ "$ephemeral" == "shared" ]; then
-        echo Using long-running cluster $OSHINKO_CLUSTER_NAME
+    if [ "$ephemeral" == "<shared>" ]; then
+        if [ "$CREATED_EPHEMERAL" == "true" ]; then
+            echo Cound not create an ephemeral cluster, created a shared cluster instead
+        fi
+        echo Using shared cluster $OSHINKO_CLUSTER_NAME
     else
         echo Using ephemeral cluster $OSHINKO_CLUSTER_NAME
     fi
