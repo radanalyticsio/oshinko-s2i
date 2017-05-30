@@ -11,20 +11,20 @@ DOCKERFILE_CONTEXT=..
 .PHONY: build clean push test
 
 build:
-	sudo docker build --pull -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
+	docker build --pull -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
 
 clean:
-	- sudo docker rmi $(LOCAL_IMAGE)
+	- docker rmi $(LOCAL_IMAGE)
 	rm -rf utils
 
 push: build
-	sudo docker tag $(LOCAL_IMAGE) $(PUSH_IMAGE)
-	sudo docker push $(PUSH_IMAGE)
+	docker tag $(LOCAL_IMAGE) $(PUSH_IMAGE)
+	docker push $(PUSH_IMAGE)
 
 utils:
 	cd ../common && make build
 	cp -r ../common/utils .
 
 test:
-	sudo docker build -t $(PUSH_IMAGE)-candidate -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
+	docker build -t $(PUSH_IMAGE)-candidate -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
 	IMAGE_NAME=$(PUSH_IMAGE)-candidate test/run
