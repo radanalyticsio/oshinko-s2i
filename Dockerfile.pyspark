@@ -46,7 +46,6 @@ RUN cd /go/src/github.com/radanalyticsio/oshinko-s2i/pyspark && \
     cp -rp utils/* $APP_ROOT/src && \
     rm -rf /go/src/github.com/radanalyticsio/oshinko-s2i
 
-RUN source /opt/app-root/etc/scl_enable && source /opt/app-root/bin/activate && \
-    pip install numpy
+RUN source /opt/app-root/etc/scl_enable && pip install numpy
 
 CMD $STI_SCRIPTS_PATH/usage
