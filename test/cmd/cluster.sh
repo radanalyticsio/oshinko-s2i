@@ -1,9 +1,13 @@
 #!/bin/bash
 # Save project and user, generate a temporary project name
+
+# todo, this might need to be an argument
 LOCAL_IMAGE=tmckay/radanalytics-pyspark
+
 ORIG_PROJECT=$(oc project -q)
 PROJECT=test-$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
+SPARK_IMAGE=docker.io/tmckay/openshift-spark:test
 
 function set_app_exit {
     DO_EXIT="true"
@@ -38,6 +42,25 @@ function clear_test_mode() {
     DO_TEST="false"
 }
 
+function init_config_map() {
+    set +e
+    oc delete configmap clusterconfig masterconfig workerconfig
+    set -e
+    oc create configmap masterconfig --from-file=$SCRIPT_DIR/masterconfig
+    oc create configmap workerconfig --from-file=$SCRIPT_DIR/workerconfig
+    oc create configmap clusterconfig --from-literal=workercount=$WORKER_COUNT \
+                                      --from-literal=sparkimage=$SPARK_IMAGE \
+                                      --from-literal=sparkmasterconfig=masterconfig \
+                                      --from-literal=sparkworkerconfig=workerconfig
+}
+
+function set_worker_count() {
+    if [ "${WORKER_COUNT:-0}" -ne "$1" ]; then
+        WORKER_COUNT=$1
+        init_config_map
+    fi
+}
+
 function set_defaults() {
     set_ephemeral
     set_spark_sleep
@@ -48,14 +71,12 @@ function set_defaults() {
 function run_app() {
     # Launch the app using the service account and create a cluster
     if [ "$#" -eq 0 ]; then    
-        echo oc new-app --file="$SCRIPT_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"
-        os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
+        os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
         os::cmd::try_until_not_text 'oc get rc bob-1 --template="{{index .metadata.labels \"uses-oshinko-cluster\"}}"' "<no value>" $((5*minute))
         GEN_CLUSTER_NAME=$(oc get rc bob-1 --template='{{index .metadata.labels "uses-oshinko-cluster"}}')
     else
         GEN_CLUSTER_NAME=$1
-        echo oc new-app --file="$SCRIPT_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"
-        os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
+        os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
     fi 
     echo Using cluster name $GEN_CLUSTER_NAME
     MASTER_DC=$GEN_CLUSTER_NAME-m
@@ -88,14 +109,21 @@ function cleanup_app() {
 
 function cleanup_cluster() {
     echo cleanup_cluster called with cluster $GEN_CLUSTER_NAME
-    os::cmd::expect_success 'oc delete dc "$MASTER_DC"'
-    os::cmd::expect_success 'oc delete dc "$WORKER_DC"'
-    os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
-    os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
-    os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"'
-    os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"-ui'
-    os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
-    os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
+
+    # We get tricky here and just use try_until_failure for components that
+    # might not actually exist, depending on what we've been doing
+    # If present, they'll be deleted and the next call will fail
+    os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"'
+    os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"'
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"'
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui'
+    if [ "$#" -eq 0 ]; then
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
+    fi
+
 } 
 
 function cleanup_job() {
@@ -263,9 +291,9 @@ function del_pod_completed() {
     os::cmd::try_until_failure 'oc get pod "$DRIVER"'
 
     # In a case with a generated cluster name we don't know the new name, so
-    # just look for spark submit
+    # just look for spark start
     os::cmd::try_until_text 'oc logs dc/bob' "Didn't find cluster"
-    os::cmd::try_until_text 'oc logs dc/bob' "spark-submit" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' "Running Spark" $((5*minute))
 }
 
 function pod_tests() {
@@ -283,7 +311,7 @@ function pod_tests() {
 
     del_pod "Didn't find cluster"
     del_pod "Waiting for spark master"
-    del_pod "spark-submit"
+    del_pod "Running Spark"
     del_pod "SparkContext: Starting job"
     cleanup_app wait_for_cluster_del
 
@@ -304,10 +332,9 @@ function pod_test_non_ephemeral() {
     set_defaults
     set_long_running
     set_test_mode
-    run_app "steve"
+    run_app $1
 
-    # Wait until a particular message is seen and the cluster pods exist
-    os::cmd::try_until_text 'oc logs dc/bob' "spark-submit" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' "Running Spark" $((5*minute))
 
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
@@ -323,9 +350,48 @@ function pod_test_non_ephemeral() {
     os::cmd::try_until_text 'oc logs dc/bob' 'Found cluster'
 
     cleanup_app
-    cleanup_cluster
 }
 
+function wait_for_incomplete_delete {
+    echo running wait_for_incomplete_delete
+    set_defaults
+    set_long_running
+
+    # intentionally break the cluster by deleting one of the services
+    os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"-ui'
+
+    run_app $GEN_CLUSTER_NAME
+    os::cmd::try_until_text 'oc logs dc/bob' 'Found incomplete cluster'
+
+    # we can't wait here because as soon as the cluster is deleted,
+    # the pod will start creating it again
+    cleanup_cluster dontwait
+
+    os::cmd::try_until_text 'oc logs dc/bob' "Didn't find cluster"
+    os::cmd::try_until_text 'oc logs dc/bob' "Waiting for spark master"
+    cleanup_app
+}
+
+
+function wait_for_incomplete_fix {
+    echo running wait_for_incomplete_fix
+    set_defaults
+    set_long_running
+
+    # intentionally break the cluster by deleting one of the services
+    # we'll put it back for the "fix"
+    file=$(mktemp)
+    os::cmd::expect_success 'oc export service "$GEN_CLUSTER_NAME"-ui > "$file"'
+    os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"-ui'
+
+    run_app $GEN_CLUSTER_NAME
+    os::cmd::try_until_text 'oc logs dc/bob' 'Found incomplete cluster'
+    os::cmd::expect_success 'oc create -f "$file"'
+    rm $file
+
+    os::cmd::try_until_text 'oc logs dc/bob' "Found cluster"
+    cleanup_app
+}
 
 function scaled_app_completed_cluster_remains() {
     echo running scaled_app_completed_cluster_remains
@@ -337,7 +403,7 @@ function scaled_app_completed_cluster_remains() {
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
     DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc logs "$DRIVER"' 'spark-submit' $((5*minute))
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Running Spark' $((5*minute))
     os::cmd::expect_success 'oc scale dc/bob --replicas=2'
     	
     os::cmd::try_until_text 'oc logs "$DRIVER"' 'Deleting cluster' $((5*minute))
@@ -366,10 +432,10 @@ function redeploy_cluster_removed() {
 
     DRIVER=$(oc get pod -l deployment=bob-2 --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_text 'oc logs "$DRIVER"' "Didn't find cluster"
+    os::cmd::try_until_text 'oc logs "$DRIVER"' "Waiting for spark master"
 
     cleanup_app wait_for_cluster_del
 }
-
 
 source "${SCRIPT_DIR}/../../hack/lib/init.sh"
 trap os::test::junit::reconcile_output EXIT
@@ -400,12 +466,14 @@ BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
 # Wait for the build to finish
 os::cmd::try_until_text 'oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}"' "Complete" $((5*minute))
 
+set_worker_count 3
+
 # Run the dc tests with an ephemeral cluster and a name supplied from env
 echo Running dc tests with an ephemeral named cluster
 del_dc "Didn't find cluster" "bob"
 del_dc "Waiting for spark master" "bob"
 del_dc "Waiting for spark workers" "bob"
-del_dc "spark-submit" "bob"
+del_dc "Running Spark" "bob"
 del_dc "SparkContext: Starting job" "bob"
 
 # Run a few of the dc tests with an ephemeral cluster and a generated cluster name
@@ -415,7 +483,7 @@ del_dc "SparkContext: Starting job"
 
 # Run a dc test against a non-ephemeral cluster
 echo Running dc test with a non-ephemeral cluster
-del_dc_non_ephemeral "spark-submit" "steve"
+del_dc_non_ephemeral "Running Spark" "steve"
 
 # Run some app completion tests
 echo Running app completion test with ephemeral cluster
@@ -435,13 +503,20 @@ echo "Running pod tests with an ephemeral un-named cluster"
 pod_tests
 
 echo Running pod test with a non-ephemeral cluster
-pod_test_non_ephemeral
+# In this test we intentionally leave the non-ephemeral cluster running
+# so that we can test the "incomplete" cluster functionality aftwerward
+pod_test_non_ephemeral steve
+
+echo Running wait for incomplete tests
+wait_for_incomplete_delete
+wait_for_incomplete_fix
+cleanup_cluster
 
 echo Running redeploy test with ephemeral cluster
 redeploy_cluster_removed
 
 echo "Running job test"
-del_job_pod "spark-submit"
+del_job_pod "Running Spark"
 
 os::cmd::expect_success 'oc delete project "$PROJECT"'
 os::test::junit::declare_suite_end
