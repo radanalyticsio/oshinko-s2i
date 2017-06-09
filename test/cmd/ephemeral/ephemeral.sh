@@ -519,8 +519,6 @@ echo "Running pod tests with an ephemeral un-named cluster"
 pod_tests
 
 echo Running pod test with a non-ephemeral cluster
-# In this test we intentionally leave the non-ephemeral cluster running
-# so that we can test the "incomplete" cluster functionality aftwerward
 pod_test_non_ephemeral steve
 
 echo Running wait for incomplete tests
