@@ -351,38 +351,43 @@ function pod_test_non_ephemeral() {
     os::cmd::try_until_text 'oc logs dc/bob' 'Found cluster'
 
     cleanup_app
+    cleanup_cluster
 }
 
 function wait_for_incomplete_delete {
     echo running wait_for_incomplete_delete
     set_defaults
     set_long_running
+    run_app $1
+
+    os::cmd::try_until_text 'oc logs dc/bob' 'Waiting for spark master'
+    cleanup_app
 
     # intentionally break the cluster by deleting one of the services
     os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"-ui'
 
-    run_app $GEN_CLUSTER_NAME
+    # Now run the app again against the broken cluster
+    run_app $1
     os::cmd::try_until_text 'oc logs dc/bob' 'Found incomplete cluster'
 
     # we can't wait here because as soon as the cluster is deleted,
-    # the pod will start creating it again. also note that cleanup_cluster
-    # tries to delete services first, because if it does services last
-    # we might overlap with the creation of the new cluster (ie the
-    # cluster will cease to be "incomplete" as soon as the master service
-    # disappears since we've intentionally already deleted the master-ui
-    # service
+    # the pod will start creating it again.
     cleanup_cluster dontwait
 
     os::cmd::try_until_text 'oc logs dc/bob' "Didn't find cluster"
     os::cmd::try_until_text 'oc logs dc/bob' "Waiting for spark master"
     cleanup_app
+    cleanup_cluster
 }
-
 
 function wait_for_incomplete_fix {
     echo running wait_for_incomplete_fix
     set_defaults
     set_long_running
+    run_app $1
+
+    os::cmd::try_until_text 'oc logs dc/bob' 'Waiting for spark master'
+    cleanup_app
 
     # intentionally break the cluster by deleting one of the services
     # we'll put it back for the "fix"
@@ -390,13 +395,14 @@ function wait_for_incomplete_fix {
     os::cmd::expect_success 'oc export service "$GEN_CLUSTER_NAME"-ui > "$file"'
     os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"-ui'
 
-    run_app $GEN_CLUSTER_NAME
+    run_app $1
     os::cmd::try_until_text 'oc logs dc/bob' 'Found incomplete cluster'
     os::cmd::expect_success 'oc create -f "$file"'
     rm $file
 
     os::cmd::try_until_text 'oc logs dc/bob' "Found cluster"
     cleanup_app
+    cleanup_cluster
 }
 
 function scaled_app_completed_cluster_remains() {
@@ -514,9 +520,8 @@ echo Running pod test with a non-ephemeral cluster
 pod_test_non_ephemeral steve
 
 echo Running wait for incomplete tests
-wait_for_incomplete_delete
-wait_for_incomplete_fix
-cleanup_cluster
+wait_for_incomplete_delete incdel
+wait_for_incomplete_fix incfix
 
 echo Running redeploy test with ephemeral cluster
 redeploy_cluster_removed
