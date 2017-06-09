@@ -469,7 +469,7 @@ os::cmd::expect_success 'oc policy add-role-to-user admin system:serviceaccount:
 if [ "$#" -eq 0 ]; then
     os::cmd::expect_success 'oc new-build --name=play "$S2I_TEST_IMAGE" --binary'
 else
-    docker login -u tmckay -p $(oc whoami -t) $1
+    docker login -u $(oc whoami) -p $(oc whoami -t) $1
     docker tag $S2I_TEST_IMAGE $1/$PROJECT/radanalytics-pyspark
     docker push $1/$PROJECT/radanalytics-pyspark
     os::cmd::expect_success 'oc new-build --name=play --image-stream=radanalytics-pyspark --binary'
