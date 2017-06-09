@@ -155,7 +155,7 @@ function wait_if_cluster_incomplete {
         CLI_RES=$?
         if [ "$CLI_RES" -eq 0 ]; then
             output=($(echo $CLI_LINE))
-            status=${output[4]}
+            status=${output[5]}
             if [ "$status" == "Incomplete" ]; then
                 if [ "$cnt" -eq 12 ]; then
                     echo Cluster is still incomplete, exiting
@@ -257,7 +257,7 @@ if [ "$CLI_RES" -ne 0 ]; then
             if [ "$CLI_RES" -eq 0 ]; then
                 if [ -n "$CLI_LINE" ]; then
                     output=($(echo $CLI_LINE))
-                    status=${output[4]}
+                    status=${output[5]}
                     if [ "$status" == "Running" ]; then
                         break
                     fi
@@ -288,8 +288,8 @@ else
     desired=${output[1]}
     master=${output[2]}
     masterweb=${output[3]}
-    status=${output[4]}
-    ephemeral=${output[5]}
+    status=${output[5]}
+    ephemeral=${output[6]}
 
     if [ "$ephemeral" != "$DEPLOYMENT" -a "$ephemeral" != "<shared>" ]; then
         if [ "$DEPLOYMENT" == "" ]; then
