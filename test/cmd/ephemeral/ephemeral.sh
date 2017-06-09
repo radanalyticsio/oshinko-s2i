@@ -1,14 +1,18 @@
 #!/bin/bash
 # Save project and user, generate a temporary project name
 
-# todo, this might need to be an argument
 S2I_TEST_IMAGE=${S2I_TEST_IMAGE:-radanalytics-pyspark}
-echo Using local image $S2I_TEST_IMAGE
+echo Using local s2i image $S2I_TEST_IMAGE
+
+S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/tmckay/openshift-spark:term}
+echo Using spark image $S2I_TEST_SPARK_IMAGE
+
+S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-3}
+echo Using $S2I_TEST_WORKERS workers
 
 ORIG_PROJECT=$(oc project -q)
 PROJECT=test-$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
-SPARK_IMAGE=docker.io/tmckay/openshift-spark:testpr3
 
 function set_app_exit {
     DO_EXIT="true"
@@ -50,7 +54,7 @@ function init_config_map() {
     oc create configmap masterconfig --from-file=$SCRIPT_DIR/masterconfig
     oc create configmap workerconfig --from-file=$SCRIPT_DIR/workerconfig
     oc create configmap clusterconfig --from-literal=workercount=$WORKER_COUNT \
-                                      --from-literal=sparkimage=$SPARK_IMAGE \
+                                      --from-literal=sparkimage=$S2I_TEST_SPARK_IMAGE \
                                       --from-literal=sparkmasterconfig=masterconfig \
                                       --from-literal=sparkworkerconfig=workerconfig
 }
@@ -235,8 +239,8 @@ function del_job_pod() {
     run_job "bob"
 
     DRIVER=$(oc get pod -l app=bob-job --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc log "$DRIVER"' 'Cound not create an ephemeral cluster, created a shared cluster instead'
-    os::cmd::try_until_text 'oc log "$DRIVER"' "$1"
+    os::cmd::try_until_text 'oc log "$DRIVER"' 'Cound not create an ephemeral cluster, created a shared cluster instead' $((5*minute))
+    os::cmd::try_until_text 'oc log "$DRIVER"' "$1" $((5*minute))
     os::cmd::expect_success 'oc delete pod "$DRIVER"'
     os::cmd::try_until_text 'oc log "$DRIVER"' 'cluster not deleted'
 
@@ -478,7 +482,16 @@ BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
 # Wait for the build to finish
 os::cmd::try_until_text 'oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}"' "Complete" $((5*minute))
 
-set_worker_count 3
+set_worker_count $S2I_TEST_WORKERS
+
+echo "Running job test"
+del_job_pod "Running Spark"
+
+os::cmd::expect_success 'oc delete project "$PROJECT"'
+os::test::junit::declare_suite_end
+oc project $ORIG_PROJECT
+exit
+
 
 # Run the dc tests with an ephemeral cluster and a name supplied from env
 echo Running dc tests with an ephemeral named cluster
