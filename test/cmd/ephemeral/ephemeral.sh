@@ -484,15 +484,6 @@ os::cmd::try_until_text 'oc get build play-"$BUILDNUM" --template="{{index .stat
 
 set_worker_count $S2I_TEST_WORKERS
 
-echo "Running job test"
-del_job_pod "Running Spark"
-
-os::cmd::expect_success 'oc delete project "$PROJECT"'
-os::test::junit::declare_suite_end
-oc project $ORIG_PROJECT
-exit
-
-
 # Run the dc tests with an ephemeral cluster and a name supplied from env
 echo Running dc tests with an ephemeral named cluster
 del_dc "Didn't find cluster" "bob"
