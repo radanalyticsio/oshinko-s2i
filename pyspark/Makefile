@@ -1,4 +1,4 @@
-LOCAL_IMAGE=radanalytics-pyspark
+LOCAL_IMAGE ?= radanalytics-pyspark
 
 # If you are going to push the built image to a registry
 # using the "push" make target then you should replace

@@ -2,12 +2,13 @@
 # Save project and user, generate a temporary project name
 
 # todo, this might need to be an argument
-LOCAL_IMAGE=tmckay/radanalytics-pyspark
+S2I_TEST_IMAGE=${S2I_TEST_IMAGE:-radanalytics-pyspark}
+echo Using local image $S2I_TEST_IMAGE
 
 ORIG_PROJECT=$(oc project -q)
 PROJECT=test-$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
-SPARK_IMAGE=docker.io/tmckay/openshift-spark:test
+SPARK_IMAGE=docker.io/tmckay/openshift-spark:testpr3
 
 function set_app_exit {
     DO_EXIT="true"
@@ -113,15 +114,15 @@ function cleanup_cluster() {
     # We get tricky here and just use try_until_failure for components that
     # might not actually exist, depending on what we've been doing
     # If present, they'll be deleted and the next call will fail
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui'
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"'
     os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"'
     os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"'
-    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"'
-    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui'
     if [ "$#" -eq 0 ]; then
-        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
-        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
         os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
         os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
     fi
 
 } 
@@ -364,7 +365,12 @@ function wait_for_incomplete_delete {
     os::cmd::try_until_text 'oc logs dc/bob' 'Found incomplete cluster'
 
     # we can't wait here because as soon as the cluster is deleted,
-    # the pod will start creating it again
+    # the pod will start creating it again. also note that cleanup_cluster
+    # tries to delete services first, because if it does services last
+    # we might overlap with the creation of the new cluster (ie the
+    # cluster will cease to be "incomplete" as soon as the master service
+    # disappears since we've intentionally already deleted the master-ui
+    # service
     cleanup_cluster dontwait
 
     os::cmd::try_until_text 'oc logs dc/bob' "Didn't find cluster"
@@ -437,7 +443,7 @@ function redeploy_cluster_removed() {
     cleanup_app wait_for_cluster_del
 }
 
-source "${SCRIPT_DIR}/../../hack/lib/init.sh"
+source "${SCRIPT_DIR}/../../../hack/lib/init.sh"
 trap os::test::junit::reconcile_output EXIT
 
 os::test::junit::declare_suite_start "cmd/cluster"
@@ -451,10 +457,10 @@ os::cmd::expect_success 'oc policy add-role-to-user admin system:serviceaccount:
 # pushes of images have to be done. In the case of a "normal" openshift cluster, the
 # image we'll use for build has to be available as an imagestream.
 if [ "$#" -eq 0 ]; then
-    os::cmd::expect_success 'oc new-build --name=play "$LOCAL_IMAGE" --binary'
+    os::cmd::expect_success 'oc new-build --name=play "$S2I_TEST_IMAGE" --binary'
 else
     docker login -u tmckay -p $(oc whoami -t) $1
-    docker tag $LOCAL_IMAGE $1/$PROJECT/radanalytics-pyspark
+    docker tag $S2I_TEST_IMAGE $1/$PROJECT/radanalytics-pyspark
     docker push $1/$PROJECT/radanalytics-pyspark
     os::cmd::expect_success 'oc new-build --name=play --image-stream=radanalytics-pyspark --binary'
 fi

@@ -56,6 +56,7 @@ function handle_term {
             fi
         done
         if [ "$killed" -ne 0 ]; then
+            echo Process is still running 10 seconds after TERM, sending KILL
             kill -9 $PID
         fi
         wait $PID
@@ -149,14 +150,14 @@ function wait_if_cluster_incomplete {
     local cnt
     local output
     local status
-    for cnt in {1..6}; do
+    for cnt in {1..12}; do
         CLI_LINE=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
         CLI_RES=$?
         if [ "$CLI_RES" -eq 0 ]; then
             output=($(echo $CLI_LINE))
             status=${output[4]}
             if [ "$status" == "Incomplete" ]; then
-                if [ "$cnt" -eq 6 ]; then
+                if [ "$cnt" -eq 12 ]; then
                     echo Cluster is still incomplete, exiting
                     app_exit
                 fi
