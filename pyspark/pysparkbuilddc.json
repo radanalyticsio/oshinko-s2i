@@ -24,6 +24,10 @@
          "name": "GIT_REF"
       },
       {
+         "description": "Git sub-directory path",
+         "name": "CONTEXT_DIR"
+      },
+      {
          "description": "The name to use for the buildconfig, imagestream and deployment components",
          "name": "APPLICATION_NAME",
          "generate": "expression",
@@ -115,7 +119,8 @@
                "git": {
                   "uri": "${GIT_URI}",
                   "ref": "${GIT_REF}"
-               }
+               },
+               "contextDir": "${CONTEXT_DIR}"
             },
             "strategy": {
                "type": "Source",
