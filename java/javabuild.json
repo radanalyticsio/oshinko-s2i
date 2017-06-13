@@ -31,6 +31,10 @@
          "description": "Git branch/tag reference",
          "name": "GIT_REF",
          "value": "master"
+      },
+      {
+         "description": "Git sub-directory path",
+         "name": "CONTEXT_DIR"
       }
    ],
    "objects": [
@@ -67,7 +71,8 @@
                "git": {
                   "uri": "${GIT_URI}",
                   "ref": "${GIT_REF}"
-               }
+               },
+               "contextDir": "${CONTEXT_DIR}"
             },
             "strategy": {
                "type": "Source",

@@ -64,6 +64,10 @@
          "value": "master"
       },
       {
+         "description": "Git sub-directory path",
+         "name": "CONTEXT_DIR"
+      },
+      {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
          "name": "APP_EXIT",
          "value": "false",
@@ -119,7 +123,8 @@
                "git": {
                   "uri": "${GIT_URI}",
                   "ref": "${GIT_REF}"
-               }
+               },
+               "contextDir": "${CONTEXT_DIR}"
             },
             "strategy": {
                "type": "Source",
