@@ -64,7 +64,7 @@ before_script:
 script:
 - if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.pyspark . ; fi
 - if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.java . ; fi
-- if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.scale . ; fi
+- if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.scala . ; fi
 
 - if [ "$TO_TEST" = "e2e" ]; then TEST_ONLY=1; test/extended/s2i.sh ; fi
 notifications:
