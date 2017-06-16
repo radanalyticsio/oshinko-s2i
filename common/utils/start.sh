@@ -56,7 +56,14 @@ fi
 # Create the cluster through oshinko-cli if it does not exist
 CLI=$APP_ROOT/src/oshinko-cli
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-KUBE="$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
+
+if [ "$KUBERNETES_SERVICE_PORT" -eq 443 ]; then                                                                                                           
+    KUBE_SCHEME="https"                                                                                                                                   
+else                                                                                                                                                      
+    KUBE_SCHEME="http"                                                                                                                                    
+fi                                                                                                                                                        
+KUBE="$KUBE_SCHEME://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
+
 SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
 NS=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
 CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA --namespace=$NS"
