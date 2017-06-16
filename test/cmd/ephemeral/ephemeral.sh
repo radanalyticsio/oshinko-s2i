@@ -7,7 +7,7 @@ echo Using local s2i image $S2I_TEST_IMAGE
 S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/tmckay/openshift-spark:term}
 echo Using spark image $S2I_TEST_SPARK_IMAGE
 
-S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-3}
+S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-1}
 echo Using $S2I_TEST_WORKERS workers
 
 ORIG_PROJECT=$(oc project -q)
@@ -454,6 +454,8 @@ function redeploy_cluster_removed() {
 }
 
 source "${SCRIPT_DIR}/../../../hack/lib/init.sh"
+source "${OS_ROOT}/test/extended/setup.sh"
+os::test::extended::setup
 trap os::test::junit::reconcile_output EXIT
 
 os::test::junit::declare_suite_start "cmd/cluster"
@@ -487,6 +489,14 @@ set_worker_count $S2I_TEST_WORKERS
 # Run the dc tests with an ephemeral cluster and a name supplied from env
 echo Running dc tests with an ephemeral named cluster
 del_dc "Didn't find cluster" "bob"
+
+# Exit early to test travis setup ...
+os::cmd::expect_success 'oc delete project "$PROJECT"'
+os::test::junit::declare_suite_end
+oc project $ORIG_PROJECT
+exit
+
+
 del_dc "Waiting for spark master" "bob"
 del_dc "Waiting for spark workers" "bob"
 del_dc "Running Spark" "bob"
