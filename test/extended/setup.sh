@@ -26,9 +26,6 @@ function os::test::extended::setup () {
 
 		echo "Not starting server"
 		return 0
-	else
-
-	    return 1
 	fi
 
 }
