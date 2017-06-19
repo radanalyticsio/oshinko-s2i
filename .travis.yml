@@ -50,7 +50,7 @@ before_install:
       # below cmd is important to get oc working in ubuntu
       sudo docker run -v /:/rootfs -ti --rm --entrypoint=/bin/bash --privileged openshift/origin:v1.4.1 -c "mv /rootfs/bin/findmnt /rootfs/bin/findmnt.backup"
       sudo oc cluster up --host-config-dir=/home/travis/gopath/src/github.com/radanalyticsio/origin
-      sudo chmod -R a+r /home/travis/.kube
+      sudo chmod -R a+rwX /home/travis/.kube
       sudo ls -l /home/travis/gopath/src/github.com/radanalyticsio/origin
       # find IP:PORT of openshift
       IPSTR=`sudo oc status |grep server`
