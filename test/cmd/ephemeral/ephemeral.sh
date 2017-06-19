@@ -489,14 +489,6 @@ set_worker_count $S2I_TEST_WORKERS
 # Run the dc tests with an ephemeral cluster and a name supplied from env
 echo Running dc tests with an ephemeral named cluster
 del_dc "Didn't find cluster" "bob"
-
-# Exit early to test travis setup ...
-os::cmd::expect_success 'oc delete project "$PROJECT"'
-os::test::junit::declare_suite_end
-oc project $ORIG_PROJECT
-exit
-
-
 del_dc "Waiting for spark master" "bob"
 del_dc "Waiting for spark workers" "bob"
 del_dc "Running Spark" "bob"
