@@ -41,7 +41,7 @@ before_install:
       sudo chmod -R 766 /home/travis/gopath/src/github.com/radanalyticsio/origin
       sudo ls -l /home/travis/gopath/src/github.com/radanalyticsio/origin
       sudo chmod -R +755 /home/travis/gopath/src/github.com/radanalyticsio/origin/*
-      sudo chmod -R +755 /home/travis/gopath/src/github.com/radanalyticsio/oshinko-s2i/*
+      sudo chmod -R a+rwX /home/travis/gopath/src/github.com/radanalyticsio/oshinko-s2i
       sudo cp /home/travis/gopath/src/github.com/radanalyticsio/origin/* /bin
       sudo ls -l /bin
       oc version
