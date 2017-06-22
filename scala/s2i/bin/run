@@ -5,5 +5,4 @@
 # For more information see the documentation:
 #	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
 #
-
-$APP_ROOT/src/start.sh
+exec $APP_ROOT/src/start.sh
