@@ -1,9 +1,9 @@
-LOCAL_IMAGE ?= tmckay/radanalytics-pyspark
+LOCAL_IMAGE ?= radanalytics-pyspark
 
 # If you are going to push the built image to a registry
 # using the "push" make target then you should replace
 # "project" with an appropriate path for your registry and/or project
-PUSH_IMAGE=172.30.100.159:5000/test/radanalytics-pyspark
+PUSH_IMAGE=project/radanalytics-pyspark
 
 DOCKERFILE=../Dockerfile.pyspark
 DOCKERFILE_CONTEXT=..
@@ -11,7 +11,7 @@ DOCKERFILE_CONTEXT=..
 .PHONY: build clean push test
 
 build:
-	docker build --no-cache --pull -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
+	docker build --pull -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
 
 clean:
 	- docker rmi $(LOCAL_IMAGE)
