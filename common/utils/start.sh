@@ -307,7 +307,7 @@ else
     fi
     if [ "$ephemeral" == "<shared>" ]; then
         if [ "$CREATED_EPHEMERAL" == "true" ]; then
-            echo Cound not create an ephemeral cluster, created a shared cluster instead
+            echo Could not create an ephemeral cluster, created a shared cluster instead
         fi
         echo Using shared cluster $OSHINKO_CLUSTER_NAME
     else
