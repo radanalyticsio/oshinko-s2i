@@ -158,12 +158,6 @@
                                     "fieldPath": "metadata.labels"
                                  },
                                  "path": "labels"
-                              },
-                              {
-                                 "fieldRef": {
-                                    "fieldPath": "metadata.annotations"
-                                 },
-                                 "path": "annotations"
                               }
                            ]
                         },

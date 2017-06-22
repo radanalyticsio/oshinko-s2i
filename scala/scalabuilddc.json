@@ -222,11 +222,43 @@
                            {
                               "name": "OSHINKO_SPARK_DRIVER_CONFIG",
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
+                           },
+                           {
+                              "name": "POD_NAME",
+                              "valueFrom":
+                                {
+                                   "fieldRef":
+                                      {
+                                         "fieldPath": "metadata.name"
+                                      }
+                                }
                            }
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always"
+                        "imagePullPolicy": "Always",
+                        "volumeMounts": [
+                           {
+                              "mountPath": "/etc/podinfo",
+                              "name": "podinfo",
+                              "readOnly": false
+                           }
+                        ]
+                     }
+                  ],
+                  "volumes": [
+                     {
+                        "downwardAPI": {
+                           "items": [
+                              {
+                                 "fieldRef": {
+                                    "fieldPath": "metadata.labels"
+                                 },
+                                 "path": "labels"
+                              }
+                           ]
+                        },
+                        "name": "podinfo"
                      }
                   ],
                   "restartPolicy": "Always",
