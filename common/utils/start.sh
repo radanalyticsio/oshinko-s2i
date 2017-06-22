@@ -228,6 +228,7 @@ NS=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
 CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA --namespace=$NS"
 CREATED_EPHEMERAL=false
 
+get_app_file
 get_deployment
 get_cluster_name
 read_driver_config
