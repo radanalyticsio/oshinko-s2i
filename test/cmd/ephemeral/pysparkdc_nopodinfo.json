@@ -2,7 +2,7 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-pyspark-dc",
+      "name": "oshinko-pyspark-dc-nopodinfo",
       "annotations": {
          "description": "Create a deploymentconfig using an existing pyspark imagestream"
       }
@@ -146,29 +146,7 @@
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always",
-                        "volumeMounts": [
-                           {
-                              "mountPath": "/etc/podinfo",
-                              "name": "podinfo",
-                              "readOnly": false
-                           }
-                        ]
-                     }
-                  ],
-                  "volumes": [
-                     {
-                        "downwardAPI": {
-                           "items": [
-                              {
-                                 "fieldRef": {
-                                    "fieldPath": "metadata.labels"
-                                 },
-                                 "path": "labels"
-                              }
-                           ]
-                        },
-                        "name": "podinfo"
+                        "imagePullPolicy": "Always"
                      }
                   ],
                   "restartPolicy": "Always",

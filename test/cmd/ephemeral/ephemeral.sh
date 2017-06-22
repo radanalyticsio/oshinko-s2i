@@ -4,7 +4,7 @@
 S2I_TEST_IMAGE=${S2I_TEST_IMAGE:-radanalytics-pyspark}
 echo Using local s2i image $S2I_TEST_IMAGE
 
-S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/tmckay/openshift-spark:term}
+S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark:latest}
 echo Using spark image $S2I_TEST_SPARK_IMAGE
 
 S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-1}
@@ -66,9 +66,20 @@ function set_worker_count() {
     fi
 }
 
+function set_label_volume() {
+    # this template mounts labels with downward api
+    DC_TEMP=pysparkdc.json
+}
+
+function no_label_volume() {
+    # this template "forgot" to mount labels with downward api
+    DC_TEMP=pysparkdc_nopodinfo.json
+}
+
 function set_defaults() {
     set_ephemeral
     set_spark_sleep
+    set_label_volume
     clear_app_exit
     clear_test_mode
 }
@@ -76,12 +87,12 @@ function set_defaults() {
 function run_app() {
     # Launch the app using the service account and create a cluster
     if [ "$#" -eq 0 ]; then    
-        os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+        os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/"$DC_TEMP" -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
         os::cmd::try_until_not_text 'oc get rc bob-1 --template="{{index .metadata.labels \"uses-oshinko-cluster\"}}"' "<no value>" $((5*minute))
         GEN_CLUSTER_NAME=$(oc get rc bob-1 --template='{{index .metadata.labels "uses-oshinko-cluster"}}')
     else
         GEN_CLUSTER_NAME=$1
-        os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+        os::cmd::expect_success 'oc new-app --file="$SCRIPT_DIR"/"$DC_TEMP" -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
     fi 
     echo Using cluster name $GEN_CLUSTER_NAME
     MASTER_DC=$GEN_CLUSTER_NAME-m
@@ -161,6 +172,35 @@ function del_dc() {
     os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
 }
 
+function del_dc_no_label_volume() {
+    echo running del_dc
+    set_defaults
+    no_label_volume
+    set_test_mode
+    if [ "$#" -eq 0 ]; then
+        run_app
+    else
+        run_app $1
+    fi
+
+    # Wait until a particular message is seen and the cluster dcs exist
+    os::cmd::try_until_text 'oc logs dc/bob' "Could not create an ephemeral cluster, created a shared cluster instead"  $((5*minute))
+
+    DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
+
+    os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
+    os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
+
+    os::cmd::expect_success 'oc delete dc bob'
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster is not ephemeral'
+
+    os::cmd::try_until_success 'oc get dc "$MASTER_DC"'
+    os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
+
+    cleanup_cluster
+}
+
+
 function del_dc_non_ephemeral() {
     echo running del_dc_non_ephemeral 
     set_defaults
@@ -239,7 +279,7 @@ function del_job_pod() {
     run_job "bob"
 
     DRIVER=$(oc get pod -l app=bob-job --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc log "$DRIVER"' 'Cound not create an ephemeral cluster, created a shared cluster instead' $((5*minute))
+    os::cmd::try_until_text 'oc log "$DRIVER"' 'Could not create an ephemeral cluster, created a shared cluster instead' $((5*minute))
     os::cmd::try_until_text 'oc log "$DRIVER"' "$1" $((5*minute))
     os::cmd::expect_success 'oc delete pod "$DRIVER"'
     os::cmd::try_until_text 'oc log "$DRIVER"' 'cluster not deleted'
@@ -468,13 +508,14 @@ os::cmd::expect_success 'oc policy add-role-to-user admin system:serviceaccount:
 # "oc cluster up", the docker on the host is available from openshift so no special
 # pushes of images have to be done. In the case of a "normal" openshift cluster, the
 # image we'll use for build has to be available as an imagestream.
+# Build with APP_FILE unset to match default template behavior.
 if [ "$#" -eq 0 ]; then
-    os::cmd::expect_success 'oc new-build --name=play "$S2I_TEST_IMAGE" --binary'
+    os::cmd::expect_success 'oc new-build --name=play "$S2I_TEST_IMAGE" --binary -e APP_FILE=""'
 else
     docker login -u $(oc whoami) -p $(oc whoami -t) $1
     docker tag $S2I_TEST_IMAGE $1/$PROJECT/radanalytics-pyspark
     docker push $1/$PROJECT/radanalytics-pyspark
-    os::cmd::expect_success 'oc new-build --name=play --image-stream=radanalytics-pyspark --binary'
+    os::cmd::expect_success 'oc new-build --name=play --image-stream=radanalytics-pyspark --binary -e APP_FILE=""'
 fi
 os::cmd::expect_success 'oc start-build play --from-file="$SCRIPT_DIR"/play'
 
@@ -485,6 +526,11 @@ BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
 os::cmd::try_until_text 'oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}"' "Complete" $((5*minute))
 
 set_worker_count $S2I_TEST_WORKERS
+
+# Run a test in which the template does not set the label volume
+# so that the deployment is unknown
+echo Running dc test without label volume
+del_dc_no_label_volume "novol"
 
 # Run the dc tests with an ephemeral cluster and a name supplied from env
 echo Running dc tests with an ephemeral named cluster

@@ -31,7 +31,7 @@ function delete_ephemeral {
     local appstatus=$1
     local line
     echo "Deleting cluster $OSHINKO_CLUSTER_NAME"
-    line=$($CLI delete $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
+    line=$($CLI delete $OSHINKO_CLUSTER_NAME --app=$DEPLOYMENT --app-status=$1 $CLI_ARGS 2>&1)
     echo $line
 }
 
@@ -114,12 +114,15 @@ function get_cluster_name {
     local lookup
     local output
     if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
-        lookup=$($CLI get --app=$DEPLOYMENT $CLI_ARGS 2>&1)
-        if [ "$?" -eq 0 ]; then
-            output=($(echo $lookup))
-            OSHINKO_CLUSTER_NAME=${output[0]}
-            echo using stored cluster name $OSHINKO_CLUSTER_NAME
-        else
+        if [ -n "${DEPLOYMENT}" ]; then
+            lookup=$($CLI get --app=$DEPLOYMENT $CLI_ARGS 2>&1)
+            if [ "$?" -eq 0 ]; then
+                output=($(echo $lookup))
+                OSHINKO_CLUSTER_NAME=${output[0]}
+                echo using stored cluster name $OSHINKO_CLUSTER_NAME
+            fi
+        fi
+        if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
             OSHINKO_CLUSTER_NAME=cluster-`cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
         fi
     fi
@@ -240,11 +243,11 @@ wait_if_cluster_incomplete
 if [ "$CLI_RES" -ne 0 ]; then
     if [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
         echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster" 
-        APP_FLAG="--app=$POD_NAME --ephemeral"
+        APP_FLAG="--app=$DEPLOYMENT --ephemeral"
         CREATED_EPHEMERAL=true
     else
         echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating shared cluster"
-        APP_FLAG="--app=$POD_NAME"
+        APP_FLAG="--app=$DEPLOYMENT"
     fi
     CLI_LINE=$($CLI create $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $APP_FLAG $CLI_ARGS 2>&1)
     CLI_RES=$?
@@ -304,7 +307,7 @@ else
     fi
     if [ "$ephemeral" == "<shared>" ]; then
         if [ "$CREATED_EPHEMERAL" == "true" ]; then
-            echo Cound not create an ephemeral cluster, created a shared cluster instead
+            echo Could not create an ephemeral cluster, created a shared cluster instead
         fi
         echo Using shared cluster $OSHINKO_CLUSTER_NAME
     else
