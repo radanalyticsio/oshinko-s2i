@@ -1,6 +1,10 @@
 sudo: required
 dist: trusty
 language: go
+env:
+  global:
+    - DOCKER_VERSION=1.12.3-0~trusty
+    - DOCKER_COMPOSE_VERSION=1.6.3
 ## home folder is /home/travis/gopath/src/github.com/radanalyticsio/oshinko-s2i
 services:
 - docker
