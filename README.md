@@ -6,6 +6,8 @@
 This is a place to put s2i images and utilities for spark application builders for openshift
 Look for additional README files in the subdirectories for more detail.
 
+Add a line to the readme to create a fake PR
+
 ## common ##
 
 Contains:
