@@ -148,7 +148,7 @@ function del_dc() {
     fi
 
     # Wait until a particular message is seen and the cluster dcs exist
-    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((10*minute))
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
@@ -174,7 +174,7 @@ function del_dc_non_ephemeral() {
     fi
 
     # Wait until a particular message is seen and the cluster pods exist
-    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((10*minute))
     DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
 
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
@@ -203,7 +203,7 @@ function app_completed_ephemeral() {
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
-    os::cmd::try_until_text 'oc logs dc/bob' 'Deleting cluster' $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' 'Deleting cluster' $((10*minute))
     os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
     os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
 
@@ -221,7 +221,7 @@ function app_completed_cluster_remains() {
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
-    os::cmd::try_until_text 'oc logs dc/bob' 'cluster is not ephemeral' $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' 'cluster is not ephemeral' $((10*minute))
     os::cmd::try_until_text 'oc logs dc/bob' 'cluster not deleted'
 
     # Cluster dcs should still be there
@@ -240,7 +240,7 @@ function del_job_pod() {
 
     DRIVER=$(oc get pod -l app=bob-job --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_text 'oc log "$DRIVER"' 'Cound not create an ephemeral cluster, created a shared cluster instead' $((5*minute))
-    os::cmd::try_until_text 'oc log "$DRIVER"' "$1" $((5*minute))
+    os::cmd::try_until_text 'oc log "$DRIVER"' "$1" $((10*minute))
     os::cmd::expect_success 'oc delete pod "$DRIVER"'
     os::cmd::try_until_text 'oc log "$DRIVER"' 'cluster not deleted'
 
@@ -251,7 +251,7 @@ function del_job_pod() {
 function del_pod() {
     echo running del_pod with cluster $GEN_CLUSTER_NAME
     # Wait until a particular message is seen and the cluster pods exist
-    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((10*minute))
    
     # Have to guarantee that the pods are there and not just the dcs because we're going to get their names next ....
     os::cmd::try_until_success 'oc get pod -l deploymentconfig="$MASTER_DC" --template="{{index .items 0 \"metadata\" \"name\"}}"' $((2*minute))
@@ -284,7 +284,7 @@ function del_pod_completed() {
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
     # Wait until a particular message is seen and the cluster pods exist
-    os::cmd::try_until_text 'oc logs dc/bob' 'Deleting cluster' $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' 'Deleting cluster' $((10*minute))
 
     # Because the app was allowed to complete, the cluster should be deleted
     os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
@@ -298,7 +298,7 @@ function del_pod_completed() {
     # In a case with a generated cluster name we don't know the new name, so
     # just look for spark start
     os::cmd::try_until_text 'oc logs dc/bob' "Didn't find cluster"
-    os::cmd::try_until_text 'oc logs dc/bob' "Running Spark" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' "Running Spark" $((10*minute))
 }
 
 function pod_tests() {
@@ -339,7 +339,7 @@ function pod_test_non_ephemeral() {
     set_test_mode
     run_app $1
 
-    os::cmd::try_until_text 'oc logs dc/bob' "Running Spark" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/bob' "Running Spark" $((10*minute))
 
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
@@ -419,7 +419,7 @@ function scaled_app_completed_cluster_remains() {
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
     DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Running Spark' $((5*minute))
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Running Spark' $((10*minute))
     os::cmd::expect_success 'oc scale dc/bob --replicas=2'
     	
     os::cmd::try_until_text 'oc logs "$DRIVER"' 'Deleting cluster' $((5*minute))
@@ -443,7 +443,7 @@ function redeploy_cluster_removed() {
     os::cmd::try_until_failure 'oc get pod bob-1-deploy'
     os::cmd::expect_success 'oc deploy dc/bob --latest'
 
-    os::cmd::try_until_text 'oc logs "$DRIVER"' "Deleting cluster" $((5*minute))
+    os::cmd::try_until_text 'oc logs "$DRIVER"' "Deleting cluster" $((10*minute))
     os::cmd::try_until_failure 'oc get pod "$DRIVER"'
 
     DRIVER=$(oc get pod -l deployment=bob-2 --template='{{index .items 0 "metadata" "name"}}')
