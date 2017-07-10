@@ -4,7 +4,7 @@
 S2I_TEST_IMAGE=${S2I_TEST_IMAGE:-radanalytics-pyspark}
 echo Using local s2i image $S2I_TEST_IMAGE
 
-S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/tmckay/openshift-spark:term}
+S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark:latest}
 echo Using spark image $S2I_TEST_SPARK_IMAGE
 
 S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-1}
