@@ -1,0 +1,35 @@
+#!/bin/bash
+SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
+
+# Define a bunch of functions and set a bunch of variables
+source $SCRIPT_DIR/../common
+set_worker_count $S2I_TEST_WORKERS
+
+function ephemeral_app_completed_scaled_driver() {
+    set_defaults
+    clear_spark_sleep
+    run_app "bob"
+
+    os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
+    os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
+
+    DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Running Spark' $((5*minute))
+    os::cmd::expect_success 'oc scale dc/bob --replicas=2'
+
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Deleting cluster' $((5*minute))
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'driver replica count > 0'
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster not deleted'
+
+    cleanup_app wait_for_cluster_del
+}
+
+os::test::junit::declare_suite_start "$MY_SCRIPT"
+
+# Make the S2I test image if it's not already in the project
+make_image
+
+echo ephemeral_app_completed_scaled_driver
+ephemeral_app_completed_scaled_driver
+
+os::test::junit::declare_suite_end

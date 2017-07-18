@@ -1,0 +1,187 @@
+#!/bin/bash
+S2I_TEST_INTEGRATED_REGISTRY=${S2I_TEST_INTEGRATED_REGISTRY:-}
+if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+    echo Using integrated registry $S2I_TEST_INTEGRATED_REGISTRY
+else
+    echo Not using integrated registry
+fi
+
+S2I_TEST_IMAGE=${S2I_TEST_IMAGE:-radanalytics-pyspark}
+echo Using local s2i image $S2I_TEST_IMAGE
+
+S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/tmckay/openshift-spark:term}
+echo Using spark image $S2I_TEST_SPARK_IMAGE
+
+S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-1}
+echo Using $S2I_TEST_WORKERS workers
+
+PROJECT=$(oc project -q)
+MY_SCRIPT=`basename "$0"`
+
+COMMON_DIR="$SCRIPT_DIR/.."
+source "${COMMON_DIR}/../../hack/lib/init.sh"
+	
+function set_app_exit {
+    DO_EXIT="true"
+}
+
+function clear_app_exit() {
+    DO_EXIT="false"
+}
+
+function set_long_running {
+    DEL_CLUSTER="false"
+}
+
+function set_ephemeral() {
+    DEL_CLUSTER="true"
+}
+
+function set_spark_sleep() {
+    SLEEP=300
+}
+
+function clear_spark_sleep() {
+    SLEEP=0
+}
+
+function set_test_mode() {
+    # we want the signal handler to delay so that we can read the pod logs after the pod is deleted   
+    DO_TEST="true"
+}
+
+function clear_test_mode() {
+    DO_TEST="false"
+}
+
+function init_config_map() {
+    set +e
+    oc delete configmap clusterconfig masterconfig workerconfig
+    set -e
+    oc create configmap masterconfig --from-file=$COMMON_DIR/masterconfig
+    oc create configmap workerconfig --from-file=$COMMON_DIR/workerconfig
+    oc create configmap clusterconfig --from-literal=workercount=$WORKER_COUNT \
+                                      --from-literal=sparkimage=$S2I_TEST_SPARK_IMAGE \
+                                      --from-literal=sparkmasterconfig=masterconfig \
+                                      --from-literal=sparkworkerconfig=workerconfig
+}
+
+function set_worker_count() {
+    if [ "${WORKER_COUNT:-0}" -ne "$1" ]; then
+        WORKER_COUNT=$1
+        init_config_map
+    fi
+}
+
+function set_defaults() {
+    set_ephemeral
+    set_spark_sleep
+    clear_app_exit
+    clear_test_mode
+}
+
+function run_app() {
+    # Launch the app using the service account and create a cluster
+    if [ "$#" -eq 0 ]; then    
+        os::cmd::expect_success 'oc new-app --file="$COMMON_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+        os::cmd::try_until_not_text 'oc get rc bob-1 --template="{{index .metadata.labels \"uses-oshinko-cluster\"}}"' "<no value>" $((5*minute))
+        GEN_CLUSTER_NAME=$(oc get rc bob-1 --template='{{index .metadata.labels "uses-oshinko-cluster"}}')
+        echo Using cluster name $GEN_CLUSTER_NAME
+    else
+        GEN_CLUSTER_NAME=$1
+        os::cmd::expect_success 'oc new-app --file="$COMMON_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+    fi 
+    MASTER_DC=$GEN_CLUSTER_NAME-m
+    WORKER_DC=$GEN_CLUSTER_NAME-w
+}
+
+function run_job() {
+    # Launch the app using the service account and create a cluster
+    IMAGE_NAME=$(oc get is play --template="{{index .status \"dockerImageRepository\"}}")
+    GEN_CLUSTER_NAME=$1
+    os::cmd::expect_success 'oc new-app --file="$COMMON_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob-job -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
+    echo Using cluster name $GEN_CLUSTER_NAME
+    MASTER_DC=$GEN_CLUSTER_NAME-m
+    WORKER_DC=$GEN_CLUSTER_NAME-w
+}
+
+function cleanup_app() {
+
+    echo cleanup_app called
+    os::cmd::expect_success 'oc scale dc/bob --replicas=0'
+    os::cmd::try_until_text 'oc get pods -l deploymentconfig=bob' 'No resources found'
+    os::cmd::expect_success 'oc delete dc/bob'
+    if [ "$#" -eq 1 ]; then
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
+    fi
+}
+
+function cleanup_cluster() {
+    echo cleanup_cluster called with cluster $GEN_CLUSTER_NAME
+
+    # We get tricky here and just use try_until_failure for components that
+    # might not actually exist, depending on what we've been doing
+    # If present, they'll be deleted and the next call will fail
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui'
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"'
+    os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"'
+    os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"'
+    if [ "$#" -eq 0 ]; then
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
+    fi
+
+} 
+
+function cleanup_job() {
+    echo cleanup_job called
+    os::cmd::expect_success 'oc delete job bob-job'
+    os::cmd::try_until_text 'oc get pods -l app=bob-job' 'No resources found'
+}
+
+function make_image() {
+    set +e
+    oc get buildconfig play > /dev/null
+    res=$?
+    set -e
+    if [ "$res" -ne 0 ]; then
+        # The ip address of the internal registry may be set to support running against
+        # an openshift that is not "oc cluster up". In the case of "oc cluster up", the docker
+        # on the host is available from openshift so no special pushes of images have to be done.
+        # In the case of a "normal" openshift cluster, the image we'll use for build has to be
+        # available as an imagestream.
+        if [ -z "${S2I_TEST_INTEGRATED_REGISTRY}" ]; then
+            os::cmd::expect_success 'oc new-build --name=play "$S2I_TEST_IMAGE" --binary'
+        else
+            docker login -u $(oc whoami) -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
+            docker tag ${S2I_TEST_IMAGE} ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/radanalytics-pyspark
+            docker push ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/radanalytics-pyspark
+            os::cmd::expect_success 'oc new-build --name=play --image-stream=radanalytics-pyspark --binary'
+        fi
+    fi
+    BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
+    set +e
+    oc get build play-$BUILDNUM > /dev/null
+    res=$?
+    set -e
+    if [ "$res" -ne 0 ]; then
+        echo "Buildconfig but no build found, starting..."
+        os::cmd::expect_success 'oc start-build play --from-file="$COMMON_DIR"/play'
+        BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
+    else
+        # Make sure that the build is complete. If not, start another one.
+	phase=$(oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}")
+        if [ "$phase" != "Running" -a "$phase" != "Complete" ]; then
+            echo "Build phase is $phase, restarting..."
+            os::cmd::expect_success 'oc start-build play --from-file="$COMMON_DIR"/play'
+            BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
+        fi
+    fi
+    # Wait for the build to finish
+    os::cmd::try_until_text 'oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}"' "Complete" $((5*minute))
+}
