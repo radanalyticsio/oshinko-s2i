@@ -155,8 +155,11 @@ function make_image() {
         # on the host is available from openshift so no special pushes of images have to be done.
         # In the case of a "normal" openshift cluster, the image we'll use for build has to be
         # available as an imagestream.
-        $(docker history $S2I_TEST_IMAGE)
-        if [ "$?" -ne 0 ]; then
+        set +e
+        tmp=$(docker history $S2I_TEST_IMAGE)
+        res=$?
+        set -e
+        if [ "$res" -ne 0 ]; then
             echo Uh oh, image $S2I_TEST_IMAGE does not exist
             return 1
         fi
