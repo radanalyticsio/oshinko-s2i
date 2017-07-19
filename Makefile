@@ -26,6 +26,7 @@ $(alldirs):
 # with 'oc cluster up'
 test-e2e: 
 	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE) make build
-	test/e2e/run.sh
+	df -h
+	test/e2e/run.sh incomplete
 
 .PHONY: build clean push $(alldirs) test-cmd

@@ -155,6 +155,11 @@ function make_image() {
         # on the host is available from openshift so no special pushes of images have to be done.
         # In the case of a "normal" openshift cluster, the image we'll use for build has to be
         # available as an imagestream.
+        $(docker history $S2I_TEST_IMAGE)
+        if [ "$?" -ne 0 ]; then
+            echo Uh oh, image $S2I_TEST_IMAGE does not exist
+            return 1
+        fi
         if [ -z "${S2I_TEST_INTEGRATED_REGISTRY}" ]; then
             os::cmd::expect_success 'oc new-build --name=play "$S2I_TEST_IMAGE" --binary'
         else
@@ -169,19 +174,21 @@ function make_image() {
     oc get build play-$BUILDNUM > /dev/null
     res=$?
     set -e
-    if [ "$res" -ne 0 ]; then
-        echo "Buildconfig but no build found, starting..."
-        os::cmd::expect_success 'oc start-build play --from-file="$COMMON_DIR"/play'
-        BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
-    else
+    if [ "$res" -eq 0 ]; then
         # Make sure that the build is complete. If not, start another one.
 	phase=$(oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}")
         if [ "$phase" != "Running" -a "$phase" != "Complete" ]; then
             echo "Build phase is $phase, restarting..."
-            os::cmd::expect_success 'oc start-build play --from-file="$COMMON_DIR"/play'
-            BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
+            res=1
         fi
+    else
+        echo "Buildconfig but no build found, starting..."
+    fi
+    if [ "$res" -ne 0 ]; then
+        os::cmd::expect_success 'oc start-build play --from-file="$COMMON_DIR"/play'
+        BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
     fi
     # Wait for the build to finish
+    oc logs -f buildconfig/play
     os::cmd::try_until_text 'oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}"' "Complete" $((5*minute))
 }
