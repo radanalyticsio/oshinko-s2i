@@ -73,7 +73,7 @@
    ],
    "objects": [
       {
-          "apiVersion": "extensions/v1beta1",
+          "apiVersion": "batch/v1",
           "kind": "Job",
           "metadata": {
               "name": "${APPLICATION_NAME}"
@@ -81,11 +81,6 @@
           "spec": {
               "completions": "${COMPLETIONS}",
               "parallelism": 1,
-              "selector": {
-                  "matchLabels": {
-                      "app": "${APPLICATION_NAME}"
-                  }
-              },
               "template": {
                   "metadata": {
                       "labels": {
