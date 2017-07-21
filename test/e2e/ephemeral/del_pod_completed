@@ -1,0 +1,37 @@
+#!/bin/bash
+
+function del_pod_completed() {
+    os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
+    os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
+
+    os::cmd::try_until_text 'oc logs dc/bob' 'Deleting cluster' $((5*minute))
+
+    # Because the app was allowed to complete, the cluster should be deleted
+    os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
+    os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
+
+    # Delete the driver pod and check that a new driver is started which recreates the cluster
+    DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::expect_success 'oc delete pod "$DRIVER"'
+    os::cmd::try_until_failure 'oc get pod "$DRIVER"'
+
+    # In a case with a generated cluster name we don't know the new name, so
+    # just look for spark start
+    os::cmd::try_until_text 'oc logs dc/bob' "Didn't find cluster"
+    os::cmd::try_until_text 'oc logs dc/bob' "Running Spark" $((5*minute))
+}
+
+
+function pod_completed_tests() {
+    # If the app has completed, the cluster will be deleted and restarting the app should create a new one.
+    set_defaults
+    clear_spark_sleep
+    if [ "$#" -eq 0 ]; then
+        run_app
+    else
+        run_app $1
+    fi
+    del_pod_completed
+
+    cleanup_app wait_for_cluster_del
+}
