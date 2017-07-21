@@ -1,0 +1,59 @@
+#!/bin/bash
+
+function del_pod() {
+    # Wait until a particular message is seen and the cluster pods exist
+    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((5*minute))
+
+    # Have to guarantee that the pods are there and not just the dcs because we're going to get their names next ....
+    os::cmd::try_until_success 'oc get pod -l deploymentconfig="$MASTER_DC" --template="{{index .items 0 \"metadata\" \"name\"}}"' $((2*minute))
+    os::cmd::try_until_success 'oc get pod -l deploymentconfig="$WORKER_DC" --template="{{index .items 0 \"metadata\" \"name\"}}"'
+
+    # Record the names of the pods for driver, master, and worker
+    DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
+    WORKER=$(oc get pod -l deploymentconfig=$WORKER_DC --template='{{index .items 0 "metadata" "name"}}')
+    MASTER=$(oc get pod -l deploymentconfig=$MASTER_DC --template='{{index .items 0 "metadata" "name"}}')
+
+    # Delete the driver pod and check that the master and worker pods do not disappear.
+    # As long as the repl count has been left at 1, deleting the driver pod should cause
+    # a respin of the driver against the same cluster.
+    # Check that the old pod went away and that dc logs show the driver waiting for the
+    # spark master without creating a cluster.
+    os::cmd::expect_success 'oc delete pod "$DRIVER"'
+    os::cmd::try_until_failure 'oc get pod "$DRIVER"'
+
+    # We should see a respin here with the "found cluster" message
+    os::cmd::try_until_text 'oc logs dc/bob' "Found cluster" $((5*minute))
+
+    # Same master and worker pods should still exist
+    os::cmd::expect_success 'oc get pod "$MASTER"'
+    os::cmd::expect_success 'oc get pod "$WORKER"'
+}
+
+function del_pod_tests() {
+    # In these cases we delete the pod at various points before the application completes.
+    # If the app has not completed, the signal handler will leave the cluster.
+    # We re-use the same app and the same cluster
+
+    set_defaults
+    # If there's an arg it's a cluster name
+    if [ "$#" -eq 0 ]; then
+        run_app
+    else
+        run_app $1
+    fi
+
+    echo del_pod \"Didn\'t find cluster\"
+    del_pod "Didn't find cluster"
+
+    echo del_pod '"Waiting for spark master"'
+    del_pod "Waiting for spark master"
+
+    echo del_pod '"Running Spark"'
+    del_pod "Running Spark"
+
+    echo del_pod '"SparkContext: Starting job"'
+    del_pod "SparkContext: Starting job"
+
+    cleanup_app wait_for_cluster_del
+    return
+}
