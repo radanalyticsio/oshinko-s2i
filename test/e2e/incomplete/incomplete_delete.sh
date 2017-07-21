@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Define a bunch of functions and set a bunch of variables
+TEST_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/test/e2e')
+source $TEST_DIR/common
+
 function wait_for_incomplete_delete {
     echo running wait_for_incomplete_delete
     set_defaults
@@ -26,10 +30,6 @@ function wait_for_incomplete_delete {
     cleanup_cluster
 }
 
-SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
-
-# Define a bunch of functions and set a bunch of variables
-source $SCRIPT_DIR/../common
 set_worker_count $S2I_TEST_WORKERS
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"

@@ -1,8 +1,9 @@
 #!/bin/bash
-SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 
 # Define a bunch of functions and set a bunch of variables
-source $SCRIPT_DIR/../common
+TEST_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/test/e2e')
+source $TEST_DIR/common
+
 set_worker_count $S2I_TEST_WORKERS
 
 function ephemeral_app_completed_scaled_driver() {
@@ -29,7 +30,6 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 # Make the S2I test image if it's not already in the project
 make_image
 
-echo ephemeral_app_completed_scaled_driver
 ephemeral_app_completed_scaled_driver
 
 os::test::junit::declare_suite_end

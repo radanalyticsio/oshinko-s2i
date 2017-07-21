@@ -1,10 +1,11 @@
 #!/bin/bash
-SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
-echo script dir is $SCRIPT_DIR
 
 # Define a bunch of functions and set a bunch of variables
-source $SCRIPT_DIR/../common
+TEST_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/test/e2e')
+SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
+source $TEST_DIR/common
 source $SCRIPT_DIR/del_pod_non_ephemeral
+
 set_worker_count $S2I_TEST_WORKERS
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"

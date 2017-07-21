@@ -1,5 +1,8 @@
 #!/bin/bash
-SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
+
+# Define a bunch of functions and set a bunch of variables
+TEST_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/test/e2e')
+source $TEST_DIR/common
 
 function del_job_pod() {
     set_defaults
@@ -16,8 +19,6 @@ function del_job_pod() {
     cleanup_cluster
 }
 
-# Define a bunch of functions and set a bunch of variables
-source $SCRIPT_DIR/../common
 set_worker_count $S2I_TEST_WORKERS
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"

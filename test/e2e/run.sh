@@ -46,7 +46,7 @@ function find_tests() {
 
 orig_project=$(oc project -q)
 
-dirs=($(find "${OS_ROOT}/test/e2e/" -mindepth 1 -type d))
+dirs=($(find "${OS_ROOT}/test/e2e/" -mindepth 1 -type d -not -path "./resources*"))
 for dir in "${dirs[@]}"; do
 
     # Get the list of test files in the current directory

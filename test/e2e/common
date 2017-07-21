@@ -9,7 +9,7 @@ fi
 S2I_TEST_IMAGE=${S2I_TEST_IMAGE:-radanalytics-pyspark}
 echo Using local s2i image $S2I_TEST_IMAGE
 
-S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/tmckay/openshift-spark:term}
+S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark}
 echo Using spark image $S2I_TEST_SPARK_IMAGE
 
 S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-1}
@@ -18,8 +18,12 @@ echo Using $S2I_TEST_WORKERS workers
 PROJECT=$(oc project -q)
 MY_SCRIPT=`basename "$0"`
 
-COMMON_DIR="$SCRIPT_DIR/.."
-source "${COMMON_DIR}/../../hack/lib/init.sh"
+# RESOURCE_DIR will be the directory containing this file
+RESOURCE_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)/resources
+
+# We count on this file being somewhere below oshinko-s2i, and
+# the location of hack/lib under oshinko-s2i
+source $(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i')/hack/lib/init.sh
 	
 function set_app_exit {
     DO_EXIT="true"
@@ -58,8 +62,8 @@ function init_config_map() {
     set +e
     oc delete configmap clusterconfig masterconfig workerconfig
     set -e
-    oc create configmap masterconfig --from-file=$COMMON_DIR/masterconfig
-    oc create configmap workerconfig --from-file=$COMMON_DIR/workerconfig
+    oc create configmap masterconfig --from-file=$RESOURCE_DIR/masterconfig
+    oc create configmap workerconfig --from-file=$RESOURCE_DIR/workerconfig
     oc create configmap clusterconfig --from-literal=workercount=$WORKER_COUNT \
                                       --from-literal=sparkimage=$S2I_TEST_SPARK_IMAGE \
                                       --from-literal=sparkmasterconfig=masterconfig \
@@ -83,13 +87,13 @@ function set_defaults() {
 function run_app() {
     # Launch the app using the service account and create a cluster
     if [ "$#" -eq 0 ]; then    
-        os::cmd::expect_success 'oc new-app --file="$COMMON_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
         os::cmd::try_until_not_text 'oc get rc bob-1 --template="{{index .metadata.labels \"uses-oshinko-cluster\"}}"' "<no value>" $((5*minute))
         GEN_CLUSTER_NAME=$(oc get rc bob-1 --template='{{index .metadata.labels "uses-oshinko-cluster"}}')
         echo Using cluster name $GEN_CLUSTER_NAME
     else
         GEN_CLUSTER_NAME=$1
-        os::cmd::expect_success 'oc new-app --file="$COMMON_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
     fi 
     MASTER_DC=$GEN_CLUSTER_NAME-m
     WORKER_DC=$GEN_CLUSTER_NAME-w
@@ -99,7 +103,7 @@ function run_job() {
     # Launch the app using the service account and create a cluster
     IMAGE_NAME=$(oc get is play --template="{{index .status \"dockerImageRepository\"}}")
     GEN_CLUSTER_NAME=$1
-    os::cmd::expect_success 'oc new-app --file="$COMMON_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob-job -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
+    os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob-job -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
     echo Using cluster name $GEN_CLUSTER_NAME
     MASTER_DC=$GEN_CLUSTER_NAME-m
     WORKER_DC=$GEN_CLUSTER_NAME-w
@@ -188,7 +192,7 @@ function make_image() {
         echo "Buildconfig but no build found, starting..."
     fi
     if [ "$res" -ne 0 ]; then
-        os::cmd::expect_success 'oc start-build play --from-file="$COMMON_DIR"/play'
+        os::cmd::expect_success 'oc start-build play --from-file="$RESOURCE_DIR"/play'
         BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
         oc logs -f buildconfig/play
     fi
