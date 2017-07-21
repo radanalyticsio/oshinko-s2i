@@ -1,0 +1,28 @@
+#!/bin/bash
+
+function del_dc_non_ephemeral() {
+    set_defaults
+    set_test_mode
+    set_long_running
+    # If there are 2 args the second is a cluster name
+    if [ "$#" -eq 1 ]; then
+        run_app
+    else
+        run_app $2
+    fi
+
+    # Wait until a particular message is seen and the cluster pods exist
+    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((5*minute))
+    DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
+
+    os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
+    os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
+
+    os::cmd::expect_success 'oc delete dc bob'
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster is not ephemeral'
+
+    os::cmd::try_until_success 'oc get dc "$MASTER_DC"'
+    os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
+
+    cleanup_cluster
+}

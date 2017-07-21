@@ -34,7 +34,6 @@ export OS_ROOT
 cd "${OS_ROOT}"
 
 library_files=( $( find "${OS_ROOT}/hack/lib" -type f -name '*.sh' -not -path '*/hack/lib/init.sh' ) )
-echo $library_files
 # TODO(skuzmets): Move the contents of the following files into respective library files.
 library_files+=( "${OS_ROOT}/hack/common.sh" )
 library_files+=( "${OS_ROOT}/hack/util.sh" )

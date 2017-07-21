@@ -1,45 +1,150 @@
-# OpenShift Command-Line Integration Test Suite
+# oshinko-s2i end-to-end test suite (based on OpenShift Command-Line Integration Test Suite)
 
-This document describes how OpenShift developers should interact with the OpenShift command-line integration test suite.
+The oshinko-s2i end-to-end test suite is built on a subset of the OpenShift Command-Line Integration Test Suite.
+In particular, it uses the `os::cmd` utility functions described below to determine success or failure of
+test commands.
+
+It uses its own test runner in `run.sh` which is based on the test runner `hack/test-cmd.sh` in
+the OpenShift Command-Line Test Suite. However, `run.sh` is different in a number of ways:
+
+* it assumes that the tests are written to run against an existing, fully functioning OpenShift instance and does
+  not attempt to spin up an instance on its own. This is the biggest difference. The instance may be a full
+  OpenShift install or it may be the result of `oc cluster up` (see below).
+* it descends through directories under `test/e2e` one at a time
+* a new project is created at each directory level
+* all *.sh files in the directory (filtered by an optional regex) are run in the same project
+* it does not do anything fancy regarding log preservation, integration with junit, etc beyond
+  the simple declaration of the beginning and end of each test suite
 
 ## Test Structure
 
-The script to run the entire suite lives in [`hack/test-cmd.sh`](./../../hack/test-cmd.sh). All of the test suites that make up
-the parent suite live in `test/cmd`, and are divided by functional area. 
+The script to run the entire suite lives in `test/e2e/run.sh`. All of the test suites that make up
+the parent suite live in `test/e2e`, and are divided into subdirectories by functional area.
 
-## Running Tests
+Common functions or environment variables used across test suites should be defined in text files in `test/e2e`
+and sourced from test scripts. For example `test/e2e/common` defines some common functions.
+
+Common resources should be put in `test/e2e/resources`; this subdirectory will be ignored
+by `run.sh` when it looks for test scripts.
+
+## Important environment variables
+
+The `test/e2e/common` file reads or sets several environment variables:
+
+``S2I_TEST_INTEGRATED_REGISTRY``
+
+  This is the IP address of the integrated registry and it needs to be set
+  when running tests against a full OpenShift instance. It does not need to
+  be set when running against an instance created with "oc cluster up".
+
+```sh
+$ S2I_TEST_INTEGRATED_REGISTRY=172.123.456.89:5000 test/e2e/run.sh
+```
+
+``S2I_TEST_IMAGE`` (default is radanalytics-pyspark)
+
+  This is the name of a pyspark S2I image in the local docker repository that the
+  tests will use. These tests look at shared functionality across the S2I
+  images (Java, Scala, Python) and the pyspark image was chosen for the tests.
+
+  Since the point is to test changes in the git repository, it is required that
+  a local pyspark S2I image be built for the tests (make will do this for
+  you, see below)
+ 
+``S2I_TEST_SPARK_IMAGE`` (default is docker.io/radanalyticsio/openshift-spark)
+
+  The Spark image that will be used for generated clusters
+
+``S2I_TEST_WORKERS`` (default is 1)
+
+  Number of workers in generated clusters
+
+``MY_SCRIPT``
+
+  Convenience variable set in `test/e2e/common`. This is the base name of the currently
+  running script and it can be used in test code. The current tests use this to set the
+  test suite identifier.
+
+## Running Tests with `make`
+
+The `test-e2e` make target can be run from the `oshinko-s2i` root directory.
+It will build a new local pyspark S2I image and then run all of the end-to-end tests
+using that image.
+
+To run against an OpenShift instance created with "oc cluster up"
+
+```
+$ make test-e2e
+```
+
+To run against a full OpenShift instance, set the registry value
+
+```sh
+$ S2I_TEST_INTEGRATED_REGISTRY=<registry ip> make test-e2e
+```
+
+To build and use a local pyspark image with a name differrent than
+then default, use the **S2I_TEST_IMAGE** env var:
+
+```sh
+$ S2I_TEST_IMAGE=my_test_image make test-e2e
+```
+
+## Running Tests with run.sh
+
+Tests may be run using `run.sh` instead of make but you must have
+a local pyspark S2I image built first.
 
 To run the full test suite, use:
 ```sh
-$ hack/test-cmd.sh
-``` 
+$ test/e2e/run.sh
+```
+
+To run against a full OpenShift instance, set the registry value
+
+```sh
+$ S2I_TEST_INTEGRATED_REGISTRY=<registry ip> test/e2e/run.sh
+```
 
 To run a single test suite, use:
 ```sh
-$ hack/test-cmd.sh <name>
+$ test/e2e/run.sh <name>
 ```
 
 To run a set of suites matching some regex, use:
 ```sh
-$ hack/test-cmd.sh <regex>
+$ test/e2e/run.sh <regex>
+```
+To use a local pyspark image with a name differrent than
+then default, use the **S2I_TEST_IMAGE** env var:
+
+```sh
+$ S2I_TEST_IMAGE=my_test_image test/e2e/run.sh
 ```
 
-Any test suite can also be run if an OpenShift instance is running and you are the cluster admin by running the scripts inside of
-`test/cmd`. The scripts will use the current project. All scripts assume cluster-admin privilege.
+Any test can also be run in the current project by invoking it directly. Note, this assumes
+that the oshinko serviceaccount has been created and given edit privileges in the current
+project.  For example:
 
+```sh
+$ test/e2e/ephemeral/non_ephemeral_app_completed.sh 
+```
 
 ## Adding Tests
 
-Most new tests belong in a specific suite under `test/cmd`. The only tests that belong in the parent suite (`hack/test-cmd.sh`) are
-those that test functionality that does not depend on being logged in and having a project. For instance, some of the tests that live
-there now are creating configuration files, logging in and logging out, and starting the master as an instance of Atomic Enterprise.
+New end-to-end tests should be added in specific subdirectories under `test/e2e`, grouped by functionality.
 
-New suites can be added by placing scripts in `test/cmd`.
+For example, to add a directory of tests that exercise the oshinko S2I templates you might add `test/e2e/templates`.
+Since the test runner is oriented toward subdirectories, you might create a subdirectory for the java template
+tests in `test/e2e/templates/java`.
 
-## `os::cmd` Utility Functions
+Any non end-to-end tests should be added under `test` in a different subdirectory. They should be given their own make target
+and perhaps their own test runner. The `e2e` subdirectory is specifically for live end-to-end tests against a full
+OpenShift instance.
 
-The `os::cmd` namespace provides a number of utility functions for writing CLI integration tests. All tests in all CLI test suites
-must use these functions, except for some exceptions mentioned later. 
+## `os::cmd` Utility Functions (text based on the OpenShift CLI Integration Test Suite readme)
+
+The `os::cmd` namespace provides a number of utility functions for writing integration tests.
 
 The utility functions have two major functions - expecting a specific exit code from the command to be tested, and expecting something
 about the output of that command to `stdout` and/or `stderr`. There are three classes of utility functions - those that expect "success"
