@@ -103,7 +103,7 @@ for dir in "${dirs[@]}"; do
 done
 
 oc project $orig_project
-if [ -n "${failed:-}" ]; then
+if [ "$failed" == true ]; then
     echo "One or more tests failed:"
     echo -e $failed_list'\n'
     exit 1
