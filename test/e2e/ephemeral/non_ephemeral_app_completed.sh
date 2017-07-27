@@ -10,18 +10,13 @@ function non_ephemeral_app_completed() {
     set_defaults
     set_long_running
     clear_spark_sleep
-    # If there is an arg the second is a cluster name
-    if [ "$#" -eq 0 ]; then
-        run_app
-    else
-        run_app $1
-    fi
+    run_app $1
 
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
-    os::cmd::try_until_text 'oc logs dc/bob' 'cluster is not ephemeral' $((5*minute))
-    os::cmd::try_until_text 'oc logs dc/bob' 'cluster not deleted'
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster is not ephemeral' $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster not deleted'
 
     # Cluster dcs should still be there
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"'
@@ -36,10 +31,10 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 # Make the S2I test image if it's not already in the project
 make_image
 
-echo 'non_ephemeral_app_completed "bob"'
-non_ephemeral_app_completed "bob"
+echo ++ non_ephemeral_app_completed true
+non_ephemeral_app_completed true
 
-echo 'non_ephemeral_app_completed'
-non_ephemeral_app_completed
+echo ++ non_ephemeral_app_completed false
+non_ephemeral_app_completed false
 
 os::test::junit::declare_suite_end

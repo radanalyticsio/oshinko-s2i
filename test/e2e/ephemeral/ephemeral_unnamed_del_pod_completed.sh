@@ -13,6 +13,6 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 # Make the S2I test image if it's not already in the project
 make_image
 
-pod_completed_tests
+pod_completed_tests false
 
 os::test::junit::declare_suite_end

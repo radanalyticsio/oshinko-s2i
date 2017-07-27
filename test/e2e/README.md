@@ -59,6 +59,11 @@ $ S2I_TEST_INTEGRATED_REGISTRY=172.123.456.89:5000 test/e2e/run.sh
 
   Number of workers in generated clusters
 
+``S2I_SAVE_FAIL`` (default is false)
+
+  If this is set to true, run.sh will not delete a project for which there are
+  test failures. This allows left over objects to be inspected for clues.
+
 ``MY_SCRIPT``
 
   Convenience variable set in `test/e2e/common`. This is the base name of the currently

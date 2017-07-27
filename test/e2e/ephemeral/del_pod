@@ -2,14 +2,14 @@
 
 function del_pod() {
     # Wait until a particular message is seen and the cluster pods exist
-    os::cmd::try_until_text 'oc logs dc/bob' "$1" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' "$1" $((5*minute))
 
     # Have to guarantee that the pods are there and not just the dcs because we're going to get their names next ....
     os::cmd::try_until_success 'oc get pod -l deploymentconfig="$MASTER_DC" --template="{{index .items 0 \"metadata\" \"name\"}}"' $((2*minute))
     os::cmd::try_until_success 'oc get pod -l deploymentconfig="$WORKER_DC" --template="{{index .items 0 \"metadata\" \"name\"}}"'
 
     # Record the names of the pods for driver, master, and worker
-    DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
     WORKER=$(oc get pod -l deploymentconfig=$WORKER_DC --template='{{index .items 0 "metadata" "name"}}')
     MASTER=$(oc get pod -l deploymentconfig=$MASTER_DC --template='{{index .items 0 "metadata" "name"}}')
 
@@ -22,7 +22,7 @@ function del_pod() {
     os::cmd::try_until_failure 'oc get pod "$DRIVER"'
 
     # We should see a respin here with the "found cluster" message
-    os::cmd::try_until_text 'oc logs dc/bob' "Found cluster" $((5*minute))
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' "Found cluster" $((5*minute))
 
     # Same master and worker pods should still exist
     os::cmd::expect_success 'oc get pod "$MASTER"'
@@ -35,23 +35,18 @@ function del_pod_tests() {
     # We re-use the same app and the same cluster
 
     set_defaults
-    # If there's an arg it's a cluster name
-    if [ "$#" -eq 0 ]; then
-        run_app
-    else
-        run_app $1
-    fi
+    run_app $1
 
-    echo del_pod \"Didn\'t find cluster\"
+    echo ++ del_pod \"Didn\'t find cluster\"
     del_pod "Didn't find cluster"
 
-    echo del_pod '"Waiting for spark master"'
+    echo ++ del_pod '"Waiting for spark master"'
     del_pod "Waiting for spark master"
 
-    echo del_pod '"Running Spark"'
+    echo ++ del_pod '"Running Spark"'
     del_pod "Running Spark"
 
-    echo del_pod '"SparkContext: Starting job"'
+    echo ++ del_pod '"SparkContext: Starting job"'
     del_pod "SparkContext: Starting job"
 
     cleanup_app wait_for_cluster_del

@@ -115,7 +115,7 @@ function get_cluster_name {
     local output
     if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
         lookup=$($CLI get --app=$DEPLOYMENT $CLI_ARGS 2>&1)
-        if [ "$?" -eq 0 ]; then
+        if [ "$?" -eq 0 -a "$DEPLOYMENT" != "" ]; then
             output=($(echo $lookup))
             OSHINKO_CLUSTER_NAME=${output[0]}
             echo using stored cluster name $OSHINKO_CLUSTER_NAME

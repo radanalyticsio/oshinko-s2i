@@ -14,19 +14,19 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 make_image
 
 # Run the dc tests with an ephemeral named cluster
-echo del_dc \"Didn\'t find cluster\" \"bob\"
-del_dc "Didn't find cluster" "bob"
+echo ++ del_dc \"Didn\'t find cluster\" true
+del_dc "Didn't find cluster" true
 
-echo 'del_dc "Waiting for spark master" "bob"'
-del_dc "Waiting for spark master" "bob"
+echo ++ del_dc '"Waiting for spark master"' true
+del_dc "Waiting for spark master" true
 
-echo 'del_dc "Waiting for spark workers" "bob"'
-del_dc "Waiting for spark workers" "bob"
+echo ++ del_dc '"Waiting for spark workers"' true
+del_dc "Waiting for spark workers" true
 
-echo 'del_dc "Running Spark" "bob"'
-del_dc "Running Spark" "bob"
+echo ++ del_dc '"Running Spark"' true
+del_dc "Running Spark" true
 
-echo 'del_dc "SparkContext: Starting job" "bob"'
-del_dc "SparkContext: Starting job" "bob"
+echo ++ del_dc '"SparkContext: Starting job"' true
+del_dc "SparkContext: Starting job" true
 
 os::test::junit::declare_suite_end

@@ -2,23 +2,22 @@
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 
 function redeploy_cluster_removed() {
-    echo running redeploy_cluster_removed
     set_defaults
     set_app_exit
     set_test_mode
-    run_app "bob"
+    run_app true
 
     os::cmd::try_until_success 'oc get dc "$MASTER_DC"' $((2*minute))
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
-    DRIVER=$(oc get pod -l deploymentconfig=bob --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_failure 'oc get pod bob-1-deploy'
-    os::cmd::expect_success 'oc deploy dc/bob --latest'
+    DRIVER=$(oc get pod -l deploymentconfig="$APP_NAME" --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_failure 'oc get pod "$APP_NAME"-1-deploy'
+    os::cmd::expect_success 'oc deploy dc/"$APP_NAME" --latest'
 
     os::cmd::try_until_text 'oc logs "$DRIVER"' "Deleting cluster" $((5*minute))
     os::cmd::try_until_failure 'oc get pod "$DRIVER"'
 
-    DRIVER=$(oc get pod -l deployment=bob-2 --template='{{index .items 0 "metadata" "name"}}')
+    DRIVER=$(oc get pod -l deployment="$APP_NAME"-2 --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_text 'oc logs "$DRIVER"' "Didn't find cluster"
     os::cmd::try_until_text 'oc logs "$DRIVER"' "Waiting for spark master"
 

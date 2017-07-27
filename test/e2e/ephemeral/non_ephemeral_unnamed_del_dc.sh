@@ -14,6 +14,6 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 make_image
 
 # Run a dc test against a non-ephemeral cluster
-del_dc_non_ephemeral "SparkContext: Running Spark"
+del_dc_non_ephemeral "SparkContext: Running Spark" false
 
 os::test::junit::declare_suite_end

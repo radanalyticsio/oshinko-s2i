@@ -1,0 +1,20 @@
+#!/bin/bash
+
+function del_job_pod() {
+    set_defaults
+    set_test_mode
+    run_job $2
+
+    DRIVER=$(oc get pod -l app=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_text 'oc log "$DRIVER"' 'Cound not create an ephemeral cluster, created a shared cluster instead' $((5*minute))
+    os::cmd::try_until_text 'oc log "$DRIVER"' "$1" $((5*minute))
+
+    # Get rid of the job, which will cause a delete of the driver pod
+    os::cmd::expect_success 'oc delete job "$APP_NAME"'
+    os::cmd::try_until_text 'oc log "$DRIVER"' 'cluster not deleted'
+
+    # Block until the job is totally cleaned up
+    os::cmd::try_until_text 'oc get pods -l app="$APP_NAME"' 'No resources found'
+
+    cleanup_cluster
+}

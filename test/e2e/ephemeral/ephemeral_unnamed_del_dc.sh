@@ -12,10 +12,10 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 make_image
 
 # Run the dc tests with an ephemeral unnamed cluster
-echo del_dc '"Waiting for spark workers"'
-del_dc "Waiting for spark workers"
+echo ++ del_dc '"Waiting for spark workers"' false
+del_dc "Waiting for spark workers" false
 
-echo 'del_dc "SparkContext: Starting job"'
-del_dc "SparkContext: Starting job"
+echo ++ del_dc '"SparkContext: Starting job"' false
+del_dc "SparkContext: Starting job" false
 
 os::test::junit::declare_suite_end
