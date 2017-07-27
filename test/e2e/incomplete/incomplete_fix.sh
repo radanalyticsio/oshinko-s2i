@@ -5,12 +5,11 @@ TEST_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/t
 source $TEST_DIR/common
 
 function wait_for_incomplete_fix {
-    echo running wait_for_incomplete_fix
     set_defaults
     set_long_running
     run_app $1
 
-    os::cmd::try_until_text 'oc logs dc/bob' 'Waiting for spark master'
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Waiting for spark master'
     cleanup_app
 
     # intentionally break the cluster by deleting one of the services
@@ -20,11 +19,11 @@ function wait_for_incomplete_fix {
     os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"-ui'
 
     run_app $1
-    os::cmd::try_until_text 'oc logs dc/bob' 'Found incomplete cluster'
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Found incomplete cluster'
     os::cmd::expect_success 'oc create -f "$file"'
     rm $file
 
-    os::cmd::try_until_text 'oc logs dc/bob' "Found cluster"
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' "Found cluster"
     cleanup_app
     cleanup_cluster
 }
@@ -36,6 +35,6 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 # Make the S2I test image if it's not already in the project
 make_image
 
-wait_for_incomplete_fix "incfix"
+wait_for_incomplete_fix true
 
 os::test::junit::declare_suite_end

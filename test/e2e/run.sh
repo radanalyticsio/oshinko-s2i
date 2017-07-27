@@ -1,6 +1,11 @@
 #!/bin/bash
 STARTTIME=$(date +%s)
-source "$(dirname "${BASH_SOURCE}")/../../hack/lib/init.sh"
+
+# Sourcing common will source hack/lib/init.sh
+TEST_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/test/e2e')
+source $TEST_DIR/common
+print_test_env
+
 os::util::environment::setup_time_vars
 
 function cleanup()
@@ -45,9 +50,13 @@ function find_tests() {
 }
 
 orig_project=$(oc project -q)
+failed_list=""
+failed=false
 
 dirs=($(find "${OS_ROOT}/test/e2e/" -mindepth 1 -type d -not -path "./resources*"))
 for dir in "${dirs[@]}"; do
+
+    failed_dir=false
 
     # Get the list of test files in the current directory
     set +e
@@ -70,26 +79,32 @@ for dir in "${dirs[@]}"; do
     set +e # For some reason the result here from head is not 0 even though we get the desired result
     namespace=${name}-$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
     set -e
-    oc new-project $namespace > /dev/null
-    oc create sa oshinko
-    oc policy add-role-to-user admin system:serviceaccount:$namespace:oshinko
-    echo "++++ ${dir}"
+    oc new-project $namespace &> /dev/null
+    oc create sa oshinko &> /dev/null
+    oc policy add-role-to-user admin system:serviceaccount:$namespace:oshinko &> /dev/null
+    echo "++++++ ${dir}"
     echo Using project $namespace
 
     for test in "${tests[@]}"; do
         echo
-        echo "++ ${test}"
+        echo "++++ ${test}"
         if ! ${test}; then
             echo "failed: ${test}"
-            failed="true"        
+            failed=true
+            failed_dir=true
+            failed_list=$failed_list'\n\t'$test
         fi
     done
-
-    oc delete project $namespace
+    if [ "$failed_dir" == true -a ${S2I_SAVE_FAIL:-false} == true ]; then
+        echo Leaving project $namespace because of failures
+    else
+        oc delete project $namespace
+    fi
 done
 
 oc project $orig_project
 if [ -n "${failed:-}" ]; then
-    echo "one or more tests failed"
+    echo "One or more tests failed:"
+    echo -e $failed_list'\n'
     exit 1
 fi

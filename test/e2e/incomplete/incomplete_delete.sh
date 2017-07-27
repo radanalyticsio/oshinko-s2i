@@ -5,12 +5,11 @@ TEST_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/t
 source $TEST_DIR/common
 
 function wait_for_incomplete_delete {
-    echo running wait_for_incomplete_delete
     set_defaults
     set_long_running
     run_app $1
 
-    os::cmd::try_until_text 'oc logs dc/bob' 'Waiting for spark master'
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Waiting for spark master'
     cleanup_app
 
     # intentionally break the cluster by deleting one of the services
@@ -18,14 +17,14 @@ function wait_for_incomplete_delete {
 
     # Now run the app again against the broken cluster
     run_app $1
-    os::cmd::try_until_text 'oc logs dc/bob' 'Found incomplete cluster'
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Found incomplete cluster'
 
     # we can't wait here because as soon as the cluster is deleted,
     # the pod will start creating it again.
     cleanup_cluster dontwait
 
-    os::cmd::try_until_text 'oc logs dc/bob' "Didn't find cluster"
-    os::cmd::try_until_text 'oc logs dc/bob' "Waiting for spark master"
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' "Didn't find cluster"
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' "Waiting for spark master"
     cleanup_app
     cleanup_cluster
 }
@@ -37,6 +36,6 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 # Make the S2I test image if it's not already in the project
 make_image
 
-wait_for_incomplete_delete "incdel"
+wait_for_incomplete_delete true
 
 os::test::junit::declare_suite_end

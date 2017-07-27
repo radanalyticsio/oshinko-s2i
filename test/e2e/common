@@ -1,19 +1,11 @@
 #!/bin/bash
 S2I_TEST_INTEGRATED_REGISTRY=${S2I_TEST_INTEGRATED_REGISTRY:-}
-if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
-    echo Using integrated registry $S2I_TEST_INTEGRATED_REGISTRY
-else
-    echo Not using integrated registry
-fi
 
 S2I_TEST_IMAGE=${S2I_TEST_IMAGE:-radanalytics-pyspark}
-echo Using local s2i image $S2I_TEST_IMAGE
 
 S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark}
-echo Using spark image $S2I_TEST_SPARK_IMAGE
 
 S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-1}
-echo Using $S2I_TEST_WORKERS workers
 
 PROJECT=$(oc project -q)
 MY_SCRIPT=`basename "$0"`
@@ -24,7 +16,18 @@ RESOURCE_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)/resources
 # We count on this file being somewhere below oshinko-s2i, and
 # the location of hack/lib under oshinko-s2i
 source $(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i')/hack/lib/init.sh
-	
+
+function print_test_env {
+    if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+        echo Using integrated registry $S2I_TEST_INTEGRATED_REGISTRY
+    else
+        echo Not using integrated registry
+    fi
+    echo Using local s2i image $S2I_TEST_IMAGE
+    echo Using spark image $S2I_TEST_SPARK_IMAGE
+    echo Using $S2I_TEST_WORKERS workers
+}
+
 function set_app_exit {
     DO_EXIT="true"
 }
@@ -58,16 +61,20 @@ function clear_test_mode() {
     DO_TEST="false"
 }
 
+function clear_cluster_name() {
+    GEN_CLUSTER_NAME=""
+}
+
 function init_config_map() {
     set +e
-    oc delete configmap clusterconfig masterconfig workerconfig
+    oc delete configmap clusterconfig masterconfig workerconfig &>/dev/null
     set -e
-    oc create configmap masterconfig --from-file=$RESOURCE_DIR/masterconfig
-    oc create configmap workerconfig --from-file=$RESOURCE_DIR/workerconfig
+    oc create configmap masterconfig --from-file=$RESOURCE_DIR/masterconfig &>/dev/null
+    oc create configmap workerconfig --from-file=$RESOURCE_DIR/workerconfig &>/dev/null
     oc create configmap clusterconfig --from-literal=workercount=$WORKER_COUNT \
                                       --from-literal=sparkimage=$S2I_TEST_SPARK_IMAGE \
                                       --from-literal=sparkmasterconfig=masterconfig \
-                                      --from-literal=sparkworkerconfig=workerconfig
+                                      --from-literal=sparkworkerconfig=workerconfig &>/dev/null
 }
 
 function set_worker_count() {
@@ -82,28 +89,64 @@ function set_defaults() {
     set_spark_sleep
     clear_app_exit
     clear_test_mode
+    clear_cluster_name
 }
 
 function run_app() {
     # Launch the app using the service account and create a cluster
-    if [ "$#" -eq 0 ]; then    
-        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
-        os::cmd::try_until_not_text 'oc get rc bob-1 --template="{{index .metadata.labels \"uses-oshinko-cluster\"}}"' "<no value>" $((5*minute))
-        GEN_CLUSTER_NAME=$(oc get rc bob-1 --template='{{index .metadata.labels "uses-oshinko-cluster"}}')
-        echo Using cluster name $GEN_CLUSTER_NAME
+    set +e
+    SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+    set -e
+    APP_NAME=app-$SUFFIX
+    if [ "$#" -ne 1 ]; then
+	echo run_app takes 1 parameter, true or false for named or unnamed cluster
+	return 1
+    fi
+    if [ "$1" != true ]; then
+        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+        os::cmd::try_until_not_text 'oc get rc "$APP_NAME"-1 --template="{{index .metadata.labels \"uses-oshinko-cluster\"}}"' "<no value>" $((5*minute))
+        GEN_CLUSTER_NAME=$(oc get rc "$APP_NAME"-1 --template='{{index .metadata.labels "uses-oshinko-cluster"}}')
+
     else
-        GEN_CLUSTER_NAME=$1
-        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+	# If the cluster name was not cleared, reuse it
+	if [ "$GEN_CLUSTER_NAME" == "" ]; then
+            GEN_CLUSTER_NAME=cl-$SUFFIX
+	fi
+        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
     fi 
+    echo Using cluster name $GEN_CLUSTER_NAME
     MASTER_DC=$GEN_CLUSTER_NAME-m
     WORKER_DC=$GEN_CLUSTER_NAME-w
 }
 
 function run_job() {
+    local pod
     # Launch the app using the service account and create a cluster
+    # Until jobs work with image triggers, we need the full pullspec for an image in a job template
+    set +e
+    SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+    set -e
+    APP_NAME=app-$SUFFIX
     IMAGE_NAME=$(oc get is play --template="{{index .status \"dockerImageRepository\"}}")
-    GEN_CLUSTER_NAME=$1
-    os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME=bob-job -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
+    if [ "$#" -ne 1 ]; then
+	echo run_job takes 1 parameter, true or false for named or unnamed cluster
+	return 1
+    fi
+    if [ "$1" != true ]; then
+        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
+        # Well, we have no easy way of figuring out what the clustername is here since we're not using a dc but if we figure out the pod name we can grep the log
+        # Use the os::cmd_try_until_xxx functions to gate
+        os::cmd::try_until_success 'oc get pod -l app="$APP_NAME"'
+        pod=$(oc get pod -l app=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+        os::cmd::try_until_text 'oc logs "$pod"' "Using shared cluster"
+        GEN_CLUSTER_NAME=$(oc logs $pod | grep "Using shared cluster" | grep -oE "[^ ]+$")
+    else
+	# If the cluster name was not cleared, reuse it
+	if [ "$GEN_CLUSTER_NAME" == "" ]; then
+            GEN_CLUSTER_NAME=cl-$SUFFIX
+	fi
+        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST"'
+    fi
     echo Using cluster name $GEN_CLUSTER_NAME
     MASTER_DC=$GEN_CLUSTER_NAME-m
     WORKER_DC=$GEN_CLUSTER_NAME-w
@@ -111,46 +154,36 @@ function run_job() {
 
 function cleanup_app() {
 
-    echo cleanup_app called
-    os::cmd::expect_success 'oc scale dc/bob --replicas=0'
-    os::cmd::try_until_text 'oc get pods -l deploymentconfig=bob' 'No resources found'
-    os::cmd::expect_success 'oc delete dc/bob'
+    oc scale dc/"$APP_NAME" --replicas=0 > /dev/null
+    os::cmd::try_until_text 'oc get pods -l deploymentconfig="$APP_NAME"' 'No resources found' > /dev/null
+    oc delete dc/"$APP_NAME" > /dev/null
     if [ "$#" -eq 1 ]; then
-        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
-        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"' > /dev/null
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"' > /dev/null
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"' > /dev/null
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui' > /dev/null
     fi
 }
 
 function cleanup_cluster() {
-    echo cleanup_cluster called with cluster $GEN_CLUSTER_NAME
-
     # We get tricky here and just use try_until_failure for components that
     # might not actually exist, depending on what we've been doing
     # If present, they'll be deleted and the next call will fail
-    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui'
-    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"'
-    os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"'
-    os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"'
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui' > /dev/null
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"' > /dev/null
+    os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"' > /dev/null
+    os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"' > /dev/null
     if [ "$#" -eq 0 ]; then
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
-        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
-        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"' > /dev/null
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui' > /dev/null
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"' > /dev/null
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"' > /dev/null
     fi
-
 } 
-
-function cleanup_job() {
-    echo cleanup_job called
-    os::cmd::expect_success 'oc delete job bob-job'
-    os::cmd::try_until_text 'oc get pods -l app=bob-job' 'No resources found'
-}
 
 function make_image() {
     set +e
-    oc get buildconfig play > /dev/null
+    oc get buildconfig play &> /dev/null
     res=$?
     set -e
     if [ "$res" -ne 0 ]; then
@@ -178,18 +211,16 @@ function make_image() {
     fi
     BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
     set +e
-    oc get build play-$BUILDNUM > /dev/null
+    oc get build play-$BUILDNUM &> /dev/null
     res=$?
     set -e
     if [ "$res" -eq 0 ]; then
         # Make sure that the build is complete. If not, start another one.
-	phase=$(oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}")
+	phase=$(oc get build play-$BUILDNUM --template="{{index .status \"phase\"}}")
         if [ "$phase" != "Running" -a "$phase" != "Complete" ]; then
-            echo "Build phase is $phase, restarting..."
+            echo "Build phase for play-$BUILDNUM is $phase, restarting..."
             res=1
         fi
-    else
-        echo "Buildconfig but no build found, starting..."
     fi
     if [ "$res" -ne 0 ]; then
         os::cmd::expect_success 'oc start-build play --from-file="$RESOURCE_DIR"/play'

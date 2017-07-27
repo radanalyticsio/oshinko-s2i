@@ -14,6 +14,6 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 make_image
 
 # Run a dc test against a non-ephemeral cluster
-del_pod_non_ephemeral
+del_pod_non_ephemeral false
 
 os::test::junit::declare_suite_end
