@@ -1,0 +1,307 @@
+#!/bin/bash
+
+function set_defaults() {
+    TEST_MODE=false
+    APPARGS=
+    DEL_CLUSTER=false
+    NAMED_CONFIG=clusterconfig
+    DRIVER_CONFIG=
+    SPARK_OPTIONS=
+    GEN_CLUSTER_NAME=
+    APP_NAME=
+}
+
+function app_preamble() {
+    if [ -z "$FIXED_APP_NAME" ]; then
+        set +e
+        SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+        set -e
+        APP_NAME=app-$SUFFIX
+    else
+	APP_NAME=$FIXED_APP_NAME
+    fi
+    if [ "$GEN_CLUSTER_NAME" == "" ]; then
+        GEN_CLUSTER_NAME=testenv
+    fi
+    MASTER_DC=$GEN_CLUSTER_NAME-m
+    WORKER_DC=$GEN_CLUSTER_NAME-w
+}
+
+function set_fixed_app_name() {
+    if [ "$#" -eq 1 ]; then
+	FIXED_APP_NAME=$1
+    else
+	FIXED_APP_NAME=
+    fi
+}
+
+function set_template() {
+    TEMPLATE=$1
+}
+
+function set_exit_flag() {
+    if [ "$#" -eq 1 ]; then
+	EXIT_FLAG="-p APP_EXIT=$1"
+    else
+	EXIT_FLAG=
+    fi
+}
+
+function set_git_uri() {
+    if [ "$#" -eq 1 ]; then
+	GIT_URI=$1
+	SOURCE_INFO="-p GIT_URI=$1" 
+    elif [ "$#" -eq 2 ]; then
+	GIT_URI=$1
+	SOURCE_INFO="-p GIT_URI=$1 -p GIT_REF=$2"
+    else
+	GIT_URI=
+	SOURCE_INFO=
+    fi
+}
+
+function set_app_file() {
+    if [ "$#" -eq 1 ]; then
+	APP_FILE="-p APP_FILE=$1"
+    else
+	APP_FILE=
+    fi
+}
+
+function set_image() {
+    if [ "$#" -eq 1 ]; then
+	SOURCE_INFO="-p IMAGE=$1"
+    else
+	SOURCE_INFO=
+    fi
+}
+
+APP_MAIN_CLASS=
+function set_app_main_class() {
+    if [ "$#" -eq 1 ]; then
+	APP_MAIN_CLASS="-p APP_MAIN_CLASS=$1"
+    else
+	APP_MAIN_CLASS=
+    fi
+}
+
+# -p GIT_URI=https://github.com/radanalyticsio/grafzahl
+
+function run_app() {
+    app_preamble
+    set +e
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS &> /dev/null
+    set -e
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Waiting for spark master' $((5*minute))
+}
+
+
+function run_app_without_optionals() {
+    app_preamble
+    set +e
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME $APP_MAIN_CLASS &> /dev/null
+    set -e
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Waiting for spark master'  $((5*minute))
+}
+
+function run_app_without_clustername() {
+    app_preamble
+    set +e
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME $APP_MAIN_CLASS &> /dev/null
+    set -e
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Waiting for spark master'  $((5*minute))
+}
+
+function run_app_without_application_name() {
+    app_preamble
+    oc new-app --file=$TEMPLATE $SOURCE_INFO $APP_MAIN_CLASS &> /dev/null
+}
+
+function test_no_app_name {
+    set_defaults
+    DEL_CLUSTER=true
+    os::cmd::expect_success 'oc delete dc -l app'
+    os::cmd::try_until_text 'oc get pod -l app' 'No resources found'
+    run_app_without_application_name
+    os::cmd::try_until_not_text 'oc get pod -l app' 'No resources found' $((10*minute))
+    DRIVER=$(oc get pod -l app --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Waiting for spark master'
+    os::cmd::expect_success 'oc delete dc -l app'
+}
+
+function test_app_args {
+    set_defaults
+    APPARGS="doodleydoodley"
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_ARGS=doodleydoodley$"'
+    cleanup_app
+
+    run_app_without_optionals
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_ARGS=$"'
+    cleanup_app
+}
+
+function test_podinfo {
+    set_defaults
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- ls /etc/podinfo/labels'
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep POD_NAME="$DRIVER"'
+    cleanup_app
+}
+
+function test_del_cluster {
+    set_defaults
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_DEL_CLUSTER=false$"'
+    cleanup_app
+
+    DEL_CLUSTER=true
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_DEL_CLUSTER=true$"'
+    cleanup_app
+
+    run_app_without_optionals
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_DEL_CLUSTER=true$"'
+    cleanup_app
+}
+
+function test_cluster_name {
+    set_defaults
+    DEL_CLUSTER=true
+    GEN_CLUSTER_NAME=jerry
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_CLUSTER_NAME=jerry"'
+    cleanup_app
+
+    run_app_without_clustername
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_CLUSTER_NAME=$"'
+    cleanup_app
+}
+
+function test_no_source_or_image {
+    set_defaults
+    app_preamble
+    os::cmd::expect_failure 'oc new-app --file="$TEMPLATE"'
+}
+
+function test_named_config {
+    set_defaults
+    NAMED_CONFIG=myconfig
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_NAMED_CONFIG=myconfig$"'
+    cleanup_app
+
+    run_app_without_optionals
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_NAMED_CONFIG=$"'
+    cleanup_app
+}
+
+function test_app_file {
+    set_defaults
+    # APP_FILE is set in the image as an env at build time, so to change it we need to redo the build
+    set +e
+    oc delete buildconfig $APP_NAME &> /dev/null
+    oc delete is $APP_NAME &> /dev/null
+    set -e
+    set_app_file myappfile
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=myappfile$"'
+    cleanup_app
+
+    # APP_FILE is set in the image as an env at build time, so to change it we need to redo the build
+    oc delete buildconfig $APP_NAME &> /dev/null
+    oc delete is $APP_NAME &> /dev/null
+    set_app_file
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=$"'
+    cleanup_app
+}
+
+function test_git_ref {
+    local old_source=$SOURCE_INFO
+    # the commit value has to be named in order for os::cmd to do the substitution
+    local commit=$2
+    set_defaults
+    set_git_uri $1 $commit
+    set +e
+    if [ -n "$APP_NAME" ]; then
+        oc delete buildconfig $APP_NAME &> /dev/null
+        oc delete is $APP_NAME &> /dev/null
+    fi
+    set -e
+    run_app
+    SOURCE_INFO=$old_source
+    os::cmd::try_until_success 'oc logs "$APP_NAME"-1-build | grep -e "Commit:[[:space:]]" | grep "$commit"'
+    cleanup_app
+    os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
+    os::cmd::expect_success 'oc delete is "$APP_NAME"'
+}
+
+function test_driver_config {
+    set_defaults
+    DRIVER_CONFIG=myconfig
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_SPARK_DRIVER_CONFIG=myconfig$"'
+    cleanup_app
+
+    run_app_without_optionals
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_SPARK_DRIVER_CONFIG=$"'
+    cleanup_app
+}
+
+function test_spark_options {
+    set_defaults
+    SPARK_OPTIONS="--conf somevalue=1"
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "SPARK_OPTIONS=--conf somevalue=1"'
+    cleanup_app
+
+    run_app_without_optionals
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "SPARK_OPTIONS=$"'
+    cleanup_app
+}
+
+function test_exit {
+    set_defaults
+    set_exit_flag
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'
+    cleanup_app
+
+    set_exit_flag true
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'
+    cleanup_app
+
+    set_exit_flag false
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'
+    cleanup_app
+}
+
+function test_fixed_exit {
+    set_defaults
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'
+    cleanup_app
+}
