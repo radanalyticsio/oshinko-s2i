@@ -7,13 +7,14 @@ services:
 matrix:
   include:
     - env: TO_TEST=build
-    - env: TO_TEST=e2e
+    - env: TO_TEST=ephemeral
+    - env: TO_TEST=templates
   fast_finish: true
 
 before_install:
 ## add insecure-registry and restart docker
 - |
-  if [ "$TO_TEST" = "e2e" ]; then
+  if [ "$TO_TEST" != "build" ]; then
       pwd
       bash --version
       sudo apt-get install --only-upgrade bash
@@ -68,7 +69,8 @@ script:
 - if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.java . ; fi
 - if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.scala . ; fi
 
-- if [ "$TO_TEST" = "e2e" ]; then export TEST_ONLY=1; make test-e2e ; fi
+- if [ "$TO_TEST" = "ephemeral" ]; then export TEST_ONLY=1; make test-ephemeral ; fi
+- if [ "$TO_TEST" = "templates" ]; then export TEST_ONLY=1; make test-templates ; fi
 notifications:
  email:
    on_success: never
