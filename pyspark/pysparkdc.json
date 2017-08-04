@@ -127,6 +127,10 @@
                               "value": "${OSHINKO_NAMED_CONFIG}"
                            },
                            {
+                              "name": "OSHINKO_SPARK_DRIVER_CONFIG",
+                              "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
+                           },
+                           {
                               "name": "POD_NAME",
                               "valueFrom":
                                 {
