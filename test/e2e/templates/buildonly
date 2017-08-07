@@ -30,7 +30,7 @@ function build_test_app_file {
     os::cmd::expect_success 'oc run test-app-file --image="$PULL_SPEC"'
     os::cmd::try_until_not_text 'oc get pod -l deploymentconfig=test-app-file' 'No resources found'  $((5*minute))
     NAME=$(oc get pod -l deploymentconfig=test-app-file --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$NAME" -- env | grep APP_FILE="$APP_FILE"$' $((5*minute))
+    os::cmd::try_until_success 'oc exec "$NAME" -- env | grep APP_FILE="$APP_FILE"$' $((10*minute))
     os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
     os::cmd::expect_success 'oc delete is "$APP_NAME"'
     os::cmd::expect_success 'oc delete dc test-app-file'

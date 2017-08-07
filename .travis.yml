@@ -8,7 +8,9 @@ matrix:
   include:
     - env: TO_TEST=build
     - env: TO_TEST=ephemeral
-    - env: TO_TEST=templates
+    - env: TO_TEST=pyspark-templates
+    - env: TO_TEST=java-templates
+    - env: TO_TEST=scala-templates
   fast_finish: true
 
 before_install:
@@ -70,7 +72,9 @@ script:
 - if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.scala . ; fi
 
 - if [ "$TO_TEST" = "ephemeral" ]; then export TEST_ONLY=1; make test-ephemeral ; fi
-- if [ "$TO_TEST" = "templates" ]; then export TEST_ONLY=1; make test-templates ; fi
+- if [ "$TO_TEST" = "pyspark-templates" ]; then export TEST_ONLY=1; make test-pyspark-templates ; fi
+- if [ "$TO_TEST" = "java-templates" ]; then export TEST_ONLY=1; make test-java-templates ; fi
+- if [ "$TO_TEST" = "scala-templates" ]; then export TEST_ONLY=1; make test-scala-templates ; fi
 notifications:
  email:
    on_success: never
