@@ -214,7 +214,7 @@ function test_app_file {
     set_app_file myappfile
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=myappfile$"' $((5*minute))
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=myappfile$"' $((10*minute))
     cleanup_app
 
     # APP_FILE is set in the image as an env at build time, so to change it we need to redo the build
@@ -223,7 +223,7 @@ function test_app_file {
     set_app_file
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=$"' $((5*minute))
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=$"' $((10*minute))
     cleanup_app
 }
 
@@ -280,19 +280,19 @@ function test_exit {
     set_exit_flag
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'  $((5*minute))
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'  $((10*minute))
     cleanup_app
 
     set_exit_flag true
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'  $((5*minute))
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'  $((10*minute))
     cleanup_app
 
     set_exit_flag false
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'  $((5*minute))
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'  $((10*minute))
     cleanup_app
 }
 
@@ -300,6 +300,6 @@ function test_fixed_exit {
     set_defaults
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'  $((5*minute))
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'  $((10*minute))
     cleanup_app
 }
