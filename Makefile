@@ -32,12 +32,14 @@ test-java-templates:
 	test/e2e/run.sh templates/java
 
 test-pyspark-templates:
+	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE) make build
 	test/e2e/run.sh templates/pyspark
 
 test-scala-templates:
 	test/e2e/run.sh templates/scala
 
 test-templates:
+	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE) make build
 	test/e2e/run.sh templates
 
 test-e2e:
