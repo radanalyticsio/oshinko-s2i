@@ -18,16 +18,15 @@ set_app_main_class org.apache.spark.examples.SparkPi
 set_app_file
 set_exit_flag
 
-# Need a little preamble here to read the resources.yaml, create the pyspark template, and save
+# Need a little preamble here to read the resources.yaml, create the scala template, and save
 # it to the resources directory
 set +e
-oc create -f https://radanalytics.io/resources.yaml
+oc create -f https://radanalytics.io/resources.yaml &> /dev/null
 oc export template oshinko-scala-spark-build-dc > $RESOURCE_DIR/oshinko-scala-spark-build-dc.yaml
 set -e
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
-# Verify that pod goes to "Completed" if app_exit is set
 echo "++ test_exit"
 test_fixed_exit
 
@@ -37,7 +36,6 @@ test_cluster_name
 echo "++ test_del_cluster"
 test_del_cluster
 
-# Tests the ability to set arbitrary app arg strings
 echo "++ test_app_args"
 test_app_args
 
@@ -53,7 +51,7 @@ test_driver_config
 echo "++ test_spark_options"
 test_spark_options
 
-echo "++ test_no_app_name"
+#echo "++ test_no_app_name"
 #test_no_app_name
 
 echo "++ test_no_source_or_image"

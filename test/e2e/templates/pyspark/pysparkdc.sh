@@ -22,7 +22,6 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 make_image
 set_image $TEST_IMAGE
 
-# Verify that pod goes to "Completed" if app_exit is set
 echo "++ test_exit"
 test_exit
 
@@ -32,7 +31,6 @@ test_cluster_name
 echo "++ test_del_cluster"
 test_del_cluster
 
-# Tests the ability to set arbitrary app arg strings
 echo "++ test_app_args"
 test_app_args
 

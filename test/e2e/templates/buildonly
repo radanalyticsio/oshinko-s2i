@@ -15,7 +15,7 @@ function build_test_no_app_name {
     os::cmd::expect_success 'oc delete buildconfig -l app'
     os::cmd::try_until_text 'oc get buildconfig -l app' 'No resources found'
     run_app_without_application_name
-    os::cmd::try_until_not_text 'oc get buildconfig -l app' 'No resources found' $((5*minute))
+    os::cmd::try_until_not_text 'oc get buildconfig -l app' 'No resources found' $((10*minute))
     NAME=$(oc get buildconfig -l app --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_success 'oc logs "$NAME"-1-build | grep "$GIT_URI"'
     os::cmd::expect_success 'oc delete buildconfig -l app'
@@ -25,13 +25,12 @@ function build_test_no_app_name {
 function build_test_app_file {
     set_defaults
     run_app
-    os::cmd::try_until_text 'oc get build "$APP_NAME"-1 --template="{{index .status \"phase\"}}"' "Complete" $((5*minute))
+    os::cmd::try_until_text 'oc get build "$APP_NAME"-1 --template="{{index .status \"phase\"}}"' "Complete" $((10*minute))
     PULL_SPEC=$(oc describe is $APP_NAME | grep "Docker Pull Spec" | awk '{ print $4; }')
     os::cmd::expect_success 'oc run test-app-file --image="$PULL_SPEC"'
     os::cmd::try_until_not_text 'oc get pod -l deploymentconfig=test-app-file' 'No resources found'  $((5*minute))
     NAME=$(oc get pod -l deploymentconfig=test-app-file --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_success 'oc exec "$NAME" -- env | grep APP_FILE="$APP_FILE"$' $((5*minute))
-    oc exec "$NAME" -- env | grep APP_FILE="$APP_FILE"$
     os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
     os::cmd::expect_success 'oc delete is "$APP_NAME"'
     os::cmd::expect_success 'oc delete dc test-app-file'
