@@ -206,25 +206,28 @@ function test_named_config {
 
 function test_app_file {
     set_defaults
-    # APP_FILE is set in the image as an env at build time, so to change it we need to redo the build
-    set +e
-    oc delete buildconfig $APP_NAME &> /dev/null
-    oc delete is $APP_NAME &> /dev/null
-    set -e
+    # APP_FILE is set in the image as an env at build time, so to change it we need to redo the build.
+    # If we're using random app_names then the name won't matter, if not then delete FIXED_APP_NAME
+    if [ -n "$FIXED_APP_NAME" ]; then
+        set +e
+        oc delete buildconfig $FIXED_APP_NAME &> /dev/null
+        oc delete is $FIXED_APP_NAME &> /dev/null
+        set -e
+    fi
     set_app_file myappfile
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=myappfile$"' $((10*minute))
     cleanup_app
-
-    # APP_FILE is set in the image as an env at build time, so to change it we need to redo the build
     oc delete buildconfig $APP_NAME &> /dev/null
     oc delete is $APP_NAME &> /dev/null
+
     set_app_file
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=$"' $((10*minute))
     cleanup_app
+    # leave this build becase it matches the defaults
 }
 
 function test_git_ref {
@@ -234,9 +237,9 @@ function test_git_ref {
     set_defaults
     set_git_uri $1 $commit
     set +e
-    if [ -n "$APP_NAME" ]; then
-        oc delete buildconfig $APP_NAME &> /dev/null
-        oc delete is $APP_NAME &> /dev/null
+    if [ -n "$FIXED_APP_NAME" ]; then
+        oc delete buildconfig $FIXED_APP_NAME &> /dev/null
+        oc delete is $FIXED_APP_NAME &> /dev/null
     fi
     set -e
     run_app
