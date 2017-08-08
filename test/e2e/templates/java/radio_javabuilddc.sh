@@ -9,10 +9,10 @@ source $SCRIPT_DIR/../builddc
 
 RESOURCE_DIR=$TEST_DIR/resources
 set_template $RESOURCE_DIR/oshinko-java-spark-build-dc.yaml
-set_git_uri https://github.com/radanalyticsio/jgrafzahl
+set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name java-build
-set_app_main_class io.radanalytics.jgrafzahl.App
+set_app_main_class org.apache.spark.examples.JavaSparkPi
 
 # Clear these
 set_app_file
@@ -57,10 +57,10 @@ test_no_app_name
 echo "++ test_no_source_or_image"
 test_no_source_or_image
 
-echo "++ test_app_file"
-test_app_file
+echo "++ test_app_file java-spark-pi-1.0-SNAPSHOT.jar"
+test_app_file java-spark-pi-1.0-SNAPSHOT.jar
 
 echo "++ test_git_ref"
-test_git_ref $GIT_URI ccb7b2064861e17985de8d269264deee8440f5a7
+test_git_ref $GIT_URI 6fa7763517d44a9f39d6b4f0a6c15737afbf2a5a
 
 os::test::junit::declare_suite_end

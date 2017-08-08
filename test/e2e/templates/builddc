@@ -62,8 +62,10 @@ function set_git_uri() {
 
 function set_app_file() {
     if [ "$#" -eq 1 ]; then
+	APP_FILE_NAME=$1
 	APP_FILE="-p APP_FILE=$1"
     else
+	APP_FILE_NAME=
 	APP_FILE=
     fi
 }
@@ -90,7 +92,7 @@ function run_app() {
     set +e
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS &> /dev/null
     set -e
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Waiting for spark master' $((10*minute))
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster' $((10*minute))
 }
 
 
@@ -99,7 +101,7 @@ function run_app_without_optionals() {
     set +e
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME $APP_MAIN_CLASS &> /dev/null
     set -e
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Waiting for spark master'  $((10*minute))
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster'  $((10*minute))
 }
 
 function run_app_without_clustername() {
@@ -107,7 +109,7 @@ function run_app_without_clustername() {
     set +e
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME $APP_MAIN_CLASS &> /dev/null
     set -e
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Waiting for spark master'  $((10*minute))
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster'  $((10*minute))
 }
 
 function run_app_without_application_name() {
@@ -123,7 +125,7 @@ function test_no_app_name {
     run_app_without_application_name
     os::cmd::try_until_not_text 'oc get pod -l app' 'No resources found' $((10*minute))
     DRIVER=$(oc get pod -l app --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Waiting for spark master'
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster'
     os::cmd::expect_success 'oc delete dc -l app'
 }
 
@@ -214,10 +216,10 @@ function test_app_file {
         oc delete is $FIXED_APP_NAME &> /dev/null
         set -e
     fi
-    set_app_file myappfile
+    set_app_file $1
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=myappfile$"' $((10*minute))
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_FILE="$APP_FILE_NAME"$' $((10*minute))
     cleanup_app
     oc delete buildconfig $APP_NAME &> /dev/null
     oc delete is $APP_NAME &> /dev/null
@@ -225,7 +227,7 @@ function test_app_file {
     set_app_file
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_FILE=$"' $((10*minute))
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_FILE=$' $((10*minute))
     cleanup_app
     # leave this build becase it matches the defaults
 }

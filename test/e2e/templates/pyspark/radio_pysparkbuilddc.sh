@@ -9,7 +9,7 @@ source $SCRIPT_DIR/../builddc
 
 RESOURCE_DIR=$TEST_DIR/resources
 set_template $RESOURCE_DIR/oshinko-pyspark-build-dc.yaml
-set_git_uri https://github.com/radanalyticsio/grafzahl
+set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name pyspark-build
 
@@ -56,10 +56,10 @@ test_no_app_name
 echo "++ test_no_source_or_image"
 test_no_source_or_image
 
-echo "++ test_app_file"
-test_app_file
+echo "++ test_app_file app.py"
+test_app_file app.py
 
 echo "++ test_git_ref"
-test_git_ref https://github.com/radanalyticsio/grafzahl c1f37770af5cb0a7828750e5a950c6c75c97ddd1
+test_git_ref $GIT_URI 6fa7763517d44a9f39d6b4f0a6c15737afbf2a5a
 
 os::test::junit::declare_suite_end

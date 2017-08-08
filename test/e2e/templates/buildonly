@@ -6,7 +6,7 @@
 function run_app() {
     app_preamble
     set +e
-    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME="$APP_NAME" -p APP_FILE="$APP_FILE" &> /dev/null
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME="$APP_NAME" $APP_FILE &> /dev/null
     set -e
 }
 
@@ -24,14 +24,15 @@ function build_test_no_app_name {
 
 function build_test_app_file {
     set_defaults
-    run_app
+    run_app # runs the build
     os::cmd::try_until_text 'oc get build "$APP_NAME"-1 --template="{{index .status \"phase\"}}"' "Complete" $((10*minute))
     PULL_SPEC=$(oc describe is $APP_NAME | grep "Docker Pull Spec" | awk '{ print $4; }')
-    os::cmd::expect_success 'oc run test-app-file --image="$PULL_SPEC"'
-    os::cmd::try_until_not_text 'oc get pod -l deploymentconfig=test-app-file' 'No resources found'  $((5*minute))
-    NAME=$(oc get pod -l deploymentconfig=test-app-file --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$NAME" -- env | grep APP_FILE="$APP_FILE"$' $((10*minute))
+
+    # The image won't actually run since we're not using a template with all the necessary envs for start.sh
+    # So just create the pod and check the environment
+    os::cmd::expect_success 'oc run test-app-file --image="$PULL_SPEC" --restart=Never --command -- env'
+    os::cmd::try_until_success 'oc logs test-app-file | grep APP_FILE="$APP_FILE_NAME"$' $((5*minute))
     os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
     os::cmd::expect_success 'oc delete is "$APP_NAME"'
-    os::cmd::expect_success 'oc delete dc test-app-file'
+    os::cmd::expect_success 'oc delete pod test-app-file'
 }
