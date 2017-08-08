@@ -10,7 +10,7 @@ SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../builddc
 source $SCRIPT_DIR/../buildonly
 
-set_git_uri https://github.com/radanalyticsio/jgrafzahl
+set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_template $JAVATEMP_DIR/javabuild.json
 set_fixed_app_name java-build
 
@@ -24,8 +24,8 @@ build_test_no_app_name
 echo "++ test_no_source_or_image"
 test_no_source_or_image
 
-set_app_file myappfile
-echo "++ build_test_app_file myappfile"
+set_app_file java-spark-pi-1.0-SNAPSHOT.jar
+echo "++ build_test_app_file java-spark-pi-1.0-SNAPSHOT.jar"
 build_test_app_file
 
 set_app_file
@@ -33,6 +33,6 @@ echo "++ build_test_app_file"
 build_test_app_file
 
 echo "++ test_git_ref"
-test_git_ref $GIT_URI ccb7b2064861e17985de8d269264deee8440f5a7
+test_git_ref $GIT_URI 6fa7763517d44a9f39d6b4f0a6c15737afbf2a5a
 
 os::test::junit::declare_suite_end
