@@ -27,12 +27,20 @@ function build_test_app_file {
     run_app # runs the build
     os::cmd::try_until_text 'oc get build "$APP_NAME"-1 --template="{{index .status \"phase\"}}"' "Complete" $((10*minute))
     PULL_SPEC=$(oc describe is $APP_NAME | grep "Docker Pull Spec" | awk '{ print $4; }')
-
     # The image won't actually run since we're not using a template with all the necessary envs for start.sh
     # So just create the pod and check the environment
-    os::cmd::expect_success 'oc run test-app-file --image="$PULL_SPEC" --restart=Never --command -- env'
-    os::cmd::try_until_success 'oc logs test-app-file | grep APP_FILE="$APP_FILE_NAME"$' $((5*minute))
-    os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
-    os::cmd::expect_success 'oc delete is "$APP_NAME"'
-    os::cmd::expect_success 'oc delete pod test-app-file'
+    os::cmd::expect_success 'oc run test-"$APP_NAME" --image="$PULL_SPEC" --restart=Never --command -- env'
+    os::cmd::try_until_success 'oc logs test-"$APP_NAME" | grep APP_FILE="$APP_FILE_NAME"$' $((5*minute))
+
+    force_random_app_name
+    set_app_file $1
+    run_app # runs the build
+    os::cmd::try_until_text 'oc get build "$APP_NAME"-1 --template="{{index .status \"phase\"}}"' "Complete" $((10*minute))
+    PULL_SPEC=$(oc describe is $APP_NAME | grep "Docker Pull Spec" | awk '{ print $4; }')
+    # The image won't actually run since we're not using a template with all the necessary envs for start.sh
+    # So just create the pod and check the environment
+    os::cmd::expect_success 'oc run test-"$APP_NAME" --image="$PULL_SPEC" --restart=Never --command -- env'
+    os::cmd::try_until_success 'oc logs test-"$APP_NAME" | grep APP_FILE="$APP_FILE_NAME"$' $((5*minute))
+    oc delete buildconfig $APP_NAME &> /dev/null
+    oc delete is $APP_NAME &> /dev/null
 }

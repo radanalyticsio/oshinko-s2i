@@ -14,10 +14,6 @@ set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name scala-build
 set_app_main_class org.apache.spark.examples.SparkPi
 
-# Clear these
-set_app_file
-set_exit_flag
-
 # Need a little preamble here to read the resources.yaml, create the scala template, and save
 # it to the resources directory
 set +e
