@@ -13,10 +13,6 @@ set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name pyspark-build
 
-# Clear these
-set_app_file
-set_exit_flag
-
 # Need a little preamble here to read the resources.yaml, create the pyspark template, and save
 # it to the resources directory
 set +e

@@ -1,5 +1,23 @@
 #!/bin/bash
 
+function set_app_file() {
+    if [ "$#" -eq 1 ]; then
+	APP_FILE_NAME=$1
+	APP_FILE="-p APP_FILE=$1"
+    else
+	APP_FILE_NAME=
+	APP_FILE=
+    fi
+}
+
+function set_exit_flag() {
+    if [ "$#" -eq 1 ]; then
+	EXIT_FLAG="-p APP_EXIT=$1"
+    else
+	EXIT_FLAG=
+    fi
+}
+
 function set_defaults() {
     TEST_MODE=false
     APPARGS=
@@ -9,10 +27,13 @@ function set_defaults() {
     SPARK_OPTIONS=
     GEN_CLUSTER_NAME=
     APP_NAME=
+    RANDOM_NAME=false
+    set_app_file
+    set_exit_flag
 }
 
 function app_preamble() {
-    if [ -z "$FIXED_APP_NAME" ]; then
+    if [ -z "$FIXED_APP_NAME" -o "$RANDOM_NAME" == true ]; then
         set +e
         SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
         set -e
@@ -35,16 +56,12 @@ function set_fixed_app_name() {
     fi
 }
 
-function set_template() {
-    TEMPLATE=$1
+function force_random_app_name() {
+    RANDOM_NAME=true
 }
 
-function set_exit_flag() {
-    if [ "$#" -eq 1 ]; then
-	EXIT_FLAG="-p APP_EXIT=$1"
-    else
-	EXIT_FLAG=
-    fi
+function set_template() {
+    TEMPLATE=$1
 }
 
 function set_git_uri() {
@@ -57,16 +74,6 @@ function set_git_uri() {
     else
 	GIT_URI=
 	SOURCE_INFO=
-    fi
-}
-
-function set_app_file() {
-    if [ "$#" -eq 1 ]; then
-	APP_FILE_NAME=$1
-	APP_FILE="-p APP_FILE=$1"
-    else
-	APP_FILE_NAME=
-	APP_FILE=
     fi
 }
 
@@ -92,7 +99,10 @@ function run_app() {
     set +e
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS &> /dev/null
     set -e
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster' $((10*minute))
+    # Allow some tests to skip the wait for the running app, because they don't care
+    if [ "$#" -eq 0 ]; then
+        os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster' $((10*minute))
+    fi
 }
 
 
@@ -119,7 +129,6 @@ function run_app_without_application_name() {
 
 function test_no_app_name {
     set_defaults
-    DEL_CLUSTER=true
     os::cmd::expect_success 'oc delete dc -l app'
     os::cmd::try_until_text 'oc get pod -l app' 'No resources found'
     run_app_without_application_name
@@ -207,15 +216,16 @@ function test_named_config {
 }
 
 function test_app_file {
+    # Look in the default app for the app_file value unset
     set_defaults
-    # APP_FILE is set in the image as an env at build time, so to change it we need to redo the build.
-    # If we're using random app_names then the name won't matter, if not then delete FIXED_APP_NAME
-    if [ -n "$FIXED_APP_NAME" ]; then
-        set +e
-        oc delete buildconfig $FIXED_APP_NAME &> /dev/null
-        oc delete is $FIXED_APP_NAME &> /dev/null
-        set -e
-    fi
+    run_app
+    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_FILE=$' $((10*minute))
+    cleanup_app
+
+    # Because the dc is bundled with a buildconfig, this will cause a new build. Force a different
+    # app name so that the build doesn't conflict and we can keep the default one around.
+    force_random_app_name
     set_app_file $1
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
@@ -223,28 +233,18 @@ function test_app_file {
     cleanup_app
     oc delete buildconfig $APP_NAME &> /dev/null
     oc delete is $APP_NAME &> /dev/null
-
-    set_app_file
-    run_app
-    DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_FILE=$' $((10*minute))
-    cleanup_app
-    # leave this build becase it matches the defaults
 }
 
 function test_git_ref {
     local old_source=$SOURCE_INFO
-    # the commit value has to be named in order for os::cmd to do the substitution
-    local commit=$2
+    local commit=$2 # commit value has to be named for os::cmd to do the substitution
     set_defaults
+
+    # We want a new build to reference the git_ref but we don't want to delete the old build, so
+    # force a new app name
+    force_random_app_name
     set_git_uri $1 $commit
-    set +e
-    if [ -n "$FIXED_APP_NAME" ]; then
-        oc delete buildconfig $FIXED_APP_NAME &> /dev/null
-        oc delete is $FIXED_APP_NAME &> /dev/null
-    fi
-    set -e
-    run_app
+    run_app skipwait
     SOURCE_INFO=$old_source
     os::cmd::try_until_success 'oc logs "$APP_NAME"-1-build | grep -e "Commit:[[:space:]]" | grep "$commit"'
     cleanup_app
@@ -282,7 +282,6 @@ function test_spark_options {
 
 function test_exit {
     set_defaults
-    set_exit_flag
     run_app
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'  $((10*minute))

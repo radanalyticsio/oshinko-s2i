@@ -14,10 +14,6 @@ set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name scala-build
 set_app_main_class org.apache.spark.examples.SparkPi
 
-# Clear these
-set_app_file
-set_exit_flag
-
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
 echo "++ test_exit"

@@ -9,11 +9,9 @@ source $SCRIPT_DIR/../builddc
 
 PYSPARK_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/pyspark
 set_template $PYSPARK_DIR/pysparkdc.json
-set_exit_flag false
 set_worker_count $S2I_TEST_WORKERS
 
 # Clear these flags
-set_app_file
 set_fixed_app_name
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"

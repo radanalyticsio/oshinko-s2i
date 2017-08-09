@@ -10,12 +10,8 @@ source $SCRIPT_DIR/../builddc
 PYSPARK_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/pyspark
 set_template $PYSPARK_DIR/pysparkbuilddc.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
-set_exit_flag false
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name pyspark-build
-
-# Clear this
-set_app_file
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 

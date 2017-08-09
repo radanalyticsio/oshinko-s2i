@@ -24,13 +24,8 @@ build_test_no_app_name
 echo "++ test_no_source_or_image"
 test_no_source_or_image
 
-set_app_file app.py
 echo "++ build_test_app_file app.py"
-build_test_app_file
-
-set_app_file
-echo "++ build_test_app_file"
-build_test_app_file
+build_test_app_file app.py
 
 echo "++ test_git_ref"
 test_git_ref $GIT_URI 6fa7763517d44a9f39d6b4f0a6c15737afbf2a5a
