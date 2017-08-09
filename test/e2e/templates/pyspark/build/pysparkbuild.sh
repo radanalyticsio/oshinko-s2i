@@ -7,8 +7,8 @@ source $TEST_DIR/common
 PYSPARK_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/pyspark
 
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
-source $SCRIPT_DIR/../builddc
-source $SCRIPT_DIR/../buildonly
+source $SCRIPT_DIR/../../builddc
+source $SCRIPT_DIR/../../buildonly
 
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_template $PYSPARK_DIR/pysparkbuild.json
