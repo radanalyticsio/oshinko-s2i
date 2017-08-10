@@ -5,8 +5,9 @@ language: go
 services:
 - docker
 matrix:
+  # no need to include the build target at present because the template
+  # tests perform builds from the local source to do the tests
   include:
-    - env: TO_TEST=build
     - env: TO_TEST=ephemeral
     - env: TO_TEST=pyspark-templates
     - env: TO_TEST=java-templates

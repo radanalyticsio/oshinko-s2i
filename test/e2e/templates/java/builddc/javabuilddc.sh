@@ -8,7 +8,11 @@ SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 
 JAVATEMP_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/java
-set_template $JAVATEMP_DIR/javabuilddc.json
+RESOURCE_DIR=$TEST_DIR/resources
+
+cp  $JAVATEMP_DIR/javabuilddc.json $RESOURCE_DIR/javabuilddc.json
+fix_template $RESOURCE_DIR/javabuilddc.json radanalyticsio/radanalytics-java-spark $S2I_TEST_IMAGE_JAVA
+set_template $RESOURCE_DIR/javabuilddc.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name java-build

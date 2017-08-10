@@ -307,3 +307,29 @@ function test_fixed_exit {
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'  $((10*minute))
     cleanup_app
 }
+
+function fix_template() {
+    local file=$1
+    local original_image=$2
+    local new_image=$3
+    # If the integrated registry is defined, then we have to do a push of the local image
+    # into the project and modify the template to use an ImageStreamTag
+    if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+	docker login --help | grep email
+	if [ "$?" -eq 0 ]; then
+            docker login -u $(oc whoami) -e jack@jack.com -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
+	else
+            docker login -u $(oc whoami) -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
+	fi
+        docker tag ${new_image} ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/${new_image}
+        docker push ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/${new_image}
+	sed -i "s^\"kind\": \"DockerImage\"^\"kind\": \"ImageStreamTag\"^" $file
+        sed -i "s^\"name\": \"$original_image\"^\"name\": \"$new_image:latest\"^" $file
+
+    # if the integrated registry is not defined then we just use DockerImage with the local image
+    # and remove the forcePull (forcePull will break the ability of "oc cluster up" to grab the local image)
+    else
+        sed -i "s^\"name\": \"$original_image\"^\"name\": \"$new_image\"^" $file
+        sed -i "s^\"forcePull\".*^^" $file
+    fi
+}

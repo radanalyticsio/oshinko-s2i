@@ -10,8 +10,11 @@ SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 source $SCRIPT_DIR/../../buildonly
 
+RESOURCE_DIR=$TEST_DIR/resources
+cp $SCALATEMP_DIR/scalabuild.json $RESOURCE_DIR/scalabuild.json
+fix_template $RESOURCE_DIR/scalabuild.json radanalyticsio/radanalytics-scala-spark $S2I_TEST_IMAGE_SCALA
+set_template $RESOURCE_DIR/scalabuild.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
-set_template $SCALATEMP_DIR/scalabuild.json
 set_fixed_app_name scala-build
 
 set_worker_count $S2I_TEST_WORKERS

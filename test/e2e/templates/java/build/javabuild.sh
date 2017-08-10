@@ -10,8 +10,11 @@ SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 source $SCRIPT_DIR/../../buildonly
 
+RESOURCE_DIR=$TEST_DIR/resources
+cp $JAVATEMP_DIR/javabuild.json $RESOURCE_DIR/javabuild.json
+fix_template $RESOURCE_DIR/javabuild.json radanalyticsio/radanalytics-java-spark $S2I_TEST_IMAGE_JAVA
+set_template $RESOURCE_DIR/javabuild.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
-set_template $JAVATEMP_DIR/javabuild.json
 set_fixed_app_name java-build
 
 set_worker_count $S2I_TEST_WORKERS
