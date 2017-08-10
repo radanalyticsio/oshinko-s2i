@@ -1,4 +1,4 @@
-LOCAL_IMAGE=radanalytics-scala-spark
+LOCAL_IMAGE ?= radanalytics-scala-spark
 
 # If you are going to push the built image to a registry
 # using the "push" make target then you should replace

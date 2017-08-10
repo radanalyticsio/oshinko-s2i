@@ -10,8 +10,11 @@ SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 source $SCRIPT_DIR/../../buildonly
 
+RESOURCE_DIR=$TEST_DIR/resources
+cp $PYSPARK_DIR/pysparkbuild.json $RESOURCE_DIR/pysparkbuild.json
+fix_template $RESOURCE_DIR/pysparkbuild.json radanalyticsio/radanalytics-pyspark $S2I_TEST_IMAGE_PYSPARK
+set_template $RESOURCE_DIR/pysparkbuild.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
-set_template $PYSPARK_DIR/pysparkbuild.json
 set_fixed_app_name pyspark-build
 
 set_worker_count $S2I_TEST_WORKERS

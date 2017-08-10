@@ -8,7 +8,11 @@ SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 
 SCALATEMP_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/scala
-set_template $SCALATEMP_DIR/scalabuilddc.json
+RESOURCE_DIR=$TEST_DIR/resources
+
+cp  $SCALATEMP_DIR/scalabuilddc.json $RESOURCE_DIR/scalabuilddc.json
+fix_template $RESOURCE_DIR/scalabuilddc.json radanalyticsio/radanalytics-scala-spark $S2I_TEST_IMAGE_SCALA
+set_template $RESOURCE_DIR/scalabuilddc.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name scala-build
