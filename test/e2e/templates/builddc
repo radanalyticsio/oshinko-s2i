@@ -97,7 +97,16 @@ function set_app_main_class() {
 function run_app() {
     app_preamble
     set +e
+    # If is a build is necessary, it can take a long time and this can cause tests in
+    # environments like travis to time out from lack of output.  So if the imagestream
+    # associated with APP_NAME doesn't already exist, watch the build log to produce log
+    # output and prevent timeout.
+    oc get is $APP_NAME &> /dev/null
+    local stream_exists=$?
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS &> /dev/null
+    if [ "$stream_exists" -ne 0 ]; then
+       oc log buildconfig/$APP_NAME -f
+    fi
     set -e
     # Allow some tests to skip the wait for the running app, because they don't care
     if [ "$#" -eq 0 ]; then
@@ -105,11 +114,15 @@ function run_app() {
     fi
 }
 
-
 function run_app_without_optionals() {
     app_preamble
     set +e
+    oc get is $APP_NAME &> /dev/null
+    local stream_exists=$?
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME $APP_MAIN_CLASS &> /dev/null
+    if [ "$stream_exists" -ne 0 ]; then
+       oc log buildconfig/$APP_NAME -f
+    fi
     set -e
     os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster'  $((10*minute))
 }
@@ -117,7 +130,12 @@ function run_app_without_optionals() {
 function run_app_without_clustername() {
     app_preamble
     set +e
+    oc get is $APP_NAME &> /dev/null
+    local stream_exists=$?
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME $APP_MAIN_CLASS &> /dev/null
+    if [ "$stream_exists" -ne 0 ]; then
+       oc log buildconfig/$APP_NAME -f
+    fi
     set -e
     os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster'  $((10*minute))
 }
@@ -129,13 +147,17 @@ function run_app_without_application_name() {
 
 function test_no_app_name {
     set_defaults
-    os::cmd::expect_success 'oc delete dc -l app'
-    os::cmd::try_until_text 'oc get pod -l app' 'No resources found'
+    os::cmd::expect_success 'oc delete buildconfig -l app'
+    os::cmd::try_until_text 'oc get buildconfig -l app' 'No resources found'
     run_app_without_application_name
-    os::cmd::try_until_not_text 'oc get pod -l app' 'No resources found' $((10*minute))
-    DRIVER=$(oc get pod -l app --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster'
-    os::cmd::expect_success 'oc delete dc -l app'
+    os::cmd::try_until_not_text 'oc get buildconfig -l app' 'No resources found' $((10*minute))
+    NAME=$(oc get buildconfig -l app --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success 'oc logs "$NAME"-1-build | grep "$GIT_URI"'
+    os::cmd::try_until_success 'oc get dc/"$NAME"'
+    os::cmd::try_until_success 'oc get is/"$NAME"'
+    os::cmd::expect_success 'oc delete buildconfig "$NAME"'
+    os::cmd::expect_success 'oc delete is "$NAME"'
+    os::cmd::expect_success 'oc delete dc "$NAME"'
 }
 
 function test_app_args {
