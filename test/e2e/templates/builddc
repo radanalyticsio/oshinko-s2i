@@ -94,6 +94,28 @@ function set_app_main_class() {
     fi
 }
 
+function poll_build() {
+    local status
+    local BUILDNUM=$(oc get buildconfig $APP_NAME --template='{{index .status "lastVersion"}}')
+    while true; do
+        status=$(oc get build "$APP_NAME"-$BUILDNUM --template="{{index .status \"phase\"}}")
+	if [ "$status" != "Complete" -a "$status" != "Failed" ]; then
+	    echo Build for $APP_NAME status is $status, waiting ...
+	elif [ "$status" == "Failed" ]; then
+	    oc log buildconfig/$APP_NAME
+	    oc delete buildconfig $APP_NAME
+	    oc delete is $APP_NAME
+	    set +e
+	    oc delete dc $APP_NAME
+	    set -e
+	    return 1
+	else
+	    break
+	fi
+	sleep 30
+    done
+}
+
 function run_app() {
     app_preamble
     set +e
@@ -104,12 +126,12 @@ function run_app() {
     oc get is $APP_NAME &> /dev/null
     local stream_exists=$?
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS &> /dev/null
-    if [ "$stream_exists" -ne 0 ]; then
-       oc log buildconfig/$APP_NAME -f
-    fi
     set -e
     # Allow some tests to skip the wait for the running app, because they don't care
     if [ "$#" -eq 0 ]; then
+	if [ "$stream_exists" -ne 0 ]; then
+            poll_build
+	fi
         os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster' $((10*minute))
     fi
 }
@@ -120,10 +142,10 @@ function run_app_without_optionals() {
     oc get is $APP_NAME &> /dev/null
     local stream_exists=$?
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME $APP_MAIN_CLASS &> /dev/null
-    if [ "$stream_exists" -ne 0 ]; then
-       oc log buildconfig/$APP_NAME -f
-    fi
     set -e
+    if [ "$stream_exists" -ne 0 ]; then
+       poll_build
+    fi
     os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster'  $((10*minute))
 }
 
@@ -133,10 +155,10 @@ function run_app_without_clustername() {
     oc get is $APP_NAME &> /dev/null
     local stream_exists=$?
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME $APP_MAIN_CLASS &> /dev/null
-    if [ "$stream_exists" -ne 0 ]; then
-       oc log buildconfig/$APP_NAME -f
-    fi
     set -e
+    if [ "$stream_exists" -ne 0 ]; then
+       poll_build
+    fi
     os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster'  $((10*minute))
 }
 

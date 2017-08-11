@@ -16,6 +16,24 @@ set_fixed_app_name
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
+function poll_build() {
+    # override poll_build from builddc because
+    # in this case we never do a build beyond the
+    # binary build we do directly, so polls will break!
+    return
+}
+
+function test_no_app_name {
+    set_defaults
+    os::cmd::expect_success 'oc delete dc -l app'
+    os::cmd::try_until_text 'oc get pod -l app' 'No resources found'
+    run_app_without_application_name
+    os::cmd::try_until_not_text 'oc get pod -l app' 'No resources found' $((10*minute))
+    DRIVER=$(oc get pod -l app --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster'
+    os::cmd::expect_success 'oc delete dc -l app'
+}
+
 # Make the S2I test image if it's not already in the project
 make_image
 set_image $TEST_IMAGE
