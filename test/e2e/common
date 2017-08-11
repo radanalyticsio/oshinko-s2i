@@ -13,7 +13,7 @@ if [ -z "$S2I_TEST_IMAGE_JAVA" ]; then
     if [ -n "$S2I_TEST_IMAGE_PREFIX" ]; then
 	S2I_TEST_IMAGE_JAVA=$S2I_TEST_IMAGE_PREFIX-java
     else
-	S2I_TEST_IMAGE_PYSPARK=radanalytics-java-spark
+	S2I_TEST_IMAGE_JAVA=radanalytics-java-spark
     fi
 fi
 
@@ -21,7 +21,7 @@ if [ -z "$S2I_TEST_IMAGE_SCALA" ]; then
     if [ -n "$S2I_TEST_IMAGE_PREFIX" ]; then
 	S2I_TEST_IMAGE_SCALA=$S2I_TEST_IMAGE_PREFIX-scala
     else
-	S2I_TEST_IMAGE_PYSPARK=radanalytics-scala-spark
+	S2I_TEST_IMAGE_SCALA=radanalytics-scala-spark
     fi
 fi
 

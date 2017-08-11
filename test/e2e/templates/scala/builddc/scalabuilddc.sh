@@ -20,6 +20,9 @@ set_app_main_class org.apache.spark.examples.SparkPi
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
+echo "++ test_no_app_name"
+test_no_app_name
+
 echo "++ test_exit"
 test_exit
 
@@ -43,9 +46,6 @@ test_driver_config
 
 echo "++ test_spark_options"
 test_spark_options
-
-echo "++ test_no_app_name"
-test_no_app_name
 
 echo "++ test_no_source_or_image"
 test_no_source_or_image
