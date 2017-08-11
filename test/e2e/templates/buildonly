@@ -9,8 +9,11 @@ function run_app() {
     oc get is $APP_NAME &> /dev/null
     local stream_exists=$?
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME="$APP_NAME" $APP_FILE &> /dev/null
-    if [ "$stream_exists" -ne 0 ]; then
-       oc log buildconfig/$APP_NAME -f
+    # Allow some tests to skip the wait for the running app, because they don't care
+    if [ "$#" -eq 0 ]; then
+        if [ "$stream_exists" -ne 0 ]; then
+            poll_build
+        fi
     fi
     set -e
 }
