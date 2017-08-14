@@ -22,7 +22,7 @@ set_worker_count $S2I_TEST_WORKERS
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
 echo "++ check_image"
-check_image
+check_image $S2I_TEST_IMAGE_JAVA
 
 echo "++ build_test_no_app_name"
 build_test_no_app_name
