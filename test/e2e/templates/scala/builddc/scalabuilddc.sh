@@ -21,7 +21,7 @@ set_app_main_class org.apache.spark.examples.SparkPi
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
 echo "++ check_image"
-check_image
+check_image $S2I_TEST_IMAGE_SCALA
 
 echo "++ test_no_app_name"
 test_no_app_name
