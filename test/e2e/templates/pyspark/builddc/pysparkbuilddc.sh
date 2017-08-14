@@ -19,6 +19,9 @@ set_fixed_app_name pyspark-build
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
+echo "++ check_image"
+check_image
+
 echo "++ test_no_app_name"
 test_no_app_name
 
