@@ -174,7 +174,7 @@ function test_no_app_name {
     run_app_without_application_name
     os::cmd::try_until_not_text 'oc get buildconfig -l app' 'No resources found' $((10*minute))
     NAME=$(oc get buildconfig -l app --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc logs "$NAME"-1-build | grep "$GIT_URI"'
+    os::cmd::try_until_success 'oc logs "$NAME"-1-build | grep "$GIT_URI"'  $((5*minute)) 
     os::cmd::try_until_success 'oc get dc/"$NAME"'
     os::cmd::try_until_success 'oc get is/"$NAME"'
     os::cmd::expect_success 'oc delete buildconfig "$NAME"'
@@ -359,15 +359,18 @@ function fix_template() {
     # If the integrated registry is defined, then we have to do a push of the local image
     # into the project and modify the template to use an ImageStreamTag
     if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
-	docker login --help | grep email
-	if [ "$?" -eq 0 ]; then
+        set +e
+        docker login --help | grep email &> /dev/null
+        local res=$?
+        set -e
+        if [ "$res" -eq 0 ]; then
             docker login -u $(oc whoami) -e jack@jack.com -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
-	else
+        else
             docker login -u $(oc whoami) -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
-	fi
+        fi
         docker tag ${new_image} ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/${new_image}
         docker push ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/${new_image}
-	sed -i "s^\"kind\": \"DockerImage\"^\"kind\": \"ImageStreamTag\"^" $file
+        sed -i "s^\"kind\": \"DockerImage\"^\"kind\": \"ImageStreamTag\"^" $file
         sed -i "s^\"name\": \"$original_image\"^\"name\": \"$new_image:latest\"^" $file
 
     # if the integrated registry is not defined then we just use DockerImage with the local image
@@ -376,4 +379,23 @@ function fix_template() {
         sed -i "s^\"name\": \"$original_image\"^\"name\": \"$new_image\"^" $file
         sed -i "s^\"forcePull\".*^^" $file
     fi
+}
+
+function check_image {
+    set_defaults
+    run_app skip_wait
+    os::cmd::try_until_success 'oc get buildconfig "$APP_NAME"' $((10*minute))
+    IMAGE=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "name"}}')
+    KIND=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "kind"}}')
+    os::cmd::expect_success 'echo "$IMAGE" | grep "$S2I_TEST_IMAGE_PYSPARK"'
+    if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+        os::cmd::expect_success 'echo "$KIND" | grep "ImageStreamTag"'
+    else
+        os::cmd::expect_success 'echo "$KIND" | grep "DockerImage"'
+    fi
+    oc delete buildconfig $APP_NAME &> /dev/null
+    oc delete is $APP_NAME &> /dev/null
+    set +e
+    oc delete dc $APP_NAME &> /dev/null
+    set -e
 }

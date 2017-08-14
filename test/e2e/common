@@ -216,7 +216,7 @@ function make_image() {
     TEST_IMAGE=play
     set +e
     oc get buildconfig play &> /dev/null
-    res=$?
+    local res=$?
     set -e
     if [ "$res" -ne 0 ]; then
         # The ip address of the internal registry may be set to support running against
@@ -235,12 +235,15 @@ function make_image() {
         if [ -z "${S2I_TEST_INTEGRATED_REGISTRY}" ]; then
             os::cmd::expect_success 'oc new-build --name=play "$S2I_TEST_IMAGE_PYSPARK" --binary'
         else
-	    docker login --help | grep email
-	    if [ "$?" -eq 0 ]; then
+            set +e
+            docker login --help | grep email &> /dev/null
+            res=$?
+            set -e
+            if [ "$res" -eq 0 ]; then
                 docker login -u $(oc whoami) -e jack@jack.com -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
-	    else
+            else
                 docker login -u $(oc whoami) -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
-	    fi
+            fi
             docker tag ${S2I_TEST_IMAGE_PYSPARK} ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/radanalytics-pyspark
             docker push ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/radanalytics-pyspark
             os::cmd::expect_success 'oc new-build --name=play --image-stream=radanalytics-pyspark --binary'

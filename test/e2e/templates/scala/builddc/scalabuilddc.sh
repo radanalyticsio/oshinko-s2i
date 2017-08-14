@@ -20,6 +20,9 @@ set_app_main_class org.apache.spark.examples.SparkPi
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
+echo "++ check_image"
+check_image
+
 echo "++ test_no_app_name"
 test_no_app_name
 
