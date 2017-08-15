@@ -99,9 +99,9 @@ function poll_build() {
     local BUILDNUM=$(oc get buildconfig $APP_NAME --template='{{index .status "lastVersion"}}')
     while true; do
         status=$(oc get build "$APP_NAME"-$BUILDNUM --template="{{index .status \"phase\"}}")
-	if [ "$status" != "Complete" -a "$status" != "Failed" ]; then
+	if [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
 	    echo Build for $APP_NAME status is $status, waiting ...
-	elif [ "$status" == "Failed" ]; then
+	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
 	    oc log buildconfig/$APP_NAME
 	    oc delete buildconfig $APP_NAME
 	    oc delete is $APP_NAME
