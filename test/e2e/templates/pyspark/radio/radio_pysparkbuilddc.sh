@@ -17,7 +17,7 @@ set_fixed_app_name pyspark-build
 # it to the resources directory
 set +e
 if [ -f "$RESOURCE_DIR"/resources.yaml ]; then
-    echo Using local resource.yaml
+    echo Using local resources.yaml
     oc create -f $RESOURCE_DIR/resources.yaml &> /dev/null
 else
     echo Using https://radanalytics.io/resources.yaml
