@@ -16,7 +16,13 @@ set_fixed_app_name pyspark-build
 # Need a little preamble here to read the resources.yaml, create the pyspark template, and save
 # it to the resources directory
 set +e
-oc create -f https://radanalytics.io/resources.yaml &> /dev/null
+if [ -f "$RESOURCE_DIR"/resources.yaml ]; then
+    echo Using local resource.yaml
+    oc create -f $RESOURCE_DIR/resources.yaml &> /dev/null
+else
+    echo Using https://radanalytics.io/resources.yaml
+    oc create -f https://radanalytics.io/resources.yaml &> /dev/null
+fi
 oc export template oshinko-pyspark-build-dc -o json > $RESOURCE_DIR/oshinko-pyspark-build-dc.json
 fix_template $RESOURCE_DIR/oshinko-pyspark-build-dc.json radanalyticsio/radanalytics-pyspark $S2I_TEST_IMAGE_PYSPARK
 set -e
