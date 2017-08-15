@@ -17,7 +17,13 @@ set_app_main_class org.apache.spark.examples.JavaSparkPi
 # Need a little preamble here to read the resources.yaml, create the java template, and save
 # it to the resources directory
 set +e
-oc create -f https://radanalytics.io/resources.yaml &> /dev/null
+if [ -f "$RESOURCE_DIR"/resources.yaml ]; then
+    echo Using local resource.yaml
+    oc create -f $RESOURCE_DIR/resources.yaml &> /dev/null
+else
+    echo Using https://radanalytics.io/resources.yaml
+    oc create -f https://radanalytics.io/resources.yaml &> /dev/null
+fi
 oc export template oshinko-java-spark-build-dc -o json > $RESOURCE_DIR/oshinko-java-spark-build-dc.json
 fix_template $RESOURCE_DIR/oshinko-java-spark-build-dc.json radanalyticsio/radanalytics-java-spark $S2I_TEST_IMAGE_JAVA
 set -e
