@@ -384,6 +384,7 @@ function fix_template() {
 function check_image {
     local testimage=$1
     set_defaults
+    force_random_app_name
     run_app skip_wait
     os::cmd::try_until_success 'oc get buildconfig "$APP_NAME"' $((10*minute))
     IMAGE=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "name"}}')
