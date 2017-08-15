@@ -37,13 +37,25 @@ test-java-templates:
 	cd java; LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make build
 	test/e2e/run.sh templates/java
 
+test-java-radio:
+	cd java; LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make build
+	test/e2e/run.sh templates/java/radio
+
 test-pyspark-templates:
 	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make build
 	test/e2e/run.sh templates/pyspark
 
+test-pyspark-radio:
+	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make build
+	test/e2e/run.sh templates/pyspark/radio
+
 test-scala-templates:
 	cd scala; LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make build
 	test/e2e/run.sh templates/scala
+
+test-scala-radio:
+	cd scala; LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make build
+	test/e2e/run.sh templates/scala/radio
 
 test-templates:
 	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make build
@@ -57,4 +69,4 @@ test-e2e:
 	cd scala; LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make build
 	test/e2e/run.sh
 
-.PHONY: build clean push $(alldirs) test-e2e test-ephemeral test-java-templates test-pyspark-templates test-scala-templates test-templates
+.PHONY: build clean push $(alldirs) test-e2e test-ephemeral test-java-templates test-pyspark-templates test-scala-templates test-templates test-pyspark-radio test-scala-radio test-java-radio
