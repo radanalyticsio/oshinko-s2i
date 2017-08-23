@@ -73,7 +73,6 @@
                   "ref": "${GIT_REF}"
                },
                "contextDir": "${CONTEXT_DIR}"
-             }
             },
             "strategy": {
                "type": "Source",
