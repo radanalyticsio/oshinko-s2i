@@ -120,7 +120,7 @@ function get_cluster_name {
             OSHINKO_CLUSTER_NAME=${output[0]}
             echo using stored cluster name $OSHINKO_CLUSTER_NAME
         else
-            OSHINKO_CLUSTER_NAME=cluster-`cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
+            OSHINKO_CLUSTER_NAME=cluster-`date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
         fi
     fi
 }

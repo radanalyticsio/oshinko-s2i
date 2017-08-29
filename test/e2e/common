@@ -120,7 +120,7 @@ function set_defaults() {
 function run_app() {
     # Launch the app using the service account and create a cluster
     set +e
-    SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+    SUFFIX=$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
     set -e
     APP_NAME=app-$SUFFIX
     if [ "$#" -ne 1 ]; then
@@ -149,7 +149,7 @@ function run_job() {
     # Launch the app using the service account and create a cluster
     # Until jobs work with image triggers, we need the full pullspec for an image in a job template
     set +e
-    SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+    SUFFIX=$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
     set -e
     APP_NAME=app-$SUFFIX
     IMAGE_NAME=$(oc get is play --template="{{index .status \"dockerImageRepository\"}}")
