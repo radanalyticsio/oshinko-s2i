@@ -77,7 +77,7 @@ for dir in "${dirs[@]}"; do
     # Create the project here
     name=$(basename ${dir} .sh)
     set +e # For some reason the result here from head is not 0 even though we get the desired result
-    namespace=${name}-$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
+    namespace=${name}-$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
     set -e
     oc new-project $namespace &> /dev/null
     oc create sa oshinko &> /dev/null

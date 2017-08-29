@@ -35,7 +35,7 @@ function set_defaults() {
 function app_preamble() {
     if [ -z "$FIXED_APP_NAME" -o "$RANDOM_NAME" == true ]; then
         set +e
-        SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+        SUFFIX=$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
         set -e
         APP_NAME=app-$SUFFIX
     else
