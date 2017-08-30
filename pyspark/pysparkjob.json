@@ -72,11 +72,6 @@
           "spec": {
               "completions": "${COMPLETIONS}",
               "parallelism": 1,
-              "selector": {
-                  "matchLabels": {
-                      "app": "${APPLICATION_NAME}"
-                  }
-              },
               "template": {
                   "metadata": {
                       "labels": {
@@ -117,9 +112,41 @@
                                 {
                                    "name": "OSHINKO_NAMED_CONFIG",
                                    "value": "${OSHINKO_NAMED_CONFIG}"
+                                },
+                                {
+                                   "name": "POD_NAME",
+                                   "valueFrom":
+                                     {
+                                        "fieldRef":
+                                           {
+                                              "fieldPath": "metadata.name"
+                                           }
+                                     }
+                                }
+                              ],
+                              "volumeMounts": [
+                                {
+                                   "mountPath": "/etc/podinfo",
+                                   "name": "podinfo",
+                                   "readOnly": false
                                 }
                               ]
                           }
+                      ],
+                      "volumes": [
+                         {
+                            "downwardAPI": {
+                               "items": [
+                                  {
+                                     "fieldRef": {
+                                        "fieldPath": "metadata.labels"
+                                     },
+                                     "path": "labels"
+                                  }
+                               ]
+                            },
+                            "name": "podinfo"
+                         }
                       ],
                       "restartPolicy": "Never",
                       "serviceAccount": "oshinko"
