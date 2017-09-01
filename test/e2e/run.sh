@@ -36,7 +36,8 @@ function find_tests() {
         return 0
     fi    
     for test in "${full_test_list[@]}"; do
-        if grep -q -E "${test_regex}" <<< "${test}"; then
+    	test_rel_path=${test#${test::1}*oshinko-s2i/test/e2e/}
+        if grep -q -E "${test_regex}" <<< "${test_rel_path}"; then
             selected_tests+=( "${test}" )
         fi
     done
