@@ -102,7 +102,7 @@ function poll_build() {
 	if [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
 	    echo Build for $APP_NAME status is $status, waiting ...
 	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
-	    oc log buildconfig/$APP_NAME
+	    oc log buildconfig/$APP_NAME | tail -100
 	    oc delete buildconfig $APP_NAME
 	    oc delete is $APP_NAME
 	    set +e
