@@ -20,8 +20,7 @@ clean:
  
 oshinko_linux_amd64:
 	rm -f oshinko_$(OSHINKO_RELEASE)_linux_amd64.tar.gz
-	wget https://github.com/radanalyticsio/oshinko-cli/releases/download/$(OSHINKO_RELEASE)/oshinko_$(OSHINKO_RELEASE)_linux_amd64.tar.gz
-	tar -xvzf oshinko_$(OSHINKO_RELEASE)_linux_amd64.tar.gz
+	curl -L https://github.com/radanalyticsio/oshinko-cli/releases/download/$(OSHINKO_RELEASE)/oshinko_$(OSHINKO_RELEASE)_linux_amd64.tar.gz | tar -zx
 
 process-driver-config:
 	unset GOPATH
