@@ -1,29 +1,27 @@
 build: CMD=build
 clean: CMD=clean
 
-.PHONY: oshinko-cli process-driver-config
+.PHONY: process-driver-config
 
-export GOPATH = $(CURDIR)/oshinko-cli
-clonepath = $(CURDIR)/oshinko-cli/src/github.com/radanalyticsio
-makepath = $(clonepath)/oshinko-cli
+OSHINKO_RELEASE=v0.2.5
 
 # At this point utils is a simple directory which is copied
 # by other components, so handle it here rather than give it
 # a Makefile which we would want to exclude on a copy
-
-build: oshinko-cli process-driver-config
-	cp $(makepath)/_output/oshinko-cli utils
+build: oshinko_linux_amd64 process-driver-config
+	cp oshinko_linux_amd64/oshinko utils
 	cp process-driver-config/process-driver-config utils
 
 clean: 
-	rm -f utils/oshinko-cli
+	rm -f utils/oshinko
 	rm -f utils/process-driver-config
-	rm -rf $(clonepath)
-
-oshinko-cli:
-	- mkdir -p $(clonepath)
-	- cd $(clonepath) && git clone -b v0.2.3 https://github.com/radanalyticsio/oshinko-cli
-	cd $(makepath) && make extended
+	rm -rf oshinko_linux_amd64
+	rm -f oshinko_$(OSHINKO_RELEASE)_linux_amd64.tar.gz
+ 
+oshinko_linux_amd64:
+	rm -f oshinko_$(OSHINKO_RELEASE)_linux_amd64.tar.gz
+	wget https://github.com/radanalyticsio/oshinko-cli/releases/download/$(OSHINKO_RELEASE)/oshinko_$(OSHINKO_RELEASE)_linux_amd64.tar.gz
+	tar -xvzf oshinko_$(OSHINKO_RELEASE)_linux_amd64.tar.gz
 
 process-driver-config:
 	unset GOPATH
