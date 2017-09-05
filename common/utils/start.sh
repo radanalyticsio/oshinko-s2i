@@ -31,7 +31,7 @@ function delete_ephemeral {
     local appstatus=$1
     local line
     echo "Deleting cluster $OSHINKO_CLUSTER_NAME"
-    line=$($CLI delete $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
+    line=$($CLI delete_eph $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
     echo $line
 }
 
@@ -114,7 +114,7 @@ function get_cluster_name {
     local lookup
     local output
     if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
-        lookup=$($CLI get --app=$DEPLOYMENT $CLI_ARGS 2>&1)
+        lookup=$($CLI get_eph --app=$DEPLOYMENT $CLI_ARGS 2>&1)
         if [ "$?" -eq 0 -a "$DEPLOYMENT" != "" ]; then
             output=($(echo $lookup))
             OSHINKO_CLUSTER_NAME=${output[0]}
@@ -213,7 +213,7 @@ function wait_for_workers_alive {
 source $APP_ROOT/etc/generate_container_user
 
 # Create the cluster through oshinko-cli if it does not exist
-CLI=$APP_ROOT/src/oshinko-cli
+CLI=$APP_ROOT/src/oshinko
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 if [ "$KUBERNETES_SERVICE_PORT" -eq 443 ]; then                                                                                                           
@@ -246,7 +246,7 @@ if [ "$CLI_RES" -ne 0 ]; then
         echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating shared cluster"
         APP_FLAG="--app=$POD_NAME"
     fi
-    CLI_LINE=$($CLI create $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $APP_FLAG $CLI_ARGS 2>&1)
+    CLI_LINE=$($CLI create_eph $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $APP_FLAG $CLI_ARGS 2>&1)
     CLI_RES=$?
     if [ "$CLI_RES" -eq 0 ]; then
         for i in {1..60}; do # wait up to 30 seconds
