@@ -3,14 +3,14 @@
 [![Docker java build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-java-spark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-java-spark)
 
 # oshinko-s2i #
-This is a place to put s2i images and utilities for Spark application builders for OpenShift.
+This is a place to put s2i images and utilities for Apache Spark application builders for OpenShift.
 Look for additional README files in the subdirectories for more detail.
 
 ## common ##
 
 Contains:
 
-* default Spark configuration files
+* default configuration files
 * an application startup script in `utils/start.sh`
 * utilities used by `start.sh` (process-driver-config, generate_container_user)
 
@@ -22,11 +22,11 @@ Contains an s2i image for pyspark applications and some templates, uses common.
 
 ## java ##
 
-Contains an s2i image for java spark applications and some templates, uses common.
+Contains an s2i image for java applications and some templates, uses common.
 
 ## scala ##
 
-Contains an s2i image for Scala Spark applications and some templates, uses common.
+Contains an s2i image for scala applications and some templates, uses common.
 
 ## Using `release-templates.sh` ##
 
