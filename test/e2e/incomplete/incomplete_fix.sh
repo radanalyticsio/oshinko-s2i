@@ -19,7 +19,7 @@ function wait_for_incomplete_fix {
     os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"-ui'
 
     run_app $1
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Found incomplete cluster'
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Found incomplete cluster' $((5*minute))
     os::cmd::expect_success 'oc create -f "$file"'
     rm $file
 
