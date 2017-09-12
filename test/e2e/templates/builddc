@@ -125,14 +125,14 @@ function run_app() {
     # output and prevent timeout.
     oc get is $APP_NAME &> /dev/null
     local stream_exists=$?
-    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS &> /dev/null
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS
     set -e
     # Allow some tests to skip the wait for the running app, because they don't care
     if [ "$#" -eq 0 ]; then
 	if [ "$stream_exists" -ne 0 ]; then
             poll_build
 	fi
-        os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster' $((10*minute))
+        os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster' $((10*minute))
     fi
 }
 
@@ -146,7 +146,7 @@ function run_app_without_optionals() {
     if [ "$stream_exists" -ne 0 ]; then
        poll_build
     fi
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster'  $((10*minute))
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
 }
 
 function run_app_without_clustername() {
@@ -159,7 +159,7 @@ function run_app_without_clustername() {
     if [ "$stream_exists" -ne 0 ]; then
        poll_build
     fi
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'cluster'  $((10*minute))
+    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
 }
 
 function run_app_without_application_name() {

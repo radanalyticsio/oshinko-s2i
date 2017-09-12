@@ -129,8 +129,9 @@ function run_app() {
     fi
     if [ "$1" != true ]; then
         os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
-        os::cmd::try_until_not_text 'oc get rc "$APP_NAME"-1 --template="{{index .metadata.labels \"uses-oshinko-cluster\"}}"' "<no value>" $((5*minute))
-        GEN_CLUSTER_NAME=$(oc get rc "$APP_NAME"-1 --template='{{index .metadata.labels "uses-oshinko-cluster"}}')
+
+        os::cmd::try_until_text 'oc logs dc/$APP_NAME' 'Using.*cluster' $((5*minute))
+        GEN_CLUSTER_NAME=$(oc logs dc/$APP_NAME | sed -rn "s@Using (shared|ephemeral) cluster (.*$)@\2@p")
 
     else
 	# If the cluster name was not cleared, reuse it
@@ -163,8 +164,8 @@ function run_job() {
         # Use the os::cmd_try_until_xxx functions to gate
         os::cmd::try_until_success 'oc get pod -l app="$APP_NAME"'
         pod=$(oc get pod -l app=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-        os::cmd::try_until_text 'oc logs "$pod"' "Using shared cluster"
-        GEN_CLUSTER_NAME=$(oc logs $pod | grep "Using shared cluster" | grep -oE "[^ ]+$")
+        os::cmd::try_until_text 'oc logs "$pod"' "Using.*cluster"
+        GEN_CLUSTER_NAME=$(oc logs $pod | sed -rn "s@Using (shared|ephemeral) cluster (.*$)@\2@p")
     else
 	# If the cluster name was not cleared, reuse it
 	if [ "$GEN_CLUSTER_NAME" == "" ]; then
@@ -182,17 +183,18 @@ function cleanup_app() {
     # We may have code shared by build templates and app templates
     # that calls cleanup_app, and the build tempaltes may not have dcs ...
     set +e
-    oc scale dc/"$APP_NAME" --replicas=0 &> /dev/null
+    oc scale dc/"$APP_NAME" --replicas=0
     set -e
-    os::cmd::try_until_text 'oc get pods -l deploymentconfig="$APP_NAME"' 'No resources found' > /dev/null
+    os::cmd::try_until_text 'oc get pods -l deploymentconfig="$APP_NAME"' 'No resources found'
     set +e
-    oc delete dc/"$APP_NAME" &> /dev/null
+    oc delete dc/"$APP_NAME"
+    os::cmd::try_until_failure 'oc logs dc/$APP_NAME'
     set -e
     if [ "$#" -eq 1 ]; then
-        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"' > /dev/null
-        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"' > /dev/null
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"' > /dev/null
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui' > /dev/null
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
     fi
 }
 
@@ -200,15 +202,15 @@ function cleanup_cluster() {
     # We get tricky here and just use try_until_failure for components that
     # might not actually exist, depending on what we've been doing
     # If present, they'll be deleted and the next call will fail
-    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui' > /dev/null
-    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"' > /dev/null
-    os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"' > /dev/null
-    os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"' > /dev/null
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui'
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"'
+    os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"'
+    os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"'
     if [ "$#" -eq 0 ]; then
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"' > /dev/null
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui' > /dev/null
-        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"' > /dev/null
-        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"' > /dev/null
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
     fi
 } 
 
