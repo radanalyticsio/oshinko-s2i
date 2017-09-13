@@ -58,7 +58,7 @@ try {
 
 							// run tests
 							dir('oshinko-s2i') {
-								sh('make test-ephemeral')
+								sh('make test-ephemeral | tee -a test-ephemeral.log')
 							}
 						}
 					}
@@ -73,7 +73,7 @@ try {
 
 							// run tests
 							dir('oshinko-s2i') {
-								sh('make test-pyspark-templates')
+								sh('make test-pyspark-templates | tee -a test-pyspark-templates.log')
 							}
 						}
 					}
@@ -88,7 +88,7 @@ try {
 
 							// run tests
 							dir('oshinko-s2i') {
-								sh('make test-java-templates')
+								sh('make test-java-templates | tee -a test-java-templates.log')
 							}
 						}
 					}
@@ -103,7 +103,7 @@ try {
 
 							// run tests
 							dir('oshinko-s2i') {
-								sh('make test-scala-templates')
+								sh('make test-scala-templates | tee -a test-scala-templates.log')
 							}
 						}
 					}
@@ -112,6 +112,10 @@ try {
 } catch (err) {
 	githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
 	throw err
+} finally {
+	dir('oshinko-s2i') {
+		archiveArtifacts(allowEmptyArchive: true, artifacts: '*.log')
+	}
 }
 
 githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'This change looks good', status: 'SUCCESS', targetUrl: buildUrl)
