@@ -42,7 +42,11 @@ node {
 	stage('init') {
 		// generate build url
 		buildUrl = sh(script: 'curl https://url.corp.redhat.com/new?$BUILD_URL', returnStdout: true)
-		githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'This change is being built', status: 'PENDING', targetUrl: buildUrl)
+		try {
+			githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'This change is being built', status: 'PENDING', targetUrl: buildUrl)
+		} catch (err) {
+			echo("Wasn't able to notify Github: ${err}")
+		}
 	}
 }
 
@@ -110,7 +114,11 @@ try {
 		}
 	}
 } catch (err) {
-	githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
+	try {
+		githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
+	} catch (errNotify) {
+		echo("Wasn't able to notify Github: ${errNotify}")
+	}
 	throw err
 } finally {
 	dir('oshinko-s2i') {
@@ -118,6 +126,10 @@ try {
 	}
 }
 
-githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'This change looks good', status: 'SUCCESS', targetUrl: buildUrl)
+try {
+	githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'This change looks good', status: 'SUCCESS', targetUrl: buildUrl)
+} catch (err) {
+	echo("Wasn't able to notify Github: ${err}")
+}
 
 
