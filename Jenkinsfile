@@ -32,6 +32,8 @@ def prepareTests() {
 
 	// login to openshift instance
 	sh('oc login https://$OCP_HOSTNAME:8443 -u $OCP_USER -p $OCP_PASSWORD --insecure-skip-tls-verify=true')
+	// let's start on a specific project, to prevent start on a random project which could be deleted in the meantime
+	sh('oc project testsuite')
 }
 
 def buildUrl
