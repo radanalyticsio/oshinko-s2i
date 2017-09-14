@@ -153,7 +153,7 @@ function run_job() {
     SUFFIX=$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
     set -e
     APP_NAME=app-$SUFFIX
-    IMAGE_NAME=$(oc get is play --template="{{index .status \"dockerImageRepository\"}}")
+    IMAGE_NAME=$(oc describe is play | sed -rn -e "s@Docker Pull Spec:\s*(.*)@\1@p")
     if [ "$#" -ne 1 ]; then
 	echo run_job takes 1 parameter, true or false for named or unnamed cluster
 	return 1
@@ -185,16 +185,16 @@ function cleanup_app() {
     set +e
     oc scale dc/"$APP_NAME" --replicas=0
     set -e
-    os::cmd::try_until_text 'oc get pods -l deploymentconfig="$APP_NAME"' 'No resources found'
+    os::cmd::try_until_text 'oc get pods -l deploymentconfig="$APP_NAME"' 'No resources found' $((5*minute))
     set +e
     oc delete dc/"$APP_NAME"
-    os::cmd::try_until_failure 'oc logs dc/$APP_NAME'
+    os::cmd::try_until_failure 'oc logs dc/$APP_NAME' $((5*minute))
     set -e
     if [ "$#" -eq 1 ]; then
-        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
-        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"' $((5*minute))
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"' $((5*minute))
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"' $((5*minute))
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui' $((5*minute))
     fi
 }
 
@@ -202,15 +202,15 @@ function cleanup_cluster() {
     # We get tricky here and just use try_until_failure for components that
     # might not actually exist, depending on what we've been doing
     # If present, they'll be deleted and the next call will fail
-    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui'
-    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"'
-    os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"'
-    os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"'
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"-ui' $((5*minute))
+    os::cmd::try_until_failure 'oc delete service "$GEN_CLUSTER_NAME"' $((5*minute))
+    os::cmd::try_until_failure 'oc delete dc "$MASTER_DC"' $((5*minute))
+    os::cmd::try_until_failure 'oc delete dc "$WORKER_DC"' $((5*minute))
     if [ "$#" -eq 0 ]; then
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"'
-        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui'
-        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"'
-        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"'
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"' $((5*minute))
+        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui' $((5*minute))
+        os::cmd::try_until_failure 'oc get dc "$MASTER_DC"' $((5*minute))
+        os::cmd::try_until_failure 'oc get dc "$WORKER_DC"' $((5*minute))
     fi
 } 
 
