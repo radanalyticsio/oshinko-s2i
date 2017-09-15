@@ -1,8 +1,6 @@
 #!/bin/bash
 trap handle_term TERM INT
 
-echo "version 1"
-
 function app_exit {
     # Sleep forever so the process does not complete
     while [ ${APP_EXIT:-false} == false ]
@@ -227,6 +225,8 @@ SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
 NS=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
 CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA --namespace=$NS"
 CREATED_EPHEMERAL=false
+
+$CLI version
 
 get_app_file
 get_deployment
