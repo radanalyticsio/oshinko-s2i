@@ -49,6 +49,5 @@ function del_pod_tests() {
     echo ++ del_pod '"SparkContext: Starting job"'
     del_pod "SparkContext: Starting job"
 
-    cleanup_app wait_for_cluster_del
-    return
+    cleanup_app
 }

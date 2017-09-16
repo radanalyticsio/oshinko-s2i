@@ -21,7 +21,7 @@ function redeploy_cluster_removed() {
     os::cmd::try_until_text 'oc logs "$DRIVER"' "Didn't find cluster"
     os::cmd::try_until_text 'oc logs "$DRIVER"' "Waiting for spark master"
 
-    cleanup_app wait_for_cluster_del
+    cleanup_app
 }
 
 # Define a bunch of functions and set a bunch of variables

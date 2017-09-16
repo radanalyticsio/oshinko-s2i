@@ -29,5 +29,5 @@ function pod_completed_tests() {
     run_app $1
     del_pod_completed
 
-    cleanup_app wait_for_cluster_del
+    cleanup_app
 }
