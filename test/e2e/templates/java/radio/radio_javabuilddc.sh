@@ -25,7 +25,7 @@ else
     oc create -f https://radanalytics.io/resources.yaml &> /dev/null
 fi
 oc export template oshinko-java-spark-build-dc -o json > $RESOURCE_DIR/oshinko-java-spark-build-dc.json
-fix_template $RESOURCE_DIR/oshinko-java-spark-build-dc.json radanalyticsio/radanalytics-java-spark $S2I_TEST_IMAGE_JAVA
+fix_template $RESOURCE_DIR/oshinko-java-spark-build-dc.json radanalyticsio/radanalytics-java-spark:stable $S2I_TEST_IMAGE_JAVA
 set -e
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
