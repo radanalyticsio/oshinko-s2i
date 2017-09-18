@@ -50,79 +50,112 @@ node {
 	}
 }
 
+parallel testEphemeral: {
+	node {
+		stage('Test ephemeral') {
+			withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
 
-try {
-	parallel testEphemeral: {
-		node {
-			stage('Test ephemeral')
-					{
-						withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
+				try {
+					prepareTests()
 
-							prepareTests()
-
-							// run tests
-							dir('oshinko-s2i') {
-								sh('make test-ephemeral | tee -a test-ephemeral.log')
-							}
-						}
+					// run tests
+					dir('oshinko-s2i') {
+						sh('make test-ephemeral | tee -a test-ephemeral.log && exit ${PIPESTATUS[0]}')
 					}
-		}
-	}, testPysparkTemplates: {
-		node {
-			stage('Test pyspark-templates')
-					{
-						withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
-
-							prepareTests()
-
-							// run tests
-							dir('oshinko-s2i') {
-								sh('make test-pyspark-templates | tee -a test-pyspark-templates.log')
-							}
-						}
+				} catch (err) {
+					try {
+						githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
+					} catch (errNotify) {
+						echo("Wasn't able to notify Github: ${errNotify}")
 					}
-		}
-	}, testJavaTemplates: {
-		node {
-			stage('Test java-templates')
-					{
-						withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
-
-							prepareTests()
-
-							// run tests
-							dir('oshinko-s2i') {
-								sh('make test-java-templates | tee -a test-java-templates.log')
-							}
-						}
+					throw err
+				} finally {
+					dir('oshinko-s2i') {
+						archiveArtifacts(allowEmptyArchive: true, artifacts: 'test-ephemeral.log')
 					}
-		}
-	}, testScalaTemplates: {
-		node {
-			stage('Test scala-templates')
-					{
-						withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
-
-							prepareTests()
-
-							// run tests
-							dir('oshinko-s2i') {
-								sh('make test-scala-templates | tee -a test-scala-templates.log')
-							}
-						}
-					}
+				}
+			}
 		}
 	}
-} catch (err) {
-	try {
-		githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
-	} catch (errNotify) {
-		echo("Wasn't able to notify Github: ${errNotify}")
+}, testPysparkTemplates: {
+	node {
+		stage('Test pyspark-templates') {
+			withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
+
+				try {
+					prepareTests()
+
+					// run tests
+					dir('oshinko-s2i') {
+						sh('make test-pyspark-templates | tee -a test-pyspark-templates.log && exit ${PIPESTATUS[0]}')
+					}
+				} catch (err) {
+					try {
+						githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
+					} catch (errNotify) {
+						echo("Wasn't able to notify Github: ${errNotify}")
+					}
+					throw err
+				} finally {
+					dir('oshinko-s2i') {
+						archiveArtifacts(allowEmptyArchive: true, artifacts: 'test-pyspark-templates.log')
+					}
+				}
+			}
+		}
 	}
-	throw err
-} finally {
-	dir('oshinko-s2i') {
-		archiveArtifacts(allowEmptyArchive: true, artifacts: '*.log')
+}, testJavaTemplates: {
+	node {
+		stage('Test java-templates') {
+			withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
+
+				try {
+					prepareTests()
+
+					// run tests
+					dir('oshinko-s2i') {
+						sh('make test-java-templates | tee -a test-java-templates.log && exit ${PIPESTATUS[0]}')
+					}
+				} catch (err) {
+					try {
+						githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
+					} catch (errNotify) {
+						echo("Wasn't able to notify Github: ${errNotify}")
+					}
+					throw err
+				} finally {
+					dir('oshinko-s2i') {
+						archiveArtifacts(allowEmptyArchive: true, artifacts: 'test-java-templates.log')
+					}
+				}
+			}
+		}
+	}
+}, testScalaTemplates: {
+	node {
+		stage('Test scala-templates') {
+			withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
+				try {
+					prepareTests()
+
+					// run tests
+					dir('oshinko-s2i') {
+						sh('make test-scala-templates | tee -a test-scala-templates.log && exit ${PIPESTATUS[0]}')
+					}
+				} catch (err) {
+					try {
+						githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
+					} catch (errNotify) {
+						echo("Wasn't able to notify Github: ${errNotify}")
+					}
+					throw err
+				} finally {
+					dir('oshinko-s2i') {
+						archiveArtifacts(allowEmptyArchive: true, artifacts: 'test-scala-templates.log')
+					}
+				}
+			}
+		}
 	}
 }
 
