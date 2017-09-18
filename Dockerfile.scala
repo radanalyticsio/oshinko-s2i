@@ -1,5 +1,5 @@
 # radanalytics-scala-spark
-FROM radanalyticsio/openshift-spark:2.1-latest
+FROM radanalyticsio/openshift-spark:2.2-latest
 
 MAINTAINER Pete MacKinnon pmackinn@redhat.com
  

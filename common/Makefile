@@ -3,7 +3,7 @@ clean: CMD=clean
 
 .PHONY: process-driver-config
 
-OSHINKO_RELEASE=v0.2.7
+OSHINKO_RELEASE=v0.3.0
 
 # At this point utils is a simple directory which is copied
 # by other components, so handle it here rather than give it
