@@ -24,7 +24,7 @@ else
     oc create -f https://radanalytics.io/resources.yaml &> /dev/null
 fi
 oc export template oshinko-pyspark-build-dc -o json > $RESOURCE_DIR/oshinko-pyspark-build-dc.json
-fix_template $RESOURCE_DIR/oshinko-pyspark-build-dc.json radanalyticsio/radanalytics-pyspark $S2I_TEST_IMAGE_PYSPARK
+fix_template $RESOURCE_DIR/oshinko-pyspark-build-dc.json radanalyticsio/radanalytics-pyspark:stable $S2I_TEST_IMAGE_PYSPARK
 set -e
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"

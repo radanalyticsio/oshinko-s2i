@@ -389,11 +389,17 @@ function check_image {
     os::cmd::try_until_success 'oc get buildconfig "$APP_NAME"' $((10*minute))
     IMAGE=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "name"}}')
     KIND=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "kind"}}')
-    os::cmd::expect_success 'echo "$IMAGE" | grep "$testimage"'
+    echo $IMAGE
+    echo $testimage
+    echo $KIND
+    echo $S2I_TEST_INTEGRATED_REGISTRY
+    [ "$KIND" == "DockerImage" ]
+    [ "$IMAGE" == "$testimage" ]
+    os::cmd::expect_success '[ "$IMAGE" == "$testimage" ]'
     if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
-        os::cmd::expect_success 'echo "$KIND" | grep "ImageStreamTag"'
+        os::cmd::expect_success '[ "$KIND" == "ImageStreamTag" ]'
     else
-        os::cmd::expect_success 'echo "$KIND" | grep "DockerImage"'
+        os::cmd::expect_success '[ "$KIND" == "DockerImage" ]'
     fi
     oc delete buildconfig $APP_NAME &> /dev/null
     oc delete is $APP_NAME &> /dev/null
