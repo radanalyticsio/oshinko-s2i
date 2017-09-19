@@ -6,6 +6,8 @@
 This is a place to put s2i images and utilities for Apache Spark application builders for OpenShift.
 Look for additional README files in the subdirectories for more detail.
 
+## test commit ##
+
 ## common ##
 
 Contains:
