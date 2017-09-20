@@ -34,12 +34,21 @@ The `test/e2e/common` file reads or sets several environment variables:
 ``S2I_TEST_INTEGRATED_REGISTRY``
 
   This is the IP address of the integrated registry and it needs to be set
-  when running tests against a full OpenShift instance. It does not need to
-  be set when running against an instance created with "oc cluster up".
+  when running tests against a full OpenShift instance from the OpenShift
+  master host and using the integrated registry. It does not need to be set
+  when running against an instance created with "oc cluster up".
 
 ```sh
 $ S2I_TEST_INTEGRATED_REGISTRY=172.123.456.89:5000 test/e2e/run.sh
 ```
+
+``S2I_TEST_EXTERNAL_REGISTRY``
+
+  This is the IP address of a docker registry to use as an alternative to
+  either the integrated registry or the local docker daemon when "oc cluster up"
+  is used to provide the OpenShift instance. If this is set then `S2I_TEST_EXTERNAL_USER`
+  and `S2I_TEST_EXTERNAL_PASSWORD` must also be set so that the tests can
+  log in to the registry.
 
 ``S2I_TEST_IMAGE`` (default is radanalytics-pyspark)
 
