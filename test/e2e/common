@@ -1,5 +1,8 @@
 #!/bin/bash
 S2I_TEST_INTEGRATED_REGISTRY=${S2I_TEST_INTEGRATED_REGISTRY:-}
+S2I_TEST_EXTERNAL_REGISTRY=${S2I_TEST_EXTERNAL_REGISTRY:-}
+S2I_TEST_EXTERNAL_USER=${S2I_TEST_EXTERNAL_USER:-}
+S2I_TEST_EXTERNAL_PASSWORD=${S2I_TEST_EXTERNAL_PASSWORD:-}
 
 if [ -z "$S2I_TEST_IMAGE_PYSPARK" ]; then
     if [ -n "$S2I_TEST_IMAGE_PREFIX" ]; then
@@ -41,10 +44,22 @@ RESOURCE_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)/resources
 source $(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i')/hack/lib/init.sh
 
 function print_test_env {
-    if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+    if [ -n "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+        echo Using external registry $S2I_TEST_EXTERNAL_REGISTRY
+        if [ -z "$S2I_TEST_EXTERNAL_USER" ]; then
+            echo "WARNING: S2I_TEST_EXTERNAL_USER not set!"
+        else
+	    echo Using external user $S2I_TEST_EXTERNAL_USER
+        fi
+        if [ -z "$S2I_TEST_EXTERNAL_PASSWORD" ]; then
+            echo "WARNING: S2I_TEST_EXTERNAL_PASSWORD not set!"
+        else
+            echo External password set
+        fi
+    elif [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
         echo Using integrated registry $S2I_TEST_INTEGRATED_REGISTRY
     else
-        echo Not using integrated registry
+        echo Not using external or integrated registry
     fi
     echo Using local s2i pyspark image $S2I_TEST_IMAGE_PYSPARK
     echo Using local s2i java image $S2I_TEST_IMAGE_JAVA
@@ -235,7 +250,32 @@ function make_image() {
             echo Uh oh, image $S2I_TEST_IMAGE_PYSPARK does not exist
             return 1
         fi
-        if [ -z "${S2I_TEST_INTEGRATED_REGISTRY}" ]; then
+
+	local user=
+	local password=
+	local pushproj=
+	local pushimage=
+	local registry=
+	local imagestream=
+
+	if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+	    user=$S2I_TEST_EXTERNAL_USER
+	    password=$S2I_TEST_EXTERNAL_PASSWORD
+	    pushproj=$user
+	    pushimage=scratch-radanalytics-pyspark
+	    registry=$S2I_TEST_EXTERNAL_REGISTRY
+	    imagestream=false
+
+	elif [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+	    user=$(oc whoami)
+	    password=$(oc whoami -t)
+	    pushproj=$PROJECT
+	    pushimage=radanalytics-pyspark
+	    registry=$S2I_TEST_INTEGRATED_REGISTRY
+	    imagestream=true
+	fi
+
+        if [ -z "$registry" ]; then
             os::cmd::expect_success 'oc new-build --name=play "$S2I_TEST_IMAGE_PYSPARK" --binary'
         else
             set +e
@@ -243,13 +283,17 @@ function make_image() {
             res=$?
             set -e
             if [ "$res" -eq 0 ]; then
-                docker login -u $(oc whoami) -e jack@jack.com -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
+                docker login -u ${user} -e jack@jack.com -p ${password} ${registry}
             else
-                docker login -u $(oc whoami) -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
+                docker login -u ${user} -p ${password} ${registry}
             fi
-            docker tag ${S2I_TEST_IMAGE_PYSPARK} ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/radanalytics-pyspark
-            docker push ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/radanalytics-pyspark
-            os::cmd::expect_success 'oc new-build --name=play --image-stream=radanalytics-pyspark --binary'
+            docker tag ${S2I_TEST_IMAGE_PYSPARK} ${registry}/${pushproj}/${pushimage}
+            docker push ${registry}/${pushproj}/${pushimage}
+	    if [ "$imagestream" == true ]; then
+		os::cmd::expect_success 'oc new-build --name=play --image-stream="$pushimage" --binary'
+	    else
+		os::cmd::expect_success 'oc new-build --name=play --docker-image="$pushproj"/"$pushimage" --binary'
+	    fi
         fi
     fi
     BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')

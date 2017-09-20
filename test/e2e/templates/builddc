@@ -379,22 +379,50 @@ function fix_template() {
     local file=$1
     local original_image=$2
     local new_image=$3
+
+    local user=
+    local password=
+    local pushproj=
+    local pushimage=
+    local registry=
+    local imagestream=
+
     # If the integrated registry is defined, then we have to do a push of the local image
     # into the project and modify the template to use an ImageStreamTag
-    if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+    if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+	user=$S2I_TEST_EXTERNAL_USER
+	password=$S2I_TEST_EXTERNAL_PASSWORD
+	pushproj=$user
+	pushimage=scratch-$new_image
+	registry=$S2I_TEST_EXTERNAL_REGISTRY
+	imagestream=false
+    elif [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+	user=$(oc whoami)
+	password=$(oc whoami -t)
+	pushproj=$PROJECT
+	pushimage=$new_image
+	registry=$S2I_TEST_INTEGRATED_REGISTRY
+	imagestream=true
+    fi
+
+    if [ -n "$registry" ]; then
         set +e
         docker login --help | grep email &> /dev/null
         local res=$?
         set -e
         if [ "$res" -eq 0 ]; then
-            docker login -u $(oc whoami) -e jack@jack.com -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
+            docker login -u $user -e jack@jack.com -p $password $registry
         else
-            docker login -u $(oc whoami) -p $(oc whoami -t) ${S2I_TEST_INTEGRATED_REGISTRY}
+            docker login -u $user -p $password $registry
         fi
-        docker tag ${new_image} ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/${new_image}
-        docker push ${S2I_TEST_INTEGRATED_REGISTRY}/${PROJECT}/${new_image}
-        sed -i "s^\"kind\": \"DockerImage\"^\"kind\": \"ImageStreamTag\"^" $file
-        sed -i "s^\"name\": \"$original_image\"^\"name\": \"$new_image:latest\"^" $file
+        docker tag ${new_image} ${registry}/${pushproj}/${pushimage}
+        docker push ${registry}/${pushproj}/${pushimage}
+        if [ "$imagestream" == true ]; then
+            sed -i "s^\"kind\": \"DockerImage\"^\"kind\": \"ImageStreamTag\"^" $file
+            sed -i "s^\"name\": \"$original_image\"^\"name\": \"$pushimage:latest\"^" $file
+        else
+            sed -i "s^\"name\": \"$original_image\"^\"name\": \"$pushproj/$pushimage\"^" $file
+        fi
 
     # if the integrated registry is not defined then we just use DockerImage with the local image
     # and remove the forcePull (forcePull will break the ability of "oc cluster up" to grab the local image)
@@ -412,13 +440,34 @@ function check_image {
     os::cmd::try_until_success 'oc get buildconfig "$APP_NAME"' $((10*minute))
     IMAGE=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "name"}}')
     KIND=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "kind"}}')
-    if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+
+    local pushproj=
+    local pushimage=
+    local registry=
+    local imagestream=
+
+    # If the integrated registry is defined, then we have to do a push of the local image
+    # into the project and modify the template to use an ImageStreamTag
+    if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+	imagestream=false
+	registry=true
+	testimage=$S2I_TEST_EXTERNAL_USER/scratch-$testimage
+    elif [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+	imagestream=true
+	registry=true
+    fi
+
+    if [ "$registry" == true ]; then
         # strip the tags from both images in the case of the integrated registry
         # because we're not sure what we'll have.
         v1=$(echo "$IMAGE" | sed -r -e "s@([^:]*)(:.*)@\1@")
         v2=$(echo "$testimage" | sed -r -e "s@([^:]*)(:.*)@\1@")
+        echo $v1
+        echo $v2
         os::cmd::expect_success '[ "$v1" == "$v2" ]'
-        os::cmd::expect_success '[ "$KIND" == "ImageStreamTag" ]'
+        if [ "$imagestream" == true ]; then
+            os::cmd::expect_success '[ "$KIND" == "ImageStreamTag" ]'
+        fi
     else
         os::cmd::expect_success '[ "$IMAGE" == "$testimage" ]'
         os::cmd::expect_success '[ "$KIND" == "DockerImage" ]'
