@@ -292,7 +292,7 @@ function make_image() {
 	    if [ "$imagestream" == true ]; then
 		os::cmd::expect_success 'oc new-build --name=play --image-stream="$pushimage" --binary'
 	    else
-		os::cmd::expect_success 'oc new-build --name=play --docker-image="$pushproj"/"$pushimage":latest --binary'
+		os::cmd::expect_success 'oc new-build --name=play --docker-image="$registry"/"$pushproj"/"$pushimage":latest --binary'
 	    fi
         fi
     fi
