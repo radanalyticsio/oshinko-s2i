@@ -105,6 +105,21 @@ function clear_cluster_name() {
     GEN_CLUSTER_NAME=""
 }
 
+function set_driver_config() {
+    init_driver_config
+    DRIVER_CONFIG=driverconfig
+}
+
+function delete_driver_config() {
+    set +e
+    oc delete configmap driverconfig
+    set -e
+}
+
+function clear_driver_config() {
+    DRIVER_CONFIG=
+}
+
 function init_config_map() {
     set +e
     oc delete configmap clusterconfig masterconfig workerconfig &>/dev/null
@@ -115,6 +130,13 @@ function init_config_map() {
                                       --from-literal=sparkimage=$S2I_TEST_SPARK_IMAGE \
                                       --from-literal=sparkmasterconfig=masterconfig \
                                       --from-literal=sparkworkerconfig=workerconfig &>/dev/null
+}
+
+function init_driver_config() {
+    set +e
+    oc delete configmap driverconfig
+    set -e
+    oc create configmap driverconfig  --from-file=$RESOURCE_DIR/driverconfig
 }
 
 function set_worker_count() {
@@ -130,6 +152,7 @@ function set_defaults() {
     clear_app_exit
     clear_test_mode
     clear_cluster_name
+    clear_driver_config
 }
 
 function run_app() {
@@ -143,7 +166,7 @@ function run_app() {
 	return 1
     fi
     if [ "$1" != true ]; then
-        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig -p OSHINKO_SPARK_DRIVER_CONFIG="$DRIVER_CONFIG"'
 
         os::cmd::try_until_text 'oc logs dc/$APP_NAME' 'Using.*cluster' $((5*minute))
         GEN_CLUSTER_NAME=$(oc logs dc/$APP_NAME | sed -rn "s@Using (shared|ephemeral) cluster (.*$)@\2@p")
@@ -153,7 +176,7 @@ function run_app() {
 	if [ "$GEN_CLUSTER_NAME" == "" ]; then
             GEN_CLUSTER_NAME=cl-$SUFFIX
 	fi
-        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig'
+        os::cmd::expect_success 'oc new-app --file="$RESOURCE_DIR"/pysparkdc.json -p IMAGE=play -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_EXIT="$DO_EXIT" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -p TEST_MODE="$DO_TEST" -p OSHINKO_NAMED_CONFIG=clusterconfig -p OSHINKO_SPARK_DRIVER_CONFIG="$DRIVER_CONFIG"'
     fi 
     echo Using cluster name $GEN_CLUSTER_NAME
     MASTER_DC=$GEN_CLUSTER_NAME-m

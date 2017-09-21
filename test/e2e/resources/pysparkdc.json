@@ -53,7 +53,9 @@
       {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
          "name": "APP_EXIT",
-         "value": "false"
+         "value": "false",
+         "required": true
+
       },
       { "description": "Puts the start.sh script in test mode which alters things like timing in the signal handlers so logs can be collected",
         "name": "TEST_MODE",
@@ -134,6 +136,10 @@
                               "value": "${OSHINKO_NAMED_CONFIG}"
                            },
                            {
+                              "name": "OSHINKO_SPARK_DRIVER_CONFIG",
+                              "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
+                           },
+                           {
                               "name": "POD_NAME",
                               "valueFrom":
                                 {
@@ -165,12 +171,6 @@
                                     "fieldPath": "metadata.labels"
                                  },
                                  "path": "labels"
-                              },
-                              {
-                                 "fieldRef": {
-                                    "fieldPath": "metadata.annotations"
-                                 },
-                                 "path": "annotations"
                               }
                            ]
                         },
