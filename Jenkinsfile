@@ -4,9 +4,16 @@
 // * Pipeline GitHub Notify Step Plugin
 // * Disable GitHub Multibranch Status Plugin - https://github.com/bluesliverx/disable-github-multibranch-status-plugin
 //
+
+// This script expect following environment variables to be set:
+//
 // $OCP_HOSTNAME -- hostname of running Openshift cluster
 // $OCP_USER     -- Openshift user
 // $OCP_PASSWORD -- Openshift user's password
+//
+// $EXTERNAL_DOCKER_REGISTRY 			-- address of a docker registry
+// $EXTERNAL_DOCKER_REGISTRY_USER		-- username to use to authenticate to specified docker registry
+// $EXTERNAL_DOCKER_REGISTRY_PASSWORD   -- password/token to use to authenticate to specified docker registry
 
 def prepareTests() {
 
@@ -36,7 +43,10 @@ def prepareTests() {
 	sh('oc project testsuite')
 }
 
+
 def buildUrl
+def globalEnvVariables = ["S2I_TEST_EXTERNAL_REGISTRY=$EXTERNAL_DOCKER_REGISTRY", "S2I_TEST_EXTERNAL_USER=$EXTERNAL_DOCKER_REGISTRY_USER", "S2I_TEST_EXTERNAL_PASSWORD=$EXTERNAL_DOCKER_REGISTRY_PASSWORD", "TEST_ONLY=1"]
+
 
 node {
 	stage('init') {
@@ -53,7 +63,7 @@ node {
 parallel testEphemeral: {
 	node {
 		stage('Test ephemeral') {
-			withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
+			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 
 				try {
 					prepareTests()
@@ -80,7 +90,7 @@ parallel testEphemeral: {
 }, testPysparkTemplates: {
 	node {
 		stage('Test pyspark-templates') {
-			withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
+			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 
 				try {
 					prepareTests()
@@ -107,7 +117,7 @@ parallel testEphemeral: {
 }, testJavaTemplates: {
 	node {
 		stage('Test java-templates') {
-			withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
+			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 
 				try {
 					prepareTests()
@@ -134,7 +144,7 @@ parallel testEphemeral: {
 }, testScalaTemplates: {
 	node {
 		stage('Test scala-templates') {
-			withEnv(["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client", "S2I_TEST_INTEGRATED_REGISTRY=docker-registry-default.$OCP_HOSTNAME", "TEST_ONLY=1"]) {
+			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 				try {
 					prepareTests()
 
