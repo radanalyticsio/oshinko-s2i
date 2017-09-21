@@ -12,7 +12,7 @@ Contains:
 
 * default configuration files
 * an application startup script in `utils/start.sh`
-* utilities used by `start.sh` (process-driver-config, generate_container_user)
+* utilities used by `start.sh`
 
 The components of common may be used by multiple s2i images.
 
