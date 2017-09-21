@@ -125,20 +125,15 @@ function get_cluster_name {
 
 function read_driver_config {
     # If a spark driver configmap has been named, use the cli to get it
-    # and the helper process-driver-config to write the files to SPARK_HOME/conf
+    # and write the files to SPARK_HOME/conf
     if [ -n "$OSHINKO_SPARK_DRIVER_CONFIG" ]; then
         echo "Looking for spark driver config files in configmap $OSHINKO_SPARK_DRIVER_CONFIG"
-        local tmpfile=$(mktemp)
-        $($CLI configmap $OSHINKO_SPARK_DRIVER_CONFIG $CLI_ARGS -o json > $tmpfile)
+        $($CLI configmap $OSHINKO_SPARK_DRIVER_CONFIG --directory=$SPARK_HOME/conf $CLI_ARGS )
         if [ "$?" -eq 0 ]; then
-            $APP_ROOT/src/process-driver-config $tmpfile
-            if [ "$?" -eq 0 ]; then
-                echo "Spark configuration updated"
-            fi
+            echo "Spark configuration updated"
         else
             echo "Unable to read spark driver config $OSHINKO_SPARK_DRIVER_CONFIG"
         fi
-        rm $tmpfile
     fi
 }
 
