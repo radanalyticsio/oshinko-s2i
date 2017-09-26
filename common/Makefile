@@ -1,7 +1,7 @@
 build: CMD=build
 clean: CMD=clean
 
-OSHINKO_RELEASE=v0.3.0
+OSHINKO_RELEASE=v0.3.1
 
 # At this point utils is a simple directory which is copied
 # by other components, so handle it here rather than give it
