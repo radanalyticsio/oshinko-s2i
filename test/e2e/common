@@ -253,18 +253,62 @@ function cleanup_cluster() {
 #    fi
 } 
 
+function poll_build() {
+    local name
+    if [ "$#" -eq 1 ]; then
+	name=$1
+    else
+	name=$APP_NAME
+    fi
+    local tries=0
+    local status
+    local BUILDNUM=$(oc get buildconfig $name --template='{{index .status "lastVersion"}}')
+    while true; do
+        status=$(oc get build "$name"-$BUILDNUM --template="{{index .status \"phase\"}}")
+	if [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
+	    echo Build for $name status is $status, waiting ...
+	    sleep 10
+	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
+	    oc log buildconfig/$name | tail -100
+	    if [ "$tries" -lt 4 ]; then
+		tries=$((tries+1))
+	        echo "Trying build again..."
+		oc start-build $name
+		sleep 10
+	    else
+		echo "Retries exhausted ..."
+	        oc delete buildconfig $name
+	        oc delete is $name
+	        set +e
+	        oc delete dc $name
+	        set -e
+	        return 1
+	    fi
+	else
+	    break
+	fi
+    done
+}
+
 function make_image() {
     TEST_IMAGE=play
     set +e
     oc get buildconfig play &> /dev/null
     local res=$?
     set -e
+
+    # If we found the buildconfig for play, then the build
+    # succeeded because we would have deleted it last time in poll_build
+    # if it ultimately failed with retries. So we're good.
+
+    # If not, build it from scratch with retries
+
     if [ "$res" -ne 0 ]; then
-        # The ip address of the internal registry may be set to support running against
+        # The ip address of an internal/external registry may be set to support running against
         # an openshift that is not "oc cluster up". In the case of "oc cluster up", the docker
         # on the host is available from openshift so no special pushes of images have to be done.
         # In the case of a "normal" openshift cluster, the image we'll use for build has to be
-        # available as an imagestream.
+        # available from the designated registry.
         set +e
         tmp=$(docker history $S2I_TEST_IMAGE_PYSPARK)
         res=$?
@@ -318,25 +362,8 @@ function make_image() {
 		os::cmd::expect_success 'oc new-build --name=play --docker-image="$registry"/"$pushproj"/"$pushimage":latest --binary'
 	    fi
         fi
+	os::cmd::expect_success 'oc start-build play --from-file="$RESOURCE_DIR"/play'
+	poll_build play
+	return $?
     fi
-    BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
-    set +e
-    oc get build play-$BUILDNUM &> /dev/null
-    res=$?
-    set -e
-    if [ "$res" -eq 0 ]; then
-        # Make sure that the build is complete. If not, start another one.
-	phase=$(oc get build play-$BUILDNUM --template="{{index .status \"phase\"}}")
-        if [ "$phase" != "Running" -a "$phase" != "Complete" ]; then
-            echo "Build phase for play-$BUILDNUM is $phase, restarting..."
-            res=1
-        fi
-    fi
-    if [ "$res" -ne 0 ]; then
-        os::cmd::expect_success 'oc start-build play --from-file="$RESOURCE_DIR"/play'
-        BUILDNUM=$(oc get buildconfig play --template='{{index .status "lastVersion"}}')
-        oc logs -f buildconfig/play
-    fi
-    # Wait for the build to finish
-    os::cmd::try_until_text 'oc get build play-"$BUILDNUM" --template="{{index .status \"phase\"}}"' "Complete" $((5*minute))
 }

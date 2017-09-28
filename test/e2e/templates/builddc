@@ -94,28 +94,6 @@ function set_app_main_class() {
     fi
 }
 
-function poll_build() {
-    local status
-    local BUILDNUM=$(oc get buildconfig $APP_NAME --template='{{index .status "lastVersion"}}')
-    while true; do
-        status=$(oc get build "$APP_NAME"-$BUILDNUM --template="{{index .status \"phase\"}}")
-	if [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
-	    echo Build for $APP_NAME status is $status, waiting ...
-	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
-	    oc log buildconfig/$APP_NAME | tail -100
-	    oc delete buildconfig $APP_NAME
-	    oc delete is $APP_NAME
-	    set +e
-	    oc delete dc $APP_NAME
-	    set -e
-	    return 1
-	else
-	    break
-	fi
-	sleep 30
-    done
-}
-
 function run_app() {
     app_preamble
     set +e
