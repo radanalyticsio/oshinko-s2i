@@ -270,22 +270,20 @@ function poll_build() {
 	    sleep 10
 	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
 	    set +e
+	    oc log buildconfig/$name | grep "Failed to push image.*connection refused"
+	    if [ "$?" -eq 0 ]; then
+		# Write FAIL_ON_PUSH to a file so that the overseeing process
+		# can know that this happened
+                echo FAIL_ON_PUSH=true > $TEST_DIR/failonpush
+	    fi
 	    oc log buildconfig/$name | tail -100
 	    set -e
-	    if [ "$tries" -lt 10 ]; then
-		tries=$((tries+1))
-	        echo "Trying build again..."
-		oc start-build $name
-		sleep 30
-	    else
-		echo "Retries exhausted ..."
-	        oc delete buildconfig $name
-	        oc delete is $name
-	        set +e
-	        oc delete dc $name
-	        set -e
-	        return 1
-	    fi
+	    oc delete buildconfig $name
+	    oc delete is $name
+	    set +e
+	    oc delete dc $name
+	    set -e
+	    return 1
 	else
 	    break
 	fi

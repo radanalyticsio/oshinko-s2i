@@ -53,6 +53,8 @@ function find_tests() {
 orig_project=$(oc project -q)
 failed_list=""
 failed=false
+FAIL_ON_PUSH=false
+rm -f ${TEST_DIR}/failonpush
 
 dirs=($(find "${OS_ROOT}/test/e2e/" -mindepth 1 -type d -not -path "./resources*"))
 for dir in "${dirs[@]}"; do
@@ -80,26 +82,37 @@ for dir in "${dirs[@]}"; do
     set +e # For some reason the result here from head is not 0 even though we get the desired result
     namespace=${name}-$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
     set -e
-    oc new-project $namespace &> /dev/null
-    oc create sa oshinko &> /dev/null
-    oc policy add-role-to-user admin system:serviceaccount:$namespace:oshinko &> /dev/null
+    oc new-project $namespace
+    oc create sa oshinko
+    oc policy add-role-to-user admin system:serviceaccount:$namespace:oshinko
     echo "++++++ ${dir}"
     echo Using project $namespace
 
     for test in "${tests[@]}"; do
         echo
         echo "++++ ${test}"
+
         if ! ${test}; then
             echo "failed: ${test}"
+            set +e
+            source ${TEST_DIR}/failonpush
+            set -e
             failed=true
             failed_dir=true
             failed_list=$failed_list'\n\t'$test
+             if [ "$FAIL_ON_PUSH" == "true" ]; then
+                 echo "Test failed on push during build, skipping other tests"
+                 break
+             fi
         fi
     done
     if [ "$failed_dir" == true -a ${S2I_SAVE_FAIL:-false} == true ]; then
         echo Leaving project $namespace because of failures
     else
         oc delete project $namespace
+    fi
+    if  [ "$FAIL_ON_PUSH" == "true" ]; then
+	break
     fi
 done
 
