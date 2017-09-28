@@ -269,12 +269,14 @@ function poll_build() {
 	    echo Build for $name status is $status, waiting ...
 	    sleep 10
 	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
+	    set +e
 	    oc log buildconfig/$name | tail -100
-	    if [ "$tries" -lt 4 ]; then
+	    set -e
+	    if [ "$tries" -lt 10 ]; then
 		tries=$((tries+1))
 	        echo "Trying build again..."
 		oc start-build $name
-		sleep 10
+		sleep 30
 	    else
 		echo "Retries exhausted ..."
 	        oc delete buildconfig $name
