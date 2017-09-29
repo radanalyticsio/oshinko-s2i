@@ -8,6 +8,7 @@ while true; do
     if [ "$?" -eq 0 ]; then
         break
     fi
+    oc get pods
     echo "Waiting for registry pod"
     sleep 10
 done
@@ -29,7 +30,8 @@ while true; do
     if [ "$?" -eq 0 ]; then
         break
     fi
-    echo "Waiting for registry pod"
+    oc get pods
+    echo "Waiting for router pod"
     sleep 10
 done
 
