@@ -8,7 +8,7 @@ while true; do
     if [ "$?" -eq 0 ]; then
         echo "registry deploy failed, try again"
         oc get pods
-        oc deploy dc/docker-registry --latest
+        oc rollout dc/docker-registry --retry
         sleep 5
         continue
     fi
@@ -38,7 +38,7 @@ while true; do
     if [ "$?" -eq 0 ]; then
         echo "router deploy failed, try again"
         oc get pods
-        oc deploy dc/router --latest
+        oc rollout dc/router --retry
         sleep 5
         continue
     fi
