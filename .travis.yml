@@ -53,47 +53,45 @@ before_install:
       echo $PATH
       # below cmd is important to get oc working in ubuntu
       sudo docker run -v /:/rootfs -ti --rm --entrypoint=/bin/bash --privileged openshift/origin:v1.5.1 -c "mv /rootfs/bin/findmnt /rootfs/bin/findmnt.backup"
+      sudo chmod -R a+rwX /home/travis/.kube
 
       # Sometimes oc cluster up fails with a permission error and works when the test is relaunched.
       # See if a retry within the same test works
       set +e
       built=false
-      for tries in {1..3}; do
-          sudo oc cluster up --host-config-dir=/home/travis/gopath/src/github.com/radanalyticsio/origin
+      while true; do
+          oc cluster up --host-config-dir=/home/travis/gopath/src/github.com/radanalyticsio/origin
           if [ "$?" -eq 0 ]; then
-              built=true
-              break
+              ./travis-check-pods.sh
+              if [ "$?" -eq 0 ]; then
+                  built=true
+                  break
+              fi
           fi
           echo "Retrying oc cluster up after failure"
-          sudo oc cluster down
+          oc cluster down
+          sleep 5
       done
       set -e
       if [ "$built" == false ]; then
           exit 1
       fi
-
-      sudo chmod -R a+rwX /home/travis/.kube
-      sudo ls -l /home/travis/gopath/src/github.com/radanalyticsio/origin
-      # find IP:PORT of openshift
-      IPSTR=`sudo oc status |grep server`
-      echo $IPSTR
-      IP=${IPSTR##*/}
-      echo ${IP}
-      IPSTR=`sudo oc login -u system:admin`
-      echo $IPSTR
+      # travis-check-pods.sh left us in the default project
+      oc get pods
+      oc project myproject     
   fi
 
 install:
 before_script:
 script:
-- if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.pyspark . ; fi
-- if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.java . ; fi
-- if [ "$TO_TEST" = "build" ]; then docker build -f Dockerfile.scala . ; fi
+- if [ "$TO_TEST" == "ephemeral" -o "$TO_TEST" == "pyspark-templates" ]; then pushd `pwd`; cd pyspark; make build; popd ; fi
+- if [ "$TO_TEST" == "java-templates" ]; then pushd `pwd`; cd java; make build; popd ; fi
+- if [ "$TO_TEST" == "scala-templates" ]; then pushd `pwd`; cd scala; make build; popd ; fi
 
-- if [ "$TO_TEST" = "ephemeral" ]; then export TEST_ONLY=1; make test-ephemeral ; fi
-- if [ "$TO_TEST" = "pyspark-templates" ]; then export TEST_ONLY=1; make test-pyspark-templates ; fi
-- if [ "$TO_TEST" = "java-templates" ]; then export TEST_ONLY=1; make test-java-templates ; fi
-- if [ "$TO_TEST" = "scala-templates" ]; then export TEST_ONLY=1; make test-scala-templates ; fi
+- if [ "$TO_TEST" == "ephemeral" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "(ephemeral|incomplete)" ; fi
+- if [ "$TO_TEST" == "pyspark-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "templates/pyspark" ; fi
+- if [ "$TO_TEST" == "java-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "templates/java" ; fi
+- if [ "$TO_TEST" == "scala-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "templates/scala" ; fi
 notifications:
  email:
    on_success: never
