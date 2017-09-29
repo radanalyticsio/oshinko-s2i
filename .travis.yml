@@ -81,6 +81,8 @@ before_install:
       echo ${IP}
       IPSTR=`sudo oc login -u system:admin`
       echo $IPSTR
+      oc describe dc/docker-registry
+      oc describe dc/router     
   fi
 
 install:

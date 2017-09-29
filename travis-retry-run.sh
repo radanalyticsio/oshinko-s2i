@@ -5,6 +5,8 @@ FAIL_ON_PUSH=false
 while true; do
     oc project default
     oc get pods
+    oc describe dc/docker-registry
+    oc describe dc/router
     set +e
     test/e2e/run.sh $1
     makeres=$?
