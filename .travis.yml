@@ -91,9 +91,9 @@ script:
 - if [ "$TO_TEST" == "scala-templates" ]; then pushd `pwd`; cd scala; make build; popd ; fi
 
 - if [ "$TO_TEST" == "ephemeral" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "(ephemeral|incomplete)" ; fi
-- if [ "$TO_TEST" == "pyspark-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "pyspark/templates" ; fi
-- if [ "$TO_TEST" == "java-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "java/templates" ; fi
-- if [ "$TO_TEST" == "scala-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "scala/templates" ; fi
+- if [ "$TO_TEST" == "pyspark-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "templates/pyspark" ; fi
+- if [ "$TO_TEST" == "java-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "templates/java" ; fi
+- if [ "$TO_TEST" == "scala-templates" ]; then export TEST_ONLY=1; ./travis-retry-run.sh "templates/scala" ; fi
 notifications:
  email:
    on_success: never
