@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#oc login -u system:admin
-#oc project default
+oc login -u system:admin
+oc project default
 
 while true; do
     V=$(oc get dc docker-registry --template='{{index .status "latestVersion"}}')
