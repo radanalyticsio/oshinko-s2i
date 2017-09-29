@@ -38,7 +38,7 @@ while true; do
 done
 
 while true; do
-    V=$(oc get dc docker-registry --template='{{index .status "latestVersion"}}')
+    V=$(oc get dc router --template='{{index .status "latestVersion"}}')
     P=$(oc get pod router-$V-deploy --template='{{index .status "phase"}}')
     if [ "$?" -eq 0 ]; then
         echo phase is $P for router deploy $V
