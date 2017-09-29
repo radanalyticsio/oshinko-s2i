@@ -8,7 +8,7 @@ while true; do
     P=$(oc get pod docker-registry-$V-deploy --template='{{index .status "phase"}}')
     if [ "$?" -eq 0 ]; then
         echo phase is $P for docker-registry deploy $V
-        if [ "$P" == "Error" ]; then
+        if [ "$P" == "Failed" ]; then
             echo "registry deploy failed, try again"
             oc get pods
             oc rollout dc/docker-registry --retry
@@ -42,7 +42,7 @@ while true; do
     P=$(oc get pod router-$V-deploy --template='{{index .status "phase"}}')
     if [ "$?" -eq 0 ]; then
         echo phase is $P for router deploy $V
-        if [ "$P" == "Error" ]; then
+        if [ "$P" == "Failed" ]; then
             echo "router deploy failed, try again"
             oc get pods
             oc rollout dc/router --retry
