@@ -7,7 +7,7 @@ while true; do
     ERR=$(oc get pods | grep docker-registry.*deploy.*Error)
     if [ "$?" -eq 0 ]; then
         echo "registry deploy failed, try again"
-        oc deploy dc docker-registry --latest
+        oc deploy dc/docker-registry --latest
         sleep 5
         continue
     fi
@@ -36,7 +36,7 @@ while true; do
     ERR=$(oc get pods | grep router.*deploy.*Error)
     if [ "$?" -eq 0 ]; then
         echo "router deploy failed, try again"
-        oc deploy dc router --latest
+        oc deploy dc/router --latest
         sleep 5
         continue
     fi
