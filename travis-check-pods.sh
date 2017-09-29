@@ -43,9 +43,9 @@ while true; do
     if [ "$?" -eq 0 ]; then
         echo phase is $P for router deploy $V
         if [ "$P" == "Error" ]; then
-            echo "registry deploy failed, try again"
+            echo "router deploy failed, try again"
             oc get pods
-            oc rollout dc/docker-registry --retry
+            oc rollout dc/router --retry
             sleep 10
             continue
         fi
