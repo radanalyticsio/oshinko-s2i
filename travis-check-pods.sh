@@ -1,16 +1,20 @@
 #!/bin/bash
 
-oc login -u system:admin
-oc project default
+#oc login -u system:admin
+#oc project default
 
 while true; do
-    ERR=$(oc get pods | grep docker-registry.*deploy.*Error)
+    V=$(oc get dc docker-registry --template='{{index .status "latestVersion"}}')
+    P=$(oc get pod docker-registry-$V-deploy --template='{{index .status "phase"}}')
     if [ "$?" -eq 0 ]; then
-        echo "registry deploy failed, try again"
-        oc get pods
-        oc rollout dc/docker-registry --retry
-        sleep 5
-        continue
+        echo phase is $P for docker-registry deploy $V
+        if [ "$P" == "Error" ]; then
+            echo "registry deploy failed, try again"
+            oc get pods
+            oc rollout dc/docker-registry --retry
+            sleep 10
+            continue
+        fi
     fi
     REG=$(oc get pod -l deploymentconfig=docker-registry --template='{{index .items 0 "status" "phase"}}')
     if [ "$?" -eq 0 ]; then
@@ -34,13 +38,17 @@ while true; do
 done
 
 while true; do
-    ERR=$(oc get pods | grep router.*deploy.*Error)
+    V=$(oc get dc docker-registry --template='{{index .status "latestVersion"}}')
+    P=$(oc get pod router-$V-deploy --template='{{index .status "phase"}}')
     if [ "$?" -eq 0 ]; then
-        echo "router deploy failed, try again"
-        oc get pods
-        oc rollout dc/router --retry
-        sleep 5
-        continue
+        echo phase is $P for router deploy $V
+        if [ "$P" == "Error" ]; then
+            echo "registry deploy failed, try again"
+            oc get pods
+            oc rollout dc/docker-registry --retry
+            sleep 10
+            continue
+        fi
     fi
     REG=$(oc get pod -l deploymentconfig=router --template='{{index .items 0 "status" "phase"}}')
     if [ "$?" -eq 0 ]; then
