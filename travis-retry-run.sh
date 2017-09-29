@@ -3,6 +3,8 @@
 FAIL_ON_PUSH=false
 
 while true; do
+    oc project default
+    oc get pods
     set +e
     test/e2e/run.sh $1
     makeres=$?
