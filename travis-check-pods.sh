@@ -11,7 +11,7 @@ while true; do
         if [ "$P" == "Failed" ]; then
             echo "registry deploy failed, try again"
             oc get pods
-            oc rollout dc/docker-registry --retry
+            oc rollout retry dc/docker-registry
             sleep 10
             continue
         fi
@@ -45,7 +45,7 @@ while true; do
         if [ "$P" == "Failed" ]; then
             echo "router deploy failed, try again"
             oc get pods
-            oc rollout dc/router --retry
+            oc rollout retry dc/router
             sleep 10
             continue
         fi
