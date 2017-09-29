@@ -76,10 +76,8 @@ before_install:
       if [ "$built" == false ]; then
           exit 1
       fi
-
-      sudo ls -l /home/travis/gopath/src/github.com/radanalyticsio/origin
-      oc describe dc/docker-registry
-      oc describe dc/router
+      # travis-check-pods.sh left us in the default project
+      oc get pods
       oc project myproject     
   fi
 
