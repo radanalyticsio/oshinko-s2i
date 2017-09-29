@@ -4,7 +4,7 @@ FAIL_ON_PUSH=false
 
 while true; do
     set +e
-    make $1
+    test/e2e/run.sh $1
     makeres=$?
     set -e
     if [ "$makeres" -ne 0 ]; then
