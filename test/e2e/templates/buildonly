@@ -13,6 +13,7 @@ function run_app() {
     if [ "$#" -eq 0 ]; then
         if [ "$stream_exists" -ne 0 ]; then
             poll_build
+	    return $?
         fi
     fi
     set -e
