@@ -264,7 +264,7 @@ function poll_build() {
     local status
     local BUILDNUM
     while true; do
-	BUILDNUM=$(oc get buildconfig $name --template='{{index .status "lastVersion"}}')
+        BUILDNUM=$(oc get buildconfig $name --template='{{index .status "lastVersion"}}')
         status=$(oc get build "$name"-$BUILDNUM --template="{{index .status \"phase\"}}")
 	if [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
 	    echo Build for $name-$BUILDNUM status is $status, waiting ...
@@ -274,7 +274,7 @@ function poll_build() {
 	    oc log buildconfig/$name | grep "Pushing image"
 	    if [ "$?" -eq 0 ]; then
 		tries=$((tries+1))
-		if [ "$tries" -lt 2 ]; then
+		if [ "$tries" -lt 5 ]; then
 		    echo Build failed on push, retrying
 		    sleep 5
 		    oc start-build $name
