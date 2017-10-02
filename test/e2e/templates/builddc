@@ -94,28 +94,6 @@ function set_app_main_class() {
     fi
 }
 
-function poll_build() {
-    local status
-    local BUILDNUM=$(oc get buildconfig $APP_NAME --template='{{index .status "lastVersion"}}')
-    while true; do
-        status=$(oc get build "$APP_NAME"-$BUILDNUM --template="{{index .status \"phase\"}}")
-	if [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
-	    echo Build for $APP_NAME status is $status, waiting ...
-	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
-	    oc log buildconfig/$APP_NAME | tail -100
-	    oc delete buildconfig $APP_NAME
-	    oc delete is $APP_NAME
-	    set +e
-	    oc delete dc $APP_NAME
-	    set -e
-	    return 1
-	else
-	    break
-	fi
-	sleep 30
-    done
-}
-
 function run_app() {
     app_preamble
     set +e
@@ -131,6 +109,7 @@ function run_app() {
     if [ "$#" -eq 0 ]; then
 	if [ "$stream_exists" -ne 0 ]; then
             poll_build
+	    return $?
 	fi
         os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster' $((10*minute))
     fi
@@ -144,7 +123,8 @@ function run_app_without_optionals() {
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME $APP_MAIN_CLASS &> /dev/null
     set -e
     if [ "$stream_exists" -ne 0 ]; then
-       poll_build
+	poll_build
+	return $?
     fi
     os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
 }
@@ -157,7 +137,8 @@ function run_app_without_clustername() {
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME $APP_MAIN_CLASS &> /dev/null
     set -e
     if [ "$stream_exists" -ne 0 ]; then
-       poll_build
+	poll_build
+	return $?
     fi
     os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
 }
