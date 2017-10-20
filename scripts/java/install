@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+
+SCRIPT_DIR=$(dirname $0)
+ADDED_DIR=${SCRIPT_DIR}/added
+ARTIFACTS_DIR=/tmp/artifacts
+
+# If there is a zero-length spark tarball, find the verison in the
+# name and download from github
+fullname=$(find $ARTIFACTS_DIR -name spark-[0-9.]*-bin-hadoop[0-9.]*\.tgz)
+spark=$(basename $fullname)
+if ! [ -s "$fullname" ]; then
+    version=$(echo $spark | cut -d '-' -f2)
+    wget https://archive.apache.org/dist/spark/spark-$version/$spark -O $fullname
+fi
+cp $fullname /opt
+
+pushd /opt
+tar -zxf $spark
+ln -s $(basename $spark .tgz) spark
+rm $spark
+popd
+
+mkdir -p /usr/local/s2i
+cp -r $ADDED_DIR/s2i/* /usr/local/s2i
+cp $ADDED_DIR/spark-conf/* /opt/spark/conf/
+
+if [ -f /home/jboss ]; then
+    chmod -R g+rwX /home/jboss
+fi

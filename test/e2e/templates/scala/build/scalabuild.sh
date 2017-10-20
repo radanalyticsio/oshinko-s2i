@@ -4,7 +4,7 @@
 TEST_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/test/e2e')
 source $TEST_DIR/common
 
-SCALATEMP_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/scala
+SCALATEMP_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/scripts/scala
 
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc

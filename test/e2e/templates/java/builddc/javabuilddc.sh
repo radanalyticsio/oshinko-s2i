@@ -7,7 +7,7 @@ source $TEST_DIR/common
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 
-JAVATEMP_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/java
+JAVATEMP_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/scripts/java
 RESOURCE_DIR=$TEST_DIR/resources
 
 cp  $JAVATEMP_DIR/javabuilddc.json $RESOURCE_DIR/javabuilddc.json
