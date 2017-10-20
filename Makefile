@@ -1,5 +1,4 @@
-alldirs =  pyspark java scala
-pushdirs = pyspark java scala
+allimgs =  Makefile.pyspark Makefile.java Makefile.scala
 
 # Set the S2I_TEST_IMAGE_XXX env vars so that the
 # build of the local images and the tests use the
@@ -16,12 +15,12 @@ build: CMD=build
 push: CMD=push
 clean: CMD=clean
 
-build: $(alldirs)
-clean: $(alldirs)
-push: $(pushdirs)
+build: $(allimgs)
+clean: $(allimgs)
+push: $(allimgs)
 
-$(alldirs):
-	cd $@; ${MAKE} $(CMD)
+$(allimgs):
+	${MAKE} -f $@ $(CMD)
 
 # If you want to use the test targets to run tests against
 # a full OpenShift instance, make sure that you set the
@@ -29,43 +28,43 @@ $(alldirs):
 # Otherwise the test will assume an OpenShift instance created
 # with 'oc cluster up'
 test-ephemeral:
-	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	test/e2e/run.sh "(ephemeral|incomplete)"
 
 test-java-templates:
-	cd java; LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
 	test/e2e/run.sh templates/java
 
 test-java-radio:
-	cd java; LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
 	test/e2e/run.sh templates/java/radio
 
 test-pyspark-templates:
-	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	test/e2e/run.sh templates/pyspark
 
 test-pyspark-radio:
-	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	test/e2e/run.sh templates/pyspark/radio
 
 test-scala-templates:
-	cd scala; LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
 	test/e2e/run.sh templates/scala
 
 test-scala-radio:
-	cd scala; LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
 	test/e2e/run.sh templates/scala/radio
 
 test-templates:
-	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make build
-	cd java; LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make build
-	cd scala; LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
 	test/e2e/run.sh templates
 
 test-e2e:
-	cd pyspark; LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make build
-	cd java; LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make build
-	cd scala; LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
 	test/e2e/run.sh
 
-.PHONY: build clean push $(alldirs) test-e2e test-ephemeral test-java-templates test-pyspark-templates test-scala-templates test-templates test-pyspark-radio test-scala-radio test-java-radio
+.PHONY: build clean push $(allimgs) test-e2e test-ephemeral test-java-templates test-pyspark-templates test-scala-templates test-templates test-pyspark-radio test-scala-radio test-java-radio

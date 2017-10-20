@@ -7,7 +7,7 @@ source $TEST_DIR/common
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 
-SCALATEMP_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/scala
+SCALATEMP_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/scripts/scala
 RESOURCE_DIR=$TEST_DIR/resources
 
 cp  $SCALATEMP_DIR/scalabuilddc.json $RESOURCE_DIR/scalabuilddc.json

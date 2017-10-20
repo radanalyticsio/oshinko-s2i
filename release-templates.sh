@@ -9,10 +9,7 @@ TOP_DIR=$(readlink -f `dirname "$0"` | grep -o '.*/oshinko-s2i')
 mkdir -p $TOP_DIR/release_templates
 rm -rf $TOP_DIR/release_templates/*
 
-cp $TOP_DIR/pyspark/pysparkbuild*.json $TOP_DIR/release_templates
-cp $TOP_DIR/pyspark/pysparkjob.json $TOP_DIR/pyspark/pysparkdc.json $TOP_DIR/release_templates
-cp $TOP_DIR/java/javabuild*.json $TOP_DIR/release_templates
-cp $TOP_DIR/scala/scalabuild*.json $TOP_DIR/release_templates
+cp $TOP_DIR/templates/*.json $TOP_DIR/release_templates
 
 sed -r -i "s@(radanalyticsio/radanalytics-.*spark)\"@\1:$1\"@" $TOP_DIR/release_templates/*
 

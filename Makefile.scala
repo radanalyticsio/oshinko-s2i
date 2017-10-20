@@ -5,26 +5,20 @@ LOCAL_IMAGE ?= radanalytics-scala-spark
 # "project" with an appropriate path for your registry and/or project
 PUSH_IMAGE=project/radanalytics-scala-spark
 
-DOCKERFILE=../Dockerfile.scala
-DOCKERFILE_CONTEXT=..
+DOCKERFILE_CONTEXT=scala-build
 
 .PHONY: build clean push test
 
-build:
-	docker build --pull -t $(LOCAL_IMAGE) -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
+build: $(DOCKERFILE_CONTEXT)/Dockerfile
+	docker build --pull -t $(LOCAL_IMAGE) $(DOCKERFILE_CONTEXT)
 
 clean:
-	- docker rmi $(LOCAL_IMAGE)
-	rm -rf utils
+	-docker rmi $(LOCAL_IMAGE) $(PUSH_IMAGE)
+	-rm $(DOCKERFILE_CONTEXT)/Dockerfile
 
 push: build
 	docker tag $(LOCAL_IMAGE) $(PUSH_IMAGE)
 	docker push $(PUSH_IMAGE)
 
-utils:
-	cd ../common && make build
-	cp -r ../common/utils .
-
-test:
-	docker build -t $(PUSH_IMAGE)-candidate -f $(DOCKERFILE) $(DOCKERFILE_CONTEXT)
-	IMAGE_NAME=$(PUSH_IMAGE)-candidate test/run
+$(DOCKERFILE_CONTEXT)/Dockerfile:
+	docker run -it --rm -v `pwd`:/tmp jboss/dogen:latest /tmp/image.scala.yaml /tmp/$(DOCKERFILE_CONTEXT)
