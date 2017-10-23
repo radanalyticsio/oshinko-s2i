@@ -1,0 +1,20 @@
+#!/bin/bash -e
+#
+# S2I run script for the 's2i-test' image.
+# The run script executes the server that runs your application.
+#
+# For more information see the documentation:
+#	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
+#
+
+if [ -d $APP_ROOT/src/spark-conf ]; then
+    sparkconfs=$(ls -1 $APP_ROOT/src/spark-conf | wc -l)
+    if [ "$sparkconfs" -ne "0" ]; then
+        echo "Spark configuration included with application source"
+        echo "Copying from $APP_ROOT/src/spark-conf to $SPARK_HOME/conf"
+        ls -1 $APP_ROOT/src/spark-conf
+        cp $APP_ROOT/src/spark-conf/* $SPARK_HOME/conf
+    fi
+fi
+
+exec $APP_ROOT/src/start.sh

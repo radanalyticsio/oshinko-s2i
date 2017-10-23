@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if ! [ -s "$1" ]; then
+    oshinko=$(basename $1)
+    version=$(echo $oshinko | cut -d '_' -f2)
+    wget https://github.com/radanalyticsio/oshinko-cli/releases/download/$version/$oshinko -O $1
+fi

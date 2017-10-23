@@ -33,7 +33,7 @@ scripts:
   - package: scala
     exec: install
 sources:
-  - url: "http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz"
+  - url: http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz
     md5sum: e7e1f7ddc8873d228d611e801b8d2795
   - url: http://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz
     md5sum: 30a238d1b0cc2821da2b9b4e830ef204

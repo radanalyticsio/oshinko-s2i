@@ -28,6 +28,7 @@ cmd:
 packages:
   - epel-release
   - tar
+  - wget
 scripts:
   - package: common
     exec: install
