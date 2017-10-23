@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# If there is a zero-length spark tarball, find the verison in the
+# name and download from github
+if ! [ -s "$1" ]; then
+    spark=$(basename $1)
+    version=$(echo $spark | cut -d '-' -f2)
+    wget https://archive.apache.org/dist/spark/spark-$version/$spark -O $1
+fi

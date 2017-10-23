@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if ! [ -s "$1" ]; then
+    scala=$(basename $1)
+    version=$(echo $(basename $scala .tgz) | cut -d '-' -f2)
+    wget http://downloads.lightbend.com/scala/$version/$scala -O $1
+fi

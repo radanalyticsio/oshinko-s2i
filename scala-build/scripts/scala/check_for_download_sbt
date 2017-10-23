@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if ! [ -s "$1" ]; then
+    sbt=$(basename $1)
+    version=$(echo $(basename $sbt .tgz) | cut -d '-' -f2)
+    wget http://dl.bintray.com/sbt/native-packages/sbt/$version/$sbt -O $1
+fi

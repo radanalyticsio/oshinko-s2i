@@ -4,34 +4,42 @@
 
 # oshinko-s2i #
 This is a place to put s2i images and utilities for Apache Spark application builders for OpenShift.
-Look for additional README files in the subdirectories for more detail.
 
-## common ##
+## Building the s2i images ##
 
-Contains:
+The easiest way to build the s2i images is to use the makefiles provided:
 
-* default configuration files
-* an application startup script in `utils/start.sh`
-* utilities used by `start.sh`
+    $ make -f Makefile.pyspark
+    $ make -f Makefile.java
+    $ make -f Makefile.scala
 
-The components of common may be used by multiple s2i images.
+The default repository for the image can be set with the `LOCAL_IMAGE` var:
 
-## pyspark ##
+    $ LOCAL_IMAGE=myimage make -f Makefile.pyspark
 
-Contains an s2i image for pyspark applications and some templates, uses common.
+## Remaking Docker context directories when things change
 
-## java ##
+The Docker context directories are generated with the dogen tool and contain
+the Docker files and artifacts needed to build the images. They are:
 
-Contains an s2i image for java applications and some templates, uses common.
+    * pyspark-build
+    * java-build
+    * scala-build
 
-## scala ##
+If the yaml files used by dogen change (ie image.pyspark.yaml) or the scripts
+included in an image change, the Docker context directory can be regenerated this way
+(the clean target als deletes the local image):
 
-Contains an s2i image for scala applications and some templates, uses common.
+    $ make -f Makefile.pyspark clean pyspark-build/Dockerfile
+
+To regenerate the Docker context directory and build the image in one command:
+
+    $ make -f Makefile.pyspark clean build
 
 ## Using `release-templates.sh` ##
 
-The templates included in this repository with each image always reference
-the latest [s2i images](https://hub.docker.com/u/radanalyticsio/). Those images may
+The templates included in this repository always reference the latest
+[s2i images](https://hub.docker.com/u/radanalyticsio/). Those images may
 change during the normal course of development.
 
 The `release-templates.sh` script can be used to create local versions of
