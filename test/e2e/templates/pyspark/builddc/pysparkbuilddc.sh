@@ -7,7 +7,7 @@ source $TEST_DIR/common
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 
-PYSPARK_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/scripts/pyspark
+PYSPARK_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/templates')
 RESOURCE_DIR=$TEST_DIR/resources
 
 cp  $PYSPARK_DIR/pysparkbuilddc.json $RESOURCE_DIR/pysparkbuilddc.json

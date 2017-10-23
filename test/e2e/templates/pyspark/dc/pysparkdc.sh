@@ -7,7 +7,7 @@ source $TEST_DIR/common
 SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 
-PYSPARK_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/')/pyspark
+PYSPARK_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i/templates')
 set_template $PYSPARK_DIR/pysparkdc.json
 set_worker_count $S2I_TEST_WORKERS
 
