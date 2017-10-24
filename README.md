@@ -36,6 +36,18 @@ To regenerate the Docker context directory and build the image in one command:
 
     $ make -f Makefile.pyspark clean build
 
+## Git pre-commit hook to avoid committing non-zero length tarballs
+
+The `hooks/pre-commit` hook can be installed in a local repo to
+prevent commits with non-zero length tarballs in the image build
+directories. To install the hook locally do something like this:
+
+    $ cd .git/hooks
+    $ ln -s ../../hooks/pre-commit pre-commit
+
+This is recommended, since the CI tests will reject a pull request
+with non-zero length tarballs anyway. Save some time, install the hook.
+
 ## Using `release-templates.sh` ##
 
 The templates included in this repository always reference the latest
