@@ -1,0 +1,10 @@
+#!/bin/bash
+
+top=$(git rev-parse --show-toplevel)
+git diff --cached --name-only --diff-filter=ACMR | $top/test/repo-checks/check-zero.sh $top
+res=$?
+if [ "$res" -ne 0 ]; then
+    echo "Refusing to commit non-zero length tarballs in image build directories."
+    echo "Use something like 'truncate -s 0 <filename>' to make the file(s) zero length and try again."
+    exit $res
+fi
