@@ -1,10 +1,58 @@
 #!/bin/bash
+problem=0
 
-top=$(git rev-parse --show-toplevel)
-git diff --cached --name-only --diff-filter=ACMR | $top/test/repo-checks/check-zero.sh $top
-res=$?
-if [ "$res" -ne 0 ]; then
-    echo "Refusing to commit non-zero length tarballs in image build directories."
-    echo "Use something like 'truncate -s 0 <filename>' to make the file(s) zero length and try again."
-    exit $res
-fi
+# If you're running this script from the hooks directory for testing
+# you can set CACHED to null to test the checks
+CACHED=--cached
+
+function check_builddir() {
+    local LANG=$1
+    f=$(git diff $CACHED --name-only --diff-filter=ACMR image.$LANG.yaml | grep -v warning)
+    if [ "$f" == "image.$LANG.yaml" ]; then
+        d=$(git diff $CACHED --name-only --diff-filter=ACMR $LANG-build | grep -v warning)
+        if [ -z "$d" ]; then
+	    echo "$f changed but $LANG-build has not been modified"
+	    echo "Use 'make -f Makefile.$LANG clean-context context' to regenerate"
+	    echo "If you're sure this is correct, you can skip this check by setting --no-verify"
+	    echo
+	    problem=1
+        fi
+    fi
+
+    f=$(git diff $CACHED --name-only --diff-filter=ACMR scripts/common scripts/$LANG | grep -v warning)
+    if [ -n "$f" ]; then
+        d=$(git diff $CACHED --name-only --diff-filter=ACMR $LANG-build | grep -v warning)
+        if [ -z "$d" ]; then
+	    echo "scripts changed but $LANG-build has not been modified"
+	    echo "Use 'make -f Makefile.$LANG clean-context context' to regenerate"
+	    echo "If you're sure this is correct, you can skip this check by setting --no-verify"
+	    echo
+	    problem=1
+        fi
+    fi
+}
+
+function check_tarballs() {
+    local LANG=$1
+    top=$(git rev-parse --show-toplevel)
+    git diff $CACHED --name-only --diff-filter=ACMR $LANG-build | $top/test/repo-checks/check-zero.sh $top
+    res=$?
+    if [ "$res" -ne 0 ]; then
+        echo "Refusing to commit non-zero length tarballs in $LANG-build directory."
+        echo "Use 'make -f Makefile.$LANG zero-tarballs' to make the file(s) zero length and try again."
+        echo "Don't use --no-verify to skip this check."
+        echo
+        problem=1
+    fi
+}
+
+check_tarballs pyspark
+check_tarballs java
+check_tarballs scala
+
+check_builddir pyspark
+check_builddir java
+check_builddir scala
+
+exit $problem
+
