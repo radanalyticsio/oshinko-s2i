@@ -35,7 +35,8 @@ LABEL name="$JBOSS_IMAGE_NAME" \
       io.k8s.display-name="radanalytics scala_spark" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/local/s2i" \
-      io.openshift.tags="builder,radanalytics,scala_spark"
+      io.openshift.tags="builder,radanalytics,scala_spark" \
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz"
 
 
 USER root
