@@ -9,6 +9,10 @@ This is a place to put s2i images and utilities for Apache Spark application bui
 
 The easiest way to build the s2i images is to use the makefiles provided:
 
+    # To build all images
+    $ make
+
+    # To build images individually
     $ make -f Makefile.pyspark
     $ make -f Makefile.java
     $ make -f Makefile.scala
@@ -27,20 +31,21 @@ the Docker files and artifacts needed to build the images. They are:
     * scala-build
 
 If the yaml files used by dogen change (ie image.pyspark.yaml) or the scripts
-included in an image change, the Docker context directory can be regenerated this way
-(the clean target als deletes the local image):
+included in an image change, the Docker context directory can be regenerated this way:
 
-    $ make -f Makefile.pyspark clean pyspark-build/Dockerfile
+    $ make -f Makefile.pyspark clean-context context
 
 To regenerate the Docker context directory and build the image in one command:
 
     $ make -f Makefile.pyspark clean build
 
-## Git pre-commit hook to avoid committing non-zero length tarballs
+## Git pre-commit hook
 
 The `hooks/pre-commit` hook can be installed in a local repo to
 prevent commits with non-zero length tarballs in the image build
-directories. To install the hook locally do something like this:
+directories or to warn when changes have been made to yaml files or
+scripts but the image build directories have not changed.
+To install the hook locally do something like this:
 
     $ cd .git/hooks
     $ ln -s ../../hooks/pre-commit pre-commit

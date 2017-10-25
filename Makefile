@@ -14,10 +14,16 @@ export S2I_TEST_IMAGE_SCALA
 build: CMD=build
 push: CMD=push
 clean: CMD=clean
+context: CMD=context
+clean-context: CMD=clean-context
+zero-tarballs: CMD=zero-tarballs
 
 build: $(allimgs)
 clean: $(allimgs)
 push: $(allimgs)
+context: $(allimgs)
+clean-context: $(allimgs)
+zero-tarballs: $(allimgs)
 
 $(allimgs):
 	${MAKE} -f $@ $(CMD)
