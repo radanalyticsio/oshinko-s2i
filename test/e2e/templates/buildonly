@@ -35,7 +35,6 @@ function build_test_no_app_name {
 function build_test_app_file {
     set_defaults
     run_app # runs the build
-    os::cmd::try_until_text 'oc get build "$APP_NAME"-1 --template="{{index .status \"phase\"}}"' "Complete" $((10*minute))
     PULL_SPEC=$(oc describe is $APP_NAME | grep "Docker Pull Spec" | awk '{ print $4; }')
     # The image won't actually run since we're not using a template with all the necessary envs for start.sh
     # So just create the pod and check the environment
@@ -45,7 +44,6 @@ function build_test_app_file {
     force_random_app_name
     set_app_file $1
     run_app # runs the build
-    os::cmd::try_until_text 'oc get build "$APP_NAME"-1 --template="{{index .status \"phase\"}}"' "Complete" $((10*minute))
     PULL_SPEC=$(oc describe is $APP_NAME | grep "Docker Pull Spec" | awk '{ print $4; }')
     # The image won't actually run since we're not using a template with all the necessary envs for start.sh
     # So just create the pod and check the environment

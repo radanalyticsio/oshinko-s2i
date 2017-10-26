@@ -1,33 +1,33 @@
 #!/bin/bash
+S2I_TEST_LOCAL_IMAGES=${S2I_TEST_LOCAL_IMAGES:-true}
 S2I_TEST_INTEGRATED_REGISTRY=${S2I_TEST_INTEGRATED_REGISTRY:-}
 S2I_TEST_EXTERNAL_REGISTRY=${S2I_TEST_EXTERNAL_REGISTRY:-}
 S2I_TEST_EXTERNAL_USER=${S2I_TEST_EXTERNAL_USER:-}
 S2I_TEST_EXTERNAL_PASSWORD=${S2I_TEST_EXTERNAL_PASSWORD:-}
 
 if [ -z "$S2I_TEST_IMAGE_PYSPARK" ]; then
-    if [ -n "$S2I_TEST_IMAGE_PREFIX" ]; then
-	S2I_TEST_IMAGE_PYSPARK=$S2I_TEST_IMAGE_PREFIX-pyspark
-    else
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
 	S2I_TEST_IMAGE_PYSPARK=radanalytics-pyspark
+    else
+	S2I_TEST_IMAGE_PYSPARK=docker.io/radanalyticsio/radanalytics-pyspark
     fi
 fi
 
 if [ -z "$S2I_TEST_IMAGE_JAVA" ]; then
-    if [ -n "$S2I_TEST_IMAGE_PREFIX" ]; then
-	S2I_TEST_IMAGE_JAVA=$S2I_TEST_IMAGE_PREFIX-java
-    else
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
 	S2I_TEST_IMAGE_JAVA=radanalytics-java-spark
+    else
+	S2I_TEST_IMAGE_JAVA=docker.io/radanalyticsio/radanalytics-java-spark
     fi
 fi
 
 if [ -z "$S2I_TEST_IMAGE_SCALA" ]; then
-    if [ -n "$S2I_TEST_IMAGE_PREFIX" ]; then
-	S2I_TEST_IMAGE_SCALA=$S2I_TEST_IMAGE_PREFIX-scala
-    else
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
 	S2I_TEST_IMAGE_SCALA=radanalytics-scala-spark
+    else
+	S2I_TEST_IMAGE_SCALA=docker.io/radanalyticsio/radanalytics-scala-spark
     fi
 fi
-
 
 S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark}
 
@@ -44,7 +44,9 @@ RESOURCE_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)/resources
 source $(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i')/hack/lib/init.sh
 
 function print_test_env {
-    if [ -n "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+    if [ "$S2I_TEST_LOCAL_IMAGES" != true ]; then
+	echo S2I_TEST_LOCAL_IMAGES = $S2I_TEST_LOCAL_IMAGES, all s2i builder images are external, ignoring registry env vars
+    elif [ -n "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
         echo Using external registry $S2I_TEST_EXTERNAL_REGISTRY
         if [ -z "$S2I_TEST_EXTERNAL_USER" ]; then
             echo "WARNING: S2I_TEST_EXTERNAL_USER not set!"
@@ -61,9 +63,9 @@ function print_test_env {
     else
         echo Not using external or integrated registry
     fi
-    echo Using local s2i pyspark image $S2I_TEST_IMAGE_PYSPARK
-    echo Using local s2i java image $S2I_TEST_IMAGE_JAVA
-    echo Using local s2i scala image $S2I_TEST_IMAGE_SCALA
+    echo Using s2i pyspark image $S2I_TEST_IMAGE_PYSPARK
+    echo Using s2i java image $S2I_TEST_IMAGE_JAVA
+    echo Using s2i scala image $S2I_TEST_IMAGE_SCALA
     echo Using spark image $S2I_TEST_SPARK_IMAGE
     echo Using $S2I_TEST_WORKERS workers
 }
@@ -296,6 +298,7 @@ function poll_build() {
 }
 
 function make_image() {
+    local skip_push=1
     TEST_IMAGE=play
     set +e
     oc get buildconfig play &> /dev/null
@@ -310,19 +313,13 @@ function make_image() {
 
     if [ "$res" -ne 0 ]; then
         # The ip address of an internal/external registry may be set to support running against
-        # an openshift that is not "oc cluster up". In the case of "oc cluster up", the docker
-        # on the host is available from openshift so no special pushes of images have to be done.
-        # In the case of a "normal" openshift cluster, the image we'll use for build has to be
+        # an openshift that is not "oc cluster up" when using images that have been built locally.
+        # In the case of "oc cluster up", the docker on the host is available from openshift so
+        # no special pushes of images have to be done.
+        # In the case of a "normal" openshift cluster, a local image we'll use for build has to be
         # available from the designated registry.
-        set +e
-        tmp=$(docker history $S2I_TEST_IMAGE_PYSPARK)
-        res=$?
-        set -e
-        if [ "$res" -ne 0 ]; then
-            echo Uh oh, image $S2I_TEST_IMAGE_PYSPARK does not exist
-            return 1
-        fi
-
+        # If we're using a pyspark image already in an external registry, openshift can pull it from
+        # there and we don't have to do anything.
 	local user=
 	local password=
 	local pushproj=
@@ -330,21 +327,23 @@ function make_image() {
 	local registry=
 	local imagestream=
 
-	if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
-	    user=$S2I_TEST_EXTERNAL_USER
-	    password=$S2I_TEST_EXTERNAL_PASSWORD
-	    pushproj=$user
-	    pushimage=scratch-radanalytics-pyspark
-	    registry=$S2I_TEST_EXTERNAL_REGISTRY
-	    imagestream=false
+	if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+	    if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+	        user=$S2I_TEST_EXTERNAL_USER
+	        password=$S2I_TEST_EXTERNAL_PASSWORD
+	        pushproj=$user
+	        pushimage=scratch-radanalytics-pyspark
+	        registry=$S2I_TEST_EXTERNAL_REGISTRY
+	        imagestream=false
 
-	elif [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
-	    user=$(oc whoami)
-	    password=$(oc whoami -t)
-	    pushproj=$PROJECT
-	    pushimage=radanalytics-pyspark
-	    registry=$S2I_TEST_INTEGRATED_REGISTRY
-	    imagestream=true
+	    elif [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+	        user=$(oc whoami)
+	        password=$(oc whoami -t)
+	        pushproj=$PROJECT
+	        pushimage=radanalytics-pyspark
+	        registry=$S2I_TEST_INTEGRATED_REGISTRY
+	        imagestream=true
+	    fi
 	fi
 
         if [ -z "$registry" ]; then

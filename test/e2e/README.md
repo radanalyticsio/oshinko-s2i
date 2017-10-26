@@ -31,12 +31,23 @@ by `run.sh` when it looks for test scripts.
 
 The `test/e2e/common` file reads or sets several environment variables:
 
+``S2I_TEST_LOCAL_IMAGES`` (default is true)
+
+  This indicates that the s2i images to be tested are local, that is they
+  are available from the local docker daemon but not in an external registry
+  like docker hub.
+
+  If this is set to "false", all s2i images are assumed to be in an external
+  registy. **S2I_TEST_INTEGRATED_REGISTRY** and **S2I_TEST_EXTERNAL_REGISTRY**
+  will be ignored because there will be no need to push local images to
+  a registry.
+
 ``S2I_TEST_INTEGRATED_REGISTRY``
 
-  This is the IP address of the integrated registry and it needs to be set
-  when running tests against a full OpenShift instance from the OpenShift
-  master host and using the integrated registry. It does not need to be set
-  when running against an instance created with "oc cluster up".
+  This is the IP address of the integrated registry. Use this setting when:
+  * running tests using local images
+  * running tests on a host where the integrated registry is reachable (like the OpenShift master)
+  * using an OpenShift instance that was not created with `oc cluster up`
 
 ```sh
 $ S2I_TEST_INTEGRATED_REGISTRY=172.123.456.89:5000 test/e2e/run.sh
@@ -44,21 +55,25 @@ $ S2I_TEST_INTEGRATED_REGISTRY=172.123.456.89:5000 test/e2e/run.sh
 
 ``S2I_TEST_EXTERNAL_REGISTRY``
 
-  This is the IP address of a docker registry to use as an alternative to
-  either the integrated registry or the local docker daemon when "oc cluster up"
-  is used to provide the OpenShift instance. If this is set then `S2I_TEST_EXTERNAL_USER`
-  and `S2I_TEST_EXTERNAL_PASSWORD` must also be set so that the tests can
-  log in to the registry.
+  This is the IP address of a docker registry. If this is set then
+  **S2I_TEST_EXTERNAL_USER** and **S2I_TEST_EXTERNAL_PASSWORD** must also
+  be set so that the tests can log in to the registry.
+  Use this setting when:
+  * running tests using local images
+  * running tests from a host where the integrated registry is not reachable
+  * using an OpenShift instance that was not created with `oc cluster up`
 
-``S2I_TEST_IMAGE`` (default is radanalytics-pyspark)
+``S2I_TEST_IMAGE_PYSPARK`` (default: radanalytics-pyspark if S2I_TEST_LOCAL_IMAGES is true, otherwise docker.io/radanalyticsio/radanalytics-pyspark)
 
-  This is the name of a pyspark S2I image in the local docker repository that the
-  tests will use. These tests look at shared functionality across the S2I
-  images (Java, Scala, Python) and the pyspark image was chosen for the tests.
+  This is the name of a pyspark S2I image that the tests will use.
 
-  Since the point is to test changes in the git repository, it is required that
-  a local pyspark S2I image be built for the tests (make will do this for
-  you, see below)
+``S2I_TEST_IMAGE_JAVA`` (default: radanalytics-java-spark if S2I_TEST_LOCAL_IMAGES is true, otherwise docker.io/radanalyticsio/radanalytics-java-spark)
+
+  This is the name of a java spark S2I image that the tests will use.
+
+``S2I_TEST_IMAGE_SCALA`` (default: radanalytics-scala-spark if S2I_TEST_LOCAL_IMAGES is true, otherwise docker.io/radanalyticsio/radanalytics-scala-spark)
+
+  This is the name of a scala spark S2I image that the tests will use.
  
 ``S2I_TEST_SPARK_IMAGE`` (default is docker.io/radanalyticsio/openshift-spark)
 
@@ -79,11 +94,11 @@ $ S2I_TEST_INTEGRATED_REGISTRY=172.123.456.89:5000 test/e2e/run.sh
   running script and it can be used in test code. The current tests use this to set the
   test suite identifier.
 
-## Running Tests with `make`
+## Running Tests with `make` (this builds and uses local images)
 
 The `test-e2e` make target can be run from the `oshinko-s2i` root directory.
-It will build a new local pyspark S2I image and then run all of the end-to-end tests
-using that image.
+It will build new local images and then run all of the end-to-end tests
+using those images.
 
 To run against an OpenShift instance created with "oc cluster up"
 
@@ -91,30 +106,44 @@ To run against an OpenShift instance created with "oc cluster up"
 $ make test-e2e
 ```
 
-To run against a full OpenShift instance, set the registry value
+To run against a full OpenShift instance from the master host
+where the integrated registry is reachable
 
 ```sh
 $ S2I_TEST_INTEGRATED_REGISTRY=<registry ip> make test-e2e
 ```
 
-To build and use a local pyspark image with a name differrent than
-then default, use the **S2I_TEST_IMAGE** env var:
+To run against a full OpenShift instance when the integrated
+registry is not reachable, specify an external registry
 
 ```sh
-$ S2I_TEST_IMAGE=my_test_image make test-e2e
+$ S2I_TEST_EXTERNAL_REGISTRY=<registry ip> S2I_TEST_EXTERNAL_USER=myuser S2I_TEST_EXTERNAL_PASSWORD=password make test-e2e
 ```
 
-## Running Tests with run.sh
+To build and use a local pyspark image with a name differrent than
+then default, use the **S2I_TEST_IMAGE_PYSPARK** env var:
 
-Tests may be run using `run.sh` instead of make but you must have
-a local pyspark S2I image built first.
+```sh
+$ S2I_TEST_IMAGE_PYSPARK=my_test_image make test-e2e
+```
 
-To run the full test suite, use:
+## Running Tests with run.sh (this can use local or external images)
+
+Tests may be run using `run.sh` instead of make. If you are using
+local images, you must build them first.
+
+To run the full test suite with local images, use:
 ```sh
 $ test/e2e/run.sh
 ```
 
-To run against a full OpenShift instance, set the registry value
+To run the full test suite with default external images, use:
+
+```sh
+$ S2I_TEST_LOCAL_IMAGES=false test/e2e/run.sh
+
+To run against a full OpenShift instance with local images, specify an integrated
+or external registry
 
 ```sh
 $ S2I_TEST_INTEGRATED_REGISTRY=<registry ip> test/e2e/run.sh
@@ -130,10 +159,10 @@ To run a set of suites matching some regex, use:
 $ test/e2e/run.sh <regex>
 ```
 To use a local pyspark image with a name differrent than
-then default, use the **S2I_TEST_IMAGE** env var:
+then default, use the **S2I_TEST_IMAGE_PYSPARK** env var:
 
 ```sh
-$ S2I_TEST_IMAGE=my_test_image test/e2e/run.sh
+$ S2I_TEST_IMAGE_PYSPARK=my_test_image test/e2e/run.sh
 ```
 
 Any test can also be run in the current project by invoking it directly. Note, this assumes
@@ -147,10 +176,6 @@ $ test/e2e/ephemeral/non_ephemeral_app_completed.sh
 ## Adding Tests
 
 New end-to-end tests should be added in specific subdirectories under `test/e2e`, grouped by functionality.
-
-For example, to add a directory of tests that exercise the oshinko S2I templates you might add `test/e2e/templates`.
-Since the test runner is oriented toward subdirectories, you might create a subdirectory for the java template
-tests in `test/e2e/templates/java`.
 
 Any non end-to-end tests should be added under `test` in a different subdirectory. They should be given their own make target
 and perhaps their own test runner. The `e2e` subdirectory is specifically for live end-to-end tests against a full
