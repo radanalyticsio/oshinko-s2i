@@ -332,6 +332,10 @@ else
     # app completed, we take the cluster with us, as long as our repl count is 0 or 1 (if it's more
     # then someone scaled the driver and we have to leave the cluster anyway).
     trap exit_flag TERM INT
-    delete_ephemeral completed
+    if [ "$ephemeral" == "<shared>" ]; then
+	echo "cluster is not ephemeral, not deleting '$OSHINKO_CLUSTER_NAME'"
+    else
+        delete_ephemeral completed
+    fi
 fi
 app_exit
