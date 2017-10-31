@@ -333,7 +333,8 @@ else
     # then someone scaled the driver and we have to leave the cluster anyway).
     trap exit_flag TERM INT
     if [ "$ephemeral" == "<shared>" ]; then
-	echo "cluster is not ephemeral, not deleting '$OSHINKO_CLUSTER_NAME'"
+	echo "cluster is not ephemeral"
+	echo "cluster not deleted '$OSHINKO_CLUSTER_NAME'"
     else
         delete_ephemeral completed
     fi
