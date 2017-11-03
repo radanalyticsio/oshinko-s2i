@@ -28,9 +28,14 @@ function get_deployment {
 function delete_ephemeral {
     local appstatus=$1
     local line
-    echo "Deleting cluster $OSHINKO_CLUSTER_NAME"
-    line=$($CLI delete_eph $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
-    echo $line
+    echo "Deleting cluster '$OSHINKO_CLUSTER_NAME'"
+    if [ "$ephemeral" == "<shared>" ]; then
+	echo "cluster is not ephemeral"
+	echo "cluster not deleted '$OSHINKO_CLUSTER_NAME'"
+    else
+        line=$($CLI delete_eph $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
+        echo $line
+    fi
 }
 
 function handle_term {
@@ -332,11 +337,6 @@ else
     # app completed, we take the cluster with us, as long as our repl count is 0 or 1 (if it's more
     # then someone scaled the driver and we have to leave the cluster anyway).
     trap exit_flag TERM INT
-    if [ "$ephemeral" == "<shared>" ]; then
-	echo "cluster is not ephemeral"
-	echo "cluster not deleted '$OSHINKO_CLUSTER_NAME'"
-    else
-        delete_ephemeral completed
-    fi
+    delete_ephemeral completed
 fi
 app_exit
