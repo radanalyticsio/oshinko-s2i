@@ -221,14 +221,12 @@ function run_job() {
 function cleanup_app() {
 
     # We may have code shared by build templates and app templates
-    # that calls cleanup_app, and the build tempaltes may not have dcs ...
+    # that calls cleanup_app, and the build templates may not have dcs ...
     set +e
-    oc scale dc/"$APP_NAME" --replicas=0
-    set -e
+#    oc scale dc/"$APP_NAME" --replicas=0
     os::cmd::try_until_text 'oc get pods -l deploymentconfig="$APP_NAME"' 'No resources found' $((5*minute))
-    set +e
     oc delete dc/"$APP_NAME"
-    os::cmd::try_until_failure 'oc logs dc/$APP_NAME' $((5*minute))
+    os::cmd::try_until_failure 'oc logs dc/$APP_NAME' $((10*minute))
     set -e
 #    if [ "$#" -eq 1 ]; then
 #        #os::cmd::try_until_failure 'oc get dc "$MASTER_DC"' $((5*minute))
