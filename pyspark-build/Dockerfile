@@ -52,7 +52,7 @@ RUN yum install -y  java-1.8.0-openjdk \
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    oshinko_v0.4.0_linux_amd64.tar.gz \
+    oshinko_v0.4.1_linux_amd64.tar.gz \
     spark-2.2.0-bin-hadoop2.7.tgz \
     /tmp/artifacts/
 

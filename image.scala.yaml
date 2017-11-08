@@ -39,5 +39,5 @@ sources:
     md5sum: e7e1f7ddc8873d228d611e801b8d2795
   - url: http://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz
     md5sum: 30a238d1b0cc2821da2b9b4e830ef204
-  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.4.0/oshinko_v0.4.0_linux_amd64.tar.gz
-    md5sum: 8d44e833cc40fd9bda40bed802899943
+  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.4.1/oshinko_v0.4.1_linux_amd64.tar.gz
+    md5sum: 562e9eb17810d0802084a23f8db3ed21
