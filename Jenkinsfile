@@ -29,12 +29,12 @@ def prepareTests() {
 
 	// download oc client
 	dir('client') {
-		sh('curl -LO https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz')
-		sh('curl -LO https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-server-v1.5.1-7b451fc-linux-64bit.tar.gz')
-		sh('tar -xzf openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz')
-		sh('tar -xzf openshift-origin-server-v1.5.1-7b451fc-linux-64bit.tar.gz')
-		sh('cp openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit/oc .')
-		sh('cp openshift-origin-server-v1.5.1-7b451fc-linux-64bit/* .')
+		sh('curl -LO https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz')
+		sh('curl -LO https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-server-v3.7.0-7ed6862-linux-64bit.tar.gz')
+		sh('tar -xzf openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz')
+		sh('tar -xzf openshift-origin-server-v3.7.0-7ed6862-linux-64bit.tar.gz')
+		sh('cp openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit/oc .')
+		sh('cp openshift-origin-server-v3.7.0-7ed6862-linux-64bit/* .')
 	}
 
 	// login to openshift instance
