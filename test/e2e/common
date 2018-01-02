@@ -223,17 +223,16 @@ function cleanup_app() {
     # We may have code shared by build templates and app templates
     # that calls cleanup_app, and the build templates may not have dcs ...
     set +e
-#    oc scale dc/"$APP_NAME" --replicas=0
-#    os::cmd::try_until_text 'oc get pods -l deploymentconfig="$APP_NAME"' 'No resources found' $((5*minute))
-    oc delete dc/"$APP_NAME"
-    os::cmd::try_until_failure 'oc logs dc/$APP_NAME' $((10*minute))
+    local test=$(oc get dc "$APP_NAME" &> /dev/null)
+    if [ "$?" -eq 0 ]; then
+        oc delete dc/"$APP_NAME" &> /dev/null
+        os::cmd::try_until_failure 'oc get dc/"$APP_NAME"' $((10*minute))
+        if [ "$#" -eq 1 ]; then
+            local POD_NAME=$1
+            os::cmd::try_until_failure 'oc get pod/"$POD_NAME"' $((10*minute))
+        fi
+    fi
     set -e
-#    if [ "$#" -eq 1 ]; then
-#        #os::cmd::try_until_failure 'oc get dc "$MASTER_DC"' $((5*minute))
-#        #os::cmd::try_until_failure 'oc get dc "$WORKER_DC"' $((5*minute))
-#        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"' $((5*minute))
-#        os::cmd::try_until_failure 'oc get service "$GEN_CLUSTER_NAME"-ui' $((5*minute))
-#    fi
 }
 
 function cleanup_cluster() {
