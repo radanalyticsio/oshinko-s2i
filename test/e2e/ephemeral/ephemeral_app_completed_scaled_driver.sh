@@ -22,7 +22,7 @@ function ephemeral_app_completed_scaled_driver() {
     os::cmd::try_until_text 'oc logs "$DRIVER"' 'driver replica count > 0'
     os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster not deleted'
 
-    cleanup_app wait_for_cluster_del
+    cleanup_app $DRIVER
 }
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"

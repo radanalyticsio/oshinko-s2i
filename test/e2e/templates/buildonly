@@ -26,7 +26,7 @@ function build_test_no_app_name {
     run_app_without_application_name
     os::cmd::try_until_not_text 'oc get buildconfig -l app' 'No resources found' $((10*minute))
     NAME=$(oc get buildconfig -l app --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc logs "$NAME"-1-build | grep "$GIT_URI"'
+    scrape_for_env $NAME-1-build SOURCE_REPOSITORY $GIT_URI
     os::cmd::try_until_success 'oc get is/"$NAME"'
     os::cmd::expect_success 'oc delete buildconfig "$NAME"'
     os::cmd::expect_success 'oc delete is "$NAME"'

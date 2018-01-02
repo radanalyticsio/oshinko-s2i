@@ -1,4 +1,5 @@
 #!/bin/bash
+FIXED_APP_NAME=
 
 function set_app_file() {
     if [ "$#" -eq 1 ]; then
@@ -171,6 +172,21 @@ function get_driver_pod() {
     set -e
 }
 
+function scrape_for_env() {
+    local PODNAME=$1
+    local ENVNAME=$2
+    if [ "$#" -eq 3 ]; then
+        local VALUE=$3
+        local SCRAPE='oc export pod '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value: '$VALUE'"'
+        os::cmd::try_until_success "$SCRAPE"
+    else
+        local SCRAPE='oc export pod '$PODNAME' | grep "name: '$ENVNAME'"'
+        os::cmd::try_until_success "$SCRAPE"
+        SCRAPE='oc export pod '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value:"'
+        os::cmd::try_until_failure "$SCRAPE"
+    fi
+}
+
 function test_no_app_name {
     set_defaults
     os::cmd::expect_success 'oc delete buildconfig -l app'
@@ -178,7 +194,7 @@ function test_no_app_name {
     run_app_without_application_name
     os::cmd::try_until_not_text 'oc get buildconfig -l app' 'No resources found' $((10*minute))
     NAME=$(oc get buildconfig -l app --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_success 'oc logs "$NAME"-1-build | grep "$GIT_URI"'  $((5*minute)) 
+    scrape_for_env $NAME-1-build SOURCE_REPOSITORY $GIT_URI
     os::cmd::try_until_success 'oc get dc/"$NAME"'
     os::cmd::try_until_success 'oc get is/"$NAME"'
     os::cmd::expect_success 'oc delete buildconfig "$NAME"'
@@ -191,13 +207,13 @@ function test_app_args {
     APPARGS="doodleydoodley"
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_ARGS=doodleydoodley$"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER APP_ARGS doodleydoodley
+    cleanup_app $DRIVER
 
     run_app_without_optionals
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_ARGS=$"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER APP_ARGS
+    cleanup_app $DRIVER
 }
 
 function test_podinfo {
@@ -206,26 +222,26 @@ function test_podinfo {
     get_driver_pod
     os::cmd::try_until_success 'oc exec "$DRIVER" -- ls /etc/podinfo/labels'
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep POD_NAME="$DRIVER"'  $((5*minute))
-    cleanup_app
+    cleanup_app $DRIVER
 }
 
 function test_del_cluster {
     set_defaults
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_DEL_CLUSTER=false$"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER OSHINKO_DEL_CLUSTER '\"false\"'
+    cleanup_app $DRIVER
 
     DEL_CLUSTER=true
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_DEL_CLUSTER=true$"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER OSHINKO_DEL_CLUSTER '\"true\"'
+    cleanup_app $DRIVER
 
     run_app_without_optionals
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_DEL_CLUSTER=true$"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER OSHINKO_DEL_CLUSTER '\"true\"'
+    cleanup_app $DRIVER
 }
 
 function test_cluster_name {
@@ -234,13 +250,14 @@ function test_cluster_name {
     GEN_CLUSTER_NAME=jerry
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_CLUSTER_NAME=jerry"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER OSHINKO_CLUSTER_NAME jerry
+
+    cleanup_app $DRIVER
 
     run_app_without_clustername
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_CLUSTER_NAME=$"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER OSHINKO_CLUSTER_NAME
+    cleanup_app $DRIVER
 }
 
 function test_no_source_or_image {
@@ -254,13 +271,13 @@ function test_named_config {
     NAMED_CONFIG=myconfig
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_NAMED_CONFIG=myconfig$"' $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER OSHINKO_NAMED_CONFIG myconfig
+    cleanup_app $DRIVER
 
     run_app_without_optionals
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_NAMED_CONFIG=$"' $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER OSHINKO_NAMED_CONFIG
+    cleanup_app $DRIVER
 }
 
 function test_app_file {
@@ -269,7 +286,7 @@ function test_app_file {
     run_app
     get_driver_pod
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_FILE=$' $((10*minute))
-    cleanup_app
+    cleanup_app $DRIVER
 
     # Because the dc is bundled with a buildconfig, this will cause a new build. Force a different
     # app name so that the build doesn't conflict and we can keep the default one around.
@@ -278,7 +295,7 @@ function test_app_file {
     run_app
     get_driver_pod
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_FILE="$APP_FILE_NAME"$' $((10*minute))
-    cleanup_app
+    cleanup_app $DRIVER
     oc delete buildconfig $APP_NAME &> /dev/null
     oc delete is $APP_NAME &> /dev/null
 }
@@ -294,7 +311,7 @@ function test_git_ref {
     set_git_uri $1 $commit
     run_app skipwait
     SOURCE_INFO=$old_source
-    os::cmd::try_until_success 'oc logs "$APP_NAME"-1-build | grep -e "Commit:[[:space:]]" | grep "$commit"'
+    os::cmd::try_until_success 'oc export build "$APP_NAME"-1 | grep -e commit\:\ "$commit"'
     cleanup_app
     os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
     os::cmd::expect_success 'oc delete is "$APP_NAME"'
@@ -305,13 +322,14 @@ function test_driver_config {
     DRIVER_CONFIG=myconfig
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_SPARK_DRIVER_CONFIG=myconfig$"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER OSHINKO_SPARK_DRIVER_CONFIG myconfig
+    cleanup_app $DRIVER
 
     run_app_without_optionals
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_SPARK_DRIVER_CONFIG=$"'  $((5*minute))
-    cleanup_app
+#    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "OSHINKO_SPARK_DRIVER_CONFIG=$"'  $((5*minute))
+    scrape_for_env $DRIVER OSHINKO_SPARK_DRIVER_CONFIG
+    cleanup_app $DRIVER
 }
 
 function test_spark_options {
@@ -319,41 +337,41 @@ function test_spark_options {
     SPARK_OPTIONS="--conf somevalue=1"
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "SPARK_OPTIONS=--conf somevalue=1"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER SPARK_OPTIONS "$SPARK_OPTIONS"
+    cleanup_app $DRIVER
 
     run_app_without_optionals
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "SPARK_OPTIONS=$"'  $((5*minute))
-    cleanup_app
+    scrape_for_env $DRIVER SPARK_OPTIONS
+    cleanup_app $DRIVER
 }
 
 function test_exit {
     set_defaults
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'  $((10*minute))
-    cleanup_app
+    scrape_for_env $DRIVER APP_EXIT '\"false\"'
+    cleanup_app $DRIVER
 
     set_exit_flag true
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'  $((10*minute))
-    cleanup_app
+    scrape_for_env $DRIVER APP_EXIT '\"true\"'
+    cleanup_app $DRIVER
 
     set_exit_flag false
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=false"'  $((10*minute))
-    cleanup_app
+    scrape_for_env $DRIVER APP_EXIT '\"false\"'
+    cleanup_app $DRIVER
 }
 
 function test_fixed_exit {
     set_defaults
     run_app
     get_driver_pod
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep "APP_EXIT=true"'  $((10*minute))
-    cleanup_app
+    scrape_for_env $DRIVER APP_EXIT '\"true\"'
+    cleanup_app $DRIVER
 }
 
 function fix_template() {
