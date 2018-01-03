@@ -2,79 +2,57 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-scala-spark-build-dc",
+      "name": "oshinko-scala-spark-dc",
       "annotations": {
-         "openshift.io/display-name": "Apache Spark Scala",
-         "description": "Create a buildconfig, imagestream and deploymentconfig using source-to-image and Scala Spark source files hosted in git"
+         "description": "Create a deploymentconfig using an existing Scala Spark image"
       }
    },
    "labels": {
       "application": "oshinko-scala-spark",
-      "createdBy": "template-oshinko-scala-spark-build-dc"
+      "createdBy": "template-oshinko-scala-spark-dc"
    },
    "parameters": [
       {
-         "description": "The name to use for the buildconfig, imagestream and deployment objects",
+         "description": "The name to use for the deployment objects",
          "name": "APPLICATION_NAME",
          "generate": "expression",
          "from": "scala-spark-[a-z0-9]{4}",
          "required": true
       },
       {
-         "description": "Git source URI for application",
-         "name": "GIT_URI"
+         "description": "The name of the Scala Spark imagestream to use (the 'latest' tag will be used')",
+         "name": "IMAGE",
+         "required": true
       },
       {
-         "description": "Git branch/tag reference",
-         "name": "GIT_REF",
-         "value": "master"
-      },
-      {
-         "description": "Git sub-directory path",
-         "name": "CONTEXT_DIR"
-      },
-      {
-         "description": "The name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
-         "name": "APP_FILE"
-      },
-      {
-         "description": "Command line arguments to pass to the spark application",
+         "description": "Command line arguments to pass to the Spark application",
          "name": "APP_ARGS"
       },
       {
          "description": "Application main class for jar-based applications",
-         "name": "APP_MAIN_CLASS",
-         "required": true
+         "name": "APP_MAIN_CLASS"
       },
       {
-          "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
+         "description": "List of additional Spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
          "name": "SPARK_OPTIONS"
       },
       {
-         "description": "The name of the spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
+         "description": "The name of the Spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
          "name": "OSHINKO_CLUSTER_NAME"
       },
       {
-         "description": "The name of a stored cluster configuration to use if a cluster is created, default is 'default'.",
+	  "description": "The name of a stored cluster configuration to use if a cluster is created, default is 'default.",
          "name": "OSHINKO_NAMED_CONFIG"
       },
       {
-         "description": "The name of a configmap to use for the spark configuration of the driver. If this configmap is empty the default spark configuration will be used.",
-         "name": "OSHINKO_SPARK_DRIVER_CONFIG"
+        "description": "The name of a configmap to use for the Spark configuration of the driver. If this configmap is empty the default Spark configuration will be used.",
+        "name": "OSHINKO_SPARK_DRIVER_CONFIG"
       },
       {
          "description": "If a cluster is created on-demand, delete the cluster when the application finishes if this option is set to 'true'",
          "name": "OSHINKO_DEL_CLUSTER",
          "value": "true",
          "required": true
-      },
-      {
-         "description": "Arguments to use when calling sbt, replacing the default `package`",
-         "name": "SBT_ARGS"
-      },
-      {
-         "description": "Additional sbt arguments, useful for adding task arguments to sbt like `publish makePom`",
-         "name": "SBT_ARGS_APPEND"
       },
       {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
@@ -84,89 +62,6 @@
       }
    ],
    "objects": [
-      {
-         "kind": "ImageStream",
-         "apiVersion": "v1",
-         "metadata": {
-            "name": "${APPLICATION_NAME}"
-         },
-         "spec": {
-            "dockerImageRepository": "${APPLICATION_NAME}",
-            "tags": [
-               {
-                  "name": "latest"
-               }
-            ]
-         }
-      },
-      {
-         "kind": "BuildConfig",
-         "apiVersion": "v1",
-         "metadata": {
-            "name": "${APPLICATION_NAME}"
-         },
-         "spec": {
-            "triggers": [
-               {
-                  "type": "ImageChange",
-                  "imageChange": {}
-               },
-               {
-                  "type": "ConfigChange"
-               },
-               {
-                  "type": "GitHub",
-                  "github": {
-                      "secret": "${APPLICATION_NAME}"
-                  }
-               },
-               {
-                  "type": "Generic",
-                  "generic": {
-                      "secret": "${APPLICATION_NAME}"
-                  }
-               }
-            ],
-            "source": {
-               "type": "Git",
-               "git": {
-                  "uri": "${GIT_URI}",
-                  "ref": "${GIT_REF}"
-               },
-               "contextDir": "${CONTEXT_DIR}"
-            },
-            "strategy": {
-               "type": "Source",
-               "sourceStrategy": {
-                  "from": {
-                     "kind": "DockerImage",
-                     "name": "radanalyticsio/radanalytics-scala-spark"
-                  },
-                  "forcePull": true,
-                  "env": [
-                     {
-                        "name": "APP_FILE",
-                        "value": "${APP_FILE}"
-                     },
-                     {
-                         "name": "SBT_ARGS",
-                         "value": "${SBT_ARGS}"
-                     },
-                     {
-                         "name": "SBT_ARGS_APPEND",
-                         "value": "${SBT_ARGS_APPEND}"
-                     }
-                  ]
-               }
-            },
-            "output": {
-               "to": {
-                  "kind": "ImageStreamTag",
-                  "name": "${APPLICATION_NAME}:latest"
-               }
-            }
-         }
-      },
       {
          "kind": "DeploymentConfig",
          "apiVersion": "v1",
@@ -190,7 +85,7 @@
                      ],
                      "from": {
                         "kind": "ImageStreamTag",
-                        "name": "${APPLICATION_NAME}:latest"
+                        "name": "${IMAGE}:latest"
                      }
                   }
                },
@@ -212,7 +107,7 @@
                   "containers": [
                      {
                         "name": "${APPLICATION_NAME}",
-                        "image": "${APPLICATION_NAME}",
+                        "image": "${IMAGE}",
                         "env": [
                            {
                               "name": "OSHINKO_CLUSTER_NAME",
@@ -224,7 +119,7 @@
                            },
                            {
                               "name": "SPARK_OPTIONS",
-                               "value": "${SPARK_OPTIONS}"
+                              "value": "${SPARK_OPTIONS}"
                            },
                            {
                               "name": "APP_MAIN_CLASS",
@@ -234,7 +129,8 @@
                              "name": "OSHINKO_DEL_CLUSTER",
                              "value": "${OSHINKO_DEL_CLUSTER}"
                            },
-                           {  "name": "APP_EXIT",
+                           {
+                              "name": "APP_EXIT",
                               "value": "${APP_EXIT}"
                            },
                            {
@@ -258,7 +154,7 @@
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always",
+                        "imagePullPolicy": "IfNotPresent",
                         "volumeMounts": [
                            {
                               "mountPath": "/etc/podinfo",
@@ -315,3 +211,4 @@
       }
    ]
 }
+

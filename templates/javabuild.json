@@ -4,7 +4,7 @@
    "metadata": {
       "name": "oshinko-java-spark-build",
       "annotations": {
-         "description": "Create a buildconfig and imagestream using STI and java spark source hosted in git"
+         "description": "Create a buildconfig and imagestream using source-to-image and Java Spark source files hosted in git"
       }
    },
    "labels": {
@@ -13,19 +13,16 @@
    },
    "parameters": [
       {
-         "description": "The name to to use for the buildconfig and imagestream",
+         "description": "The name to to use for the buildconfig and imagestream objects",
          "name": "APPLICATION_NAME",
          "generate": "expression",
          "from": "java-spark-[a-z0-9]{4}",
          "required": true
       },
       {
-         "description": "The name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
-         "name": "APP_FILE"
-      },
-      {
          "description": "Git source URI for application",
-         "name": "GIT_URI"
+         "name": "GIT_URI",
+         "required": true
       },
       {
          "description": "Git branch/tag reference",
@@ -35,9 +32,28 @@
       {
          "description": "Git sub-directory path",
          "name": "CONTEXT_DIR"
+      },
+      {
+         "description": "The name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
+         "name": "APP_FILE"
       }
    ],
    "objects": [
+      {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "dockerImageRepository": "${APPLICATION_NAME}",
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      },
       {
          "kind": "BuildConfig",
          "apiVersion": "v1",
@@ -96,21 +112,6 @@
                   "name": "${APPLICATION_NAME}:latest"
                }
             }
-         }
-      },
-      {
-         "kind": "ImageStream",
-         "apiVersion": "v1",
-         "metadata": {
-            "name": "${APPLICATION_NAME}"
-         },
-         "spec": {
-            "dockerImageRepository": "${APPLICATION_NAME}",
-            "tags": [
-               {
-                  "name": "latest"
-               }
-            ]
          }
       }
    ]
