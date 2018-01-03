@@ -10,9 +10,9 @@ source $SCRIPT_DIR/../../builddc
 PYSPARK_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s2i')/templates
 RESOURCE_DIR=$TEST_DIR/resources
 
-cp  $PYSPARK_DIR/pysparkbuilddc.json $RESOURCE_DIR/pysparkbuilddc.json
-fix_template $RESOURCE_DIR/pysparkbuilddc.json radanalyticsio/radanalytics-pyspark $S2I_TEST_IMAGE_PYSPARK
-set_template $RESOURCE_DIR/pysparkbuilddc.json
+cp  $PYSPARK_DIR/pythonbuilddc.json $RESOURCE_DIR/pythonbuilddc.json
+fix_template $RESOURCE_DIR/pythonbuilddc.json radanalyticsio/radanalytics-pyspark $S2I_TEST_IMAGE_PYSPARK
+set_template $RESOURCE_DIR/pythonbuilddc.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name pyspark-build

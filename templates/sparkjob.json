@@ -2,27 +2,39 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-pyspark-job",
+      "name": "oshinko-spark-job",
       "annotations": {
-         "description": "Create a job using an existing pyspark imagestream"
+         "description": "Create a job using an existing Spark image"
       }
    },
    "labels": {
-      "application": "oshinko-pyspark",
-      "createdBy": "template-oshinko-pyspark-job"
+      "application": "oshinko-spark",
+      "createdBy": "template-oshinko-spark-job"
    },
    "parameters": [
       {
          "description": "The name to use for the job",
          "name": "APPLICATION_NAME",
          "generate": "expression",
-         "from": "pyspark-[a-z0-9]{4}",
+         "from": "spark-[a-z0-9]{4}",
          "required": true
       },
       {
-         "description": "The docker pull specification of the image to run",
+         "description": "The Docker pull specification of the image to run",
          "name": "IMAGE",
          "required": true
+      },
+      {
+         "description": "Command line arguments to pass to the application",
+         "name": "APP_ARGS"
+      },
+      {
+         "description": "Application main class for jar-based applications",
+         "name": "APP_MAIN_CLASS"
+      },
+      {
+         "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
+         "name": "SPARK_OPTIONS"
       },
       {
         "description": "The desired number of successful completions",
@@ -48,18 +60,6 @@
          "name": "OSHINKO_DEL_CLUSTER",
          "value": "true",
          "required": true
-      },
-      {
-         "description": "Command line arguments to pass to the pyspark application",
-         "name": "APP_ARGS"
-      },
-      {
-         "description": "Application main class for jar-based applications",
-         "name": "APP_MAIN_CLASS"
-      },
-      {
-         "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
-         "name": "SPARK_OPTIONS"
       }
    ],
    "objects": [
@@ -157,3 +157,4 @@
 
    ]
 }
+
