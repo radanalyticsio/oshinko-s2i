@@ -17,16 +17,19 @@ cp $sbt_fullname /opt
 pushd /opt
 tar -zxf $(basename $scala_fullname)
 ln -s $(basename $scala_fullname .tgz) scala
+rm $(basename $scala_fullname)
 
 tar -zxf $(basename $sbt_fullname)
 sbt_version=$(echo $(basename $sbt_fullname .tgz) | cut -d '-' -f2)
 ln -s sbt-launcher-packaging-$sbt_version sbt
+rm $(basename $sbt_fullname)
 popd
 
 /opt/sbt/bin/sbt
 
 mkdir -p /usr/local/s2i
 cp -r $ADDED_DIR/s2i/* /usr/local/s2i
+cp -R $SCRIPT_DIR/s2i/sbt/plugins /tmp/.sbt/0.13
 chmod a+x /usr/local/s2i/*
 chown -R 185:0 $APP_ROOT && chmod a+rwX -R $APP_ROOT
 chown -R 185:0 /opt/spark/conf && chmod g+rw -R /opt/spark/conf

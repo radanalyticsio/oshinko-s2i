@@ -24,7 +24,7 @@ envs:
   - name: APP_ROOT
     value: /opt/app-root
   - name: SBT_OPTS
-    value: -Dsbt.global.base=/tmp/.sbt -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
+    value: -Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
 packages:
   - git
 cmd:
