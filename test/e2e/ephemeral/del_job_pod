@@ -1,20 +1,44 @@
 #!/bin/bash
 
+function get_job_pod() {
+    local count
+    count=0
+
+    set +e
+    while true; do
+        DRIVER=$(oc get pod -l job-name=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+        if [ "$?" -eq 0 ]; then
+            break
+        fi
+        echo Getting job pod for $APP_NAME failed, trying again
+        oc get pods
+        sleep 0.5
+        count=$((count + 1))
+        echo $count
+        if [ "$count" -eq 120 ]; then
+            return 1
+        fi
+    done
+    set -e
+}
+
+
 function del_job_pod() {
     set_defaults
     set_test_mode
     run_job $2
-
-    DRIVER=$(oc get pod -l app=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+    get_job_pod
     os::cmd::try_until_text 'oc log "$DRIVER"' 'Cound not create an ephemeral cluster, created a shared cluster instead' $((5*minute))
     os::cmd::try_until_text 'oc log "$DRIVER"' "$1" $((5*minute))
 
     # Get rid of the job, which will cause a delete of the driver pod
     os::cmd::expect_success 'oc delete job "$APP_NAME"'
-    os::cmd::try_until_text 'oc log "$DRIVER"' 'cluster not deleted'
+    os::cmd::try_until_failure 'oc get pod "$DRIVER"'
 
-    # Block until the job is totally cleaned up
-    os::cmd::try_until_text 'oc get pods -l app="$APP_NAME"' 'No resources found'
+    # The dcs should be gone if they got deleted, but wait another 10 seconds to be sure
+    sleep 10
 
+    os::cmd::expect_success 'oc get dc "$MASTER_DC"'
+    os::cmd::expect_success 'oc get dc "$WORKER_DC"'
     cleanup_cluster
 }
