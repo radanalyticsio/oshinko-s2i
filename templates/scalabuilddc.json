@@ -68,6 +68,14 @@
          "name": "CONTEXT_DIR"
       },
       {
+         "description": "Arguments to use when calling sbt, replacing the default `package`",
+         "name": "SBT_ARGS"
+      },
+      {
+         "description": "Additional sbt arguments, useful for adding task arguments to sbt like `publish makePom`",
+         "name": "SBT_ARGS_APPEND"
+      },
+      {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
          "name": "APP_EXIT",
          "value": "false",
@@ -138,6 +146,14 @@
                      {
                         "name": "APP_FILE",
                         "value": "${APP_FILE}"
+                     },
+                     {
+                         "name": "SBT_ARGS",
+                         "value": "${SBT_ARGS}"
+                     },
+                     {
+                         "name": "SBT_ARGS_APPEND",
+                         "value": "${SBT_ARGS_APPEND}"
                      }
                   ]
                }
