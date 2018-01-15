@@ -20,6 +20,8 @@ function set_exit_flag() {
 }
 
 function set_defaults() {
+    # EXTRA_PARAMS is for non-general, language-specific stuff
+    EXTRA_PARAMS=
     TEST_MODE=false
     APPARGS=
     DEL_CLUSTER=false
@@ -104,7 +106,7 @@ function run_app() {
     # output and prevent timeout.
     oc get is $APP_NAME &> /dev/null
     local stream_exists=$?
-    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $APP_MAIN_CLASS $EXTRA_PARAMS
     set -e
     # Allow some tests to skip the wait for the running app, because they don't care
     if [ "$#" -eq 0 ]; then
@@ -183,6 +185,21 @@ function scrape_for_env() {
         local SCRAPE='oc export pod '$PODNAME' | grep "name: '$ENVNAME'"'
         os::cmd::try_until_success "$SCRAPE"
         SCRAPE='oc export pod '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value:"'
+        os::cmd::try_until_failure "$SCRAPE"
+    fi
+}
+
+function scrape_build_for_env() {
+    local PODNAME=$1
+    local ENVNAME=$2
+    if [ "$#" -eq 3 ]; then
+        local VALUE=$3
+        local SCRAPE='oc export build '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value: '$VALUE'"'
+        os::cmd::try_until_success "$SCRAPE"
+    else
+        local SCRAPE='oc export build '$PODNAME' | grep "name: '$ENVNAME'"'
+        os::cmd::try_until_success "$SCRAPE"
+        SCRAPE='oc export build '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value:"'
         os::cmd::try_until_failure "$SCRAPE"
     fi
 }
@@ -371,6 +388,47 @@ function test_fixed_exit {
     get_driver_pod
     scrape_for_env $DRIVER APP_EXIT '\"true\"'
     cleanup_app $DRIVER
+}
+
+function test_sbt_args {
+    set_defaults
+    EXTRA_PARAMS="-p SBT_ARGS=mycommand"
+    # We want a new build since we're changing the arguments
+    force_random_app_name
+    run_app skipwait
+    scrape_build_for_env $APP_NAME-1 SBT_ARGS mycommand
+    os::cmd::try_until_text 'oc log buildconfig/"$APP_NAME"' 'sbt .* mycommand'
+
+    cleanup_app
+    os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
+    os::cmd::expect_success 'oc delete is "$APP_NAME"'
+}
+
+function test_sbt_args_append {
+    set_defaults
+    EXTRA_PARAMS="-p SBT_ARGS_APPEND=myargs"
+    # We want a new build since we're changing the arguments
+    force_random_app_name
+    run_app skipwait
+    scrape_build_for_env $APP_NAME-1 SBT_ARGS_APPEND myargs
+    os::cmd::try_until_text 'oc log buildconfig/"$APP_NAME"' 'sbt .* package myargs'
+
+    cleanup_app
+    os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
+    os::cmd::expect_success 'oc delete is "$APP_NAME"'
+}
+
+function test_context_dir {
+    set_defaults
+    EXTRA_PARAMS="-p CONTEXT_DIR=mycontext"
+    # We want a new build since we're changing the arguments
+    force_random_app_name
+    run_app skipwait
+
+    os::cmd::try_until_text 'oc export buildconfig "$APP_NAME"' 'contextDir: mycontext'
+    cleanup_app
+    os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
+    os::cmd::expect_success 'oc delete is "$APP_NAME"'
 }
 
 function fix_template() {
