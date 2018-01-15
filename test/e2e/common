@@ -201,11 +201,11 @@ function run_job() {
 	return 1
     fi
     if [ "$1" != true ]; then
-        os::cmd::expect_success 'oc new-app -f "$PYSPARK_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -e APP_EXIT="$DO_EXIT" -e TEST_MODE="$DO_TEST"'
+        os::cmd::expect_success 'oc process -f "$PYSPARK_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" | oc create -f -'
         # Well, we have no easy way of figuring out what the clustername is here since we're not using a dc but if we figure out the pod name we can grep the log
         # Use the os::cmd_try_until_xxx functions to gate
-        os::cmd::try_until_success 'oc get pod -l app="$APP_NAME"'
-        pod=$(oc get pod -l app=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
+        os::cmd::try_until_success 'oc get pod -l job-name="$APP_NAME"'
+        pod=$(oc get pod -l job-name=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
         os::cmd::try_until_text 'oc logs "$pod"' "Using.*cluster"
         GEN_CLUSTER_NAME=$(oc logs $pod | sed -rn "s@Using (shared|ephemeral) cluster (.*$)@\2@p")
     else
@@ -213,7 +213,7 @@ function run_job() {
 	if [ "$GEN_CLUSTER_NAME" == "" ]; then
             GEN_CLUSTER_NAME=cl-$SUFFIX
 	fi
-        os::cmd::expect_success 'oc new-app -f "$PYSPARK_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" -e APP_EXIT="$DO_EXIT" -e TEST_MODE="$DO_TEST"'
+        os::cmd::expect_success 'oc process -f "$PYSPARK_DIR"/pysparkjob.json -p IMAGE="$IMAGE_NAME" -p OSHINKO_CLUSTER_NAME="$GEN_CLUSTER_NAME" -p APPLICATION_NAME="$APP_NAME" -p APP_ARGS="$SLEEP" -p OSHINKO_DEL_CLUSTER="$DEL_CLUSTER" | oc create -f -'
     fi
     echo Using cluster name $GEN_CLUSTER_NAME
     MASTER_DC=$GEN_CLUSTER_NAME-m
