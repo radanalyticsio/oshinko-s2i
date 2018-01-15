@@ -53,6 +53,15 @@ test_spark_options
 echo "++ test_no_source_or_image"
 test_no_source_or_image
 
+echo "++ test_sbt_args"
+test_sbt_args
+
+echo "++ test_sbt_args_append"
+test_sbt_args_append
+
+echo "++ test_context_dir"
+test_context_dir
+
 echo "++ test_app_file sparkpi_2.11-0.1.jar"
 test_app_file sparkpi_2.11-0.1.jar
 
