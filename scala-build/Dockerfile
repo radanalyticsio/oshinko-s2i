@@ -50,7 +50,7 @@ RUN yum install -y  git \
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    oshinko_v0.4.1_linux_amd64.tar.gz \
+    oshinko_v0.4.3_linux_amd64.tar.gz \
     sbt-0.13.13.tgz \
     scala-2.11.8.tgz \
     /tmp/artifacts/
