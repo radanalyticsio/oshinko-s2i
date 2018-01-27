@@ -11,7 +11,7 @@ source $SCRIPT_DIR/../../builddc
 source $SCRIPT_DIR/../../buildonly
 
 RESOURCE_DIR=$TEST_DIR/resources
-cp $PYSPARK_DIR/pythonbuild.json $RESOURCE_DIR/pyythonbuild.json
+cp $PYSPARK_DIR/pythonbuild.json $RESOURCE_DIR/pythonbuild.json
 fix_template $RESOURCE_DIR/pythonbuild.json radanalyticsio/radanalytics-pyspark $S2I_TEST_IMAGE_PYSPARK
 set_template $RESOURCE_DIR/pythonbuild.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
