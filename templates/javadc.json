@@ -2,30 +2,42 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-pyspark-dc",
+      "name": "oshinko-java-spark-dc",
       "annotations": {
-         "description": "Create a deploymentconfig using an existing pyspark imagestream"
+         "description": "Create a deploymentconfig using an existing Java Spark image"
       }
    },
    "labels": {
-      "application": "oshinko-pyspark",
-      "createdBy": "template-oshinko-pyspark-dc"
+      "application": "oshinko-java-spark",
+      "createdBy": "template-oshinko-java-spark-dc"
    },
    "parameters": [
       {
-         "description": "The name to use for the deployment components",
+         "description": "The name to use for the deployment objects",
          "name": "APPLICATION_NAME",
          "generate": "expression",
-         "from": "pyspark-[a-z0-9]{4}",
+         "from": "java-spark-[a-z0-9]{4}",
          "required": true
       },
       {
-         "description": "The name of the pyspark imagestream to use (the 'latest' tag will be used')",
+         "description": "The name of the Java Spark imagestream to use (the 'latest' tag will be used')",
          "name": "IMAGE",
          "required": true
       },
       {
-         "description": "The name of the spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
+         "description": "Command line arguments to pass to the Spark application",
+         "name": "APP_ARGS"
+      },
+      {
+         "description": "Application main class for jar-based applications",
+         "name": "APP_MAIN_CLASS"
+      },
+      {
+         "description": "List of additional Spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
+         "name": "SPARK_OPTIONS"
+      },
+      {
+         "description": "The name of the Spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
          "name": "OSHINKO_CLUSTER_NAME"
       },
       {
@@ -33,7 +45,7 @@
          "name": "OSHINKO_NAMED_CONFIG"
       },
       {
-        "description": "The name of a configmap to use for the spark configuration of the driver. If this configmap is empty the default spark configuration will be used.",
+        "description": "The name of a configmap to use for the Spark configuration of the driver. If this configmap is empty the default Spark configuration will be used.",
         "name": "OSHINKO_SPARK_DRIVER_CONFIG"
       },
       {
@@ -41,14 +53,6 @@
          "name": "OSHINKO_DEL_CLUSTER",
          "value": "true",
          "required": true
-      },
-      {
-         "description": "Command line arguments to pass to the spark application",
-         "name": "APP_ARGS"
-      },
-      {
-         "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
-         "name": "SPARK_OPTIONS"
       },
       {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
@@ -62,7 +66,10 @@
          "kind": "DeploymentConfig",
          "apiVersion": "v1",
          "metadata": {
-            "name": "${APPLICATION_NAME}"
+            "name": "${APPLICATION_NAME}",
+            "labels": {
+               "deploymentConfig": "${APPLICATION_NAME}"
+            }
          },
          "spec": {
             "strategy": {
@@ -88,12 +95,12 @@
             ],
             "replicas": 1,
             "selector": {
-               "deploymentconfig": "${APPLICATION_NAME}"
+               "deploymentConfig": "${APPLICATION_NAME}"
             },
             "template": {
                "metadata": {
                   "labels": {
-                     "deploymentconfig": "${APPLICATION_NAME}"
+                     "deploymentConfig": "${APPLICATION_NAME}"
                   }
                },
                "spec": {
@@ -113,6 +120,10 @@
                            {
                               "name": "SPARK_OPTIONS",
                               "value": "${SPARK_OPTIONS}"
+                           },
+                           {
+                              "name": "APP_MAIN_CLASS",
+                              "value": "${APP_MAIN_CLASS}"
                            },
                            {
                              "name": "OSHINKO_DEL_CLUSTER",
@@ -143,7 +154,7 @@
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always",
+                        "imagePullPolicy": "IfNotPresent",
                         "volumeMounts": [
                            {
                               "mountPath": "/etc/podinfo",
@@ -174,6 +185,30 @@
                }
             }
          }
+      },
+      {
+         "kind": "Service",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}",
+            "labels": {
+                "app": "${APPLICATION_NAME}"
+            }
+         },
+         "spec": {
+             "ports": [
+                 {
+                     "name": "8080-tcp",
+                     "port": 8080,
+                     "protocol": "TCP",
+                     "targetPort": 8080
+                 }
+             ],
+             "selector": {
+                 "deploymentConfig": "${APPLICATION_NAME}"
+             }
+         }
       }
    ]
 }
+

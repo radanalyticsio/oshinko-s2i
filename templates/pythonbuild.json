@@ -2,21 +2,21 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-pyspark-build",
+      "name": "oshinko-python-build",
       "annotations": {
-         "description": "Create a buildconfig and imagestream using STI and pyspark source hosted in git"
+         "description": "Create a buildconfig and imagestream using source-to-image and Python Spark source files hosted in git"
       }
    },
    "labels": {
-      "application": "oshinko-pyspark",
-      "createdBy": "template-oshinko-pyspark-build"
+      "application": "oshinko-python-spark",
+      "createdBy": "template-oshinko-python-spark-build"
    },
    "parameters": [
       {
          "description": "The name to to use for the buildconfig and imagestream",
          "name": "APPLICATION_NAME",
          "generate": "expression",
-         "from": "pyspark-[a-z0-9]{4}",
+         "from": "python-spark-[a-z0-9]{4}",
          "required": true
       },
       {
