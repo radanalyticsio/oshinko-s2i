@@ -267,10 +267,7 @@
          "kind": "Service",
          "apiVersion": "v1",
          "metadata": {
-            "name": "${APPLICATION_NAME}",
-            "labels": {
-                "app": "${APPLICATION_NAME}"
-            }
+            "name": "${APPLICATION_NAME}"
          },
          "spec": {
              "ports": [
