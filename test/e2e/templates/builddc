@@ -148,7 +148,7 @@ function run_app_without_clustername() {
 
 function run_app_without_application_name() {
     app_preamble
-    oc new-app --file=$TEMPLATE $SOURCE_INFO $APP_MAIN_CLASS &> /dev/null
+    oc new-app --file=$TEMPLATE $SOURCE_INFO $APP_MAIN_CLASS
 }
 
 function get_driver_pod() {
