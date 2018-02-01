@@ -74,9 +74,6 @@
               "parallelism": 1,
               "template": {
                   "metadata": {
-                      "labels": {
-                          "app": "${APPLICATION_NAME}"
-                      },
                       "name": "${APPLICATION_NAME}"
                   },
                   "spec": {
