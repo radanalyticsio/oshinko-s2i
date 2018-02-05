@@ -24,7 +24,7 @@ ENV JBOSS_IMAGE_NAME="radanalytics-scala-spark" \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin:/opt/scala/bin:/opt/sbt/bin" \
     SPARK_HOME="/opt/spark" \
     APP_ROOT="/opt/app-root" \
-    SBT_OPTS="-Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"
+    SBT_OPTS="-Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled" 
 
 # Labels
 LABEL name="$JBOSS_IMAGE_NAME" \
@@ -50,7 +50,7 @@ RUN yum install -y  git \
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    oshinko_v0.4.3_linux_amd64.tar.gz \
+    oshinko_v0.4.4_linux_amd64.tar.gz \
     sbt-0.13.13.tgz \
     scala-2.11.8.tgz \
     /tmp/artifacts/
