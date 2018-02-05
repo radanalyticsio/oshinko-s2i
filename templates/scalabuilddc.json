@@ -43,8 +43,7 @@
       },
       {
          "description": "Application main class for jar-based applications",
-         "name": "APP_MAIN_CLASS",
-         "required": true
+         "name": "APP_MAIN_CLASS"
       },
       {
           "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
