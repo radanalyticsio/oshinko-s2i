@@ -1,8 +1,9 @@
+schema_version: 1
+
 name: "radanalyticsio/radanalytics-pyspark"
 version: 1.0
 release: dev
 from: "centos/python-27-centos7:latest"
-user: 185
 labels:
   - name: "io.k8s.description"
     value: "Platform for building a radanalytics pyspark app"
@@ -29,17 +30,19 @@ envs:
     value: /opt/app-root
   - name: APP_FILE
     value: app.py
+modules:
+    install:
+      - name: common
+      - name: pyspark
 packages:
-  - java-1.8.0-openjdk
-cmd:
-  - /usr/local/s2i/usage
-scripts:
-  - package: common
-    exec: install
-  - package: pyspark
-    exec: install
-sources:
+    install:
+      - java-1.8.0-openjdk
+artifacts:
   - url: https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz
-    md5sum: 1715b661bdf33b40c98b3daa7837f690
+    md5: 1715b661bdf33b40c98b3daa7837f690
   - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.4.4/oshinko_v0.4.4_linux_amd64.tar.gz
-    md5sum: 4c75df234f55e6032c8bb7492953043b
+    md5: 4c75df234f55e6032c8bb7492953043b
+run:
+    user: 185
+    cmd:
+      - /usr/local/s2i/usage

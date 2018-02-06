@@ -1,8 +1,9 @@
+schema_version: 1
+
 name: "radanalytics-scala-spark"
 version: 1.0
 release: dev
 from: "radanalyticsio/openshift-spark:2.2-latest"
-user: 185
 labels:
   - name: "io.k8s.description"
     value: "Platform for building a radanalytics Scala Spark app"
@@ -25,19 +26,22 @@ envs:
     value: /opt/app-root
   - name: SBT_OPTS
     value: -Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
+modules:
+  install:
+    - name: common
+    - name: scala
 packages:
-  - git
-cmd:
-  - /usr/local/s2i/usage
-scripts:
-  - package: common
-    exec: install
-  - package: scala
-    exec: install
-sources:
+  install:
+    - epel-release
+    - git
+artifacts:
   - url: http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz
-    md5sum: e7e1f7ddc8873d228d611e801b8d2795
+    md5: e7e1f7ddc8873d228d611e801b8d2795
   - url: http://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz
-    md5sum: 30a238d1b0cc2821da2b9b4e830ef204
+    md5: 30a238d1b0cc2821da2b9b4e830ef204
   - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.4.4/oshinko_v0.4.4_linux_amd64.tar.gz
-    md5sum: 4c75df234f55e6032c8bb7492953043b
+    md5: 4c75df234f55e6032c8bb7492953043b
+run:
+  user: 185
+  cmd:
+    - /usr/local/s2i/usage

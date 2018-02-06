@@ -24,7 +24,7 @@ ENV JBOSS_IMAGE_NAME="radanalytics-scala-spark" \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin:/opt/scala/bin:/opt/sbt/bin" \
     SPARK_HOME="/opt/spark" \
     APP_ROOT="/opt/app-root" \
-    SBT_OPTS="-Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"
+    SBT_OPTS="-Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled" 
 
 # Labels
 LABEL name="$JBOSS_IMAGE_NAME" \
@@ -43,20 +43,20 @@ USER root
 
 
 # Install required RPMs and ensure that the packages were installed
-RUN yum install -y  git \
+RUN yum install -y  epel-release git \
     && yum clean all && \
-    rpm -q  git
+    rpm -q  epel-release git
 
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    oshinko_v0.4.4_linux_amd64.tar.gz \
-    sbt-0.13.13.tgz \
     scala-2.11.8.tgz \
+    sbt-0.13.13.tgz \
+    oshinko_v0.4.4_linux_amd64.tar.gz \
     /tmp/artifacts/
 
 # Add scripts used to configure the image
-COPY scripts /tmp/scripts
+COPY modules /tmp/scripts
 
 # Custom scripts
 USER root
@@ -65,13 +65,13 @@ RUN [ "bash", "-x", "/tmp/scripts/common/install" ]
 USER root
 RUN [ "bash", "-x", "/tmp/scripts/scala/install" ]
 
-
 USER root
 RUN rm -rf /tmp/scripts
 USER root
 RUN rm -rf /tmp/artifacts
 
 USER 185
+
 
 
 CMD ["/usr/local/s2i/usage"]
