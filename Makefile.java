@@ -21,15 +21,20 @@ clean: clean-context
 
 clean-context:
 	-rm -f $(DOCKERFILE_CONTEXT)/Dockerfile
-	-rm -rf $(DOCKERFILE_CONTEXT)/scripts
+	-rm -rf $(DOCKERFILE_CONTEXT)/modules
+	-rm -rf $(DOCKERFILE_CONTEXT)/repos
+	-rm -rf $(DOCKERFILE_CONTEXT)/*.tar.gz
+	-rm -rf $(DOCKERFILE_CONTEXT)/*.tgz
 
 context: $(DOCKERFILE_CONTEXT)
 
-$(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/scripts
+$(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
 
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/scripts:
-	docker run -it --rm -v `pwd`:/tmp jboss/dogen:latest /tmp/image.java.yaml /tmp/$(DOCKERFILE_CONTEXT)
+	concreate generate --descriptor image.java.yaml
+	cp -R target/image/* $(DOCKERFILE_CONTEXT)
+	$(MAKE) zero-tarballs
 
 zero-tarballs:
-	-truncate -s 0 $(DOCKERFILE_CONTEXT)/*.tgz
-	-truncate -s 0 $(DOCKERFILE_CONTEXT)/*.tar.gz
+	find ./$(DOCKERFILE_CONTEXT) -name *.tar.gz -type f -exec truncate -s 0 {} \;
+	find ./$(DOCKERFILE_CONTEXT) -name *.tgz -type f -exec truncate -s 0 {} \;
