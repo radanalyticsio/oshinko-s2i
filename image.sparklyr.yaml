@@ -1,0 +1,39 @@
+name: "radanalyticsio/radanalytics-sparklyr"
+version: 1.0
+release: dev
+from: "rimolive/r-34-centos7:latest"
+user: 185
+labels:
+  - name: "io.k8s.description"
+    value: "Platform for building a radanalytics sparklyr app"
+  - name: "io.k8s.display-name"
+    value: "radanalytics sparklyr"
+  - name: "io.openshift.expose-services"
+    value: "8080:http"
+  - name: "io.openshift.s2i.scripts-url"
+    value: "image:///usr/libexec/s2i"
+  - name: "io.openshift.tags"
+    value: "builder,radanalytics,sparklyr"
+  - name: "io.radanalytics.sparkdistro"
+    value: "https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz"
+envs:
+  - name: PATH
+    value: /opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin
+  - name: SPARK_HOME
+    value: /opt/spark
+  - name: APP_ROOT
+    value: /opt/app-root
+packages:
+  - java-1.8.0-openjdk
+cmd:
+  - /usr/local/s2i/usage
+scripts:
+  - package: common
+    exec: install
+  - package: sparklyr
+    exec: install
+sources:
+  - url: https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz
+    md5sum: 1715b661bdf33b40c98b3daa7837f690
+  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.4.3/oshinko_v0.4.3_linux_amd64.tar.gz
+    md5sum: f832333a63f3dd8e1697e52eb7ff2b99
