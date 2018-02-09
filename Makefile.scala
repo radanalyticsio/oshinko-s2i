@@ -33,7 +33,6 @@ $(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/mo
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
 	concreate generate --descriptor image.scala.yaml
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
-	$(MAKE) zero-tarballs
 
 zero-tarballs:
 	find ./$(DOCKERFILE_CONTEXT) -name *.tgz -type f -exec truncate -s 0 {} \;
