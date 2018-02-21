@@ -20,11 +20,8 @@ clean: clean-context
 	-docker rmi $(LOCAL_IMAGE) $(PUSH_IMAGE)
 
 clean-context:
-	-rm -f $(DOCKERFILE_CONTEXT)/Dockerfile
-	-rm -rf $(DOCKERFILE_CONTEXT)/modules
-	-rm -rf $(DOCKERFILE_CONTEXT)/repos
-	-rm -rf $(DOCKERFILE_CONTEXT)/*.tar.gz
-	-rm -rf $(DOCKERFILE_CONTEXT)/*.tgz
+	-rm -rf target
+	-rm -rf $(DOCKERFILE_CONTEXT)/*
 
 context: $(DOCKERFILE_CONTEXT)
 
@@ -35,5 +32,5 @@ $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
 
 zero-tarballs:
-	find ./$(DOCKERFILE_CONTEXT) -name *.tgz -type f -exec truncate -s 0 {} \;
-	find ./$(DOCKERFILE_CONTEXT) -name *.tar.gz -type f -exec truncate -s 0 {} \;
+	find ./$(DOCKERFILE_CONTEXT) -name "*.tgz" -type f -exec truncate -s 0 {} \;
+	find ./$(DOCKERFILE_CONTEXT) -name "*.tar.gz" -type f -exec truncate -s 0 {} \;

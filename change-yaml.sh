@@ -2,18 +2,14 @@
 
 function usage() {
     echo
-    echo "Changes the image.*.yaml files and regenerates the build directories"
-    echo 'Commits the changes on a branch release_$RELEASE, ready for a push'
+    echo "Changes the image.*.yaml files and adds them to the current commit (git add)"
+    echo "No change is made for any option not specified"
     echo
-    echo "Usage: release.sh [options]"
-    echo
-    echo "required arguments"
-    echo
-    echo "  -r RELEASE          The oshinko release number, like v0.4.4"
+    echo "Usage: change-yaml.sh [options]"
     echo
     echo "optional arguments:"
     echo
-    echo "  -o OSHINKO_VERSION  If not specified, the oshinko version will be set to RELEASE"
+    echo "  -o OSHINKO_VERSION  The oshinko version, like v0.4.4"
     echo
     echo "  -s SPARK_VERSION    The spark version, like 2.2.1"
     echo "                      This value is used to download the spark distribution, and for the"
@@ -26,12 +22,11 @@ function usage() {
     echo "  -h                  Show this message"
 }
 
-if [ "$#" -lt 1 ]; then
-    usage
-    exit 1
+if [ "$#" -eq 0 ]; then
+    echo No options specified, changing nothing.
 fi
 
-# Set a default for the hadoop version
+# Set the hadoop version
 HVER=2.7
 
 while getopts r:o:s:l:t:h opt; do
@@ -52,9 +47,6 @@ while getopts r:o:s:l:t:h opt; do
             usage
             exit 0
             ;;
-	r)
-	    NEW_VERSION=$OPTARG
-	    ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
             exit 1
@@ -62,34 +54,25 @@ while getopts r:o:s:l:t:h opt; do
     esac
 done
 
-if [ -z ${NEW_VERSION+x} ]; then
-    echo "Error: no release specified"
-    usage
-    exit 1
+# Change the oshinko version
+if [ ! -z ${OVER+x} ]; then
+    wget https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz -O /tmp/oshinko_${OVER}_linux_amd64.tar.gz
+    if [ "$?" -eq 0 ]; then
+
+        sum=$(md5sum /tmp/oshinko_${OVER}_linux_amd64.tar.gz | cut -d ' ' -f 1)
+
+        # Fix the url references
+        sed -i "s@https://github.com/radanalyticsio/oshinko-cli/releases/download/.*@https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz@" image.*.yaml
+
+        # Fix the md5sum on the line following the url
+        sed -i '\@url: https://github.com/radanalyticsio/oshinko-cli/releases/download@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
+    else
+        echo "Failed to get the md5 sum for the specified oshinko version, the version $OVER may not be a real version"
+        exit 1
+    fi
 fi
 
-git checkout -b release_$NEW_VERSION
-
-if [ -z ${OVER+x} ]; then
-    OVER=$NEW_VERSION
-fi
-
-wget https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz -O /tmp/oshinko_${OVER}_linux_amd64.tar.gz
-if [ "$?" -eq 0 ]; then
-
-    sum=$(md5sum /tmp/oshinko_${OVER}_linux_amd64.tar.gz | cut -d ' ' -f 1)
-
-    # Fix the url references
-    sed -i "s@https://github.com/radanalyticsio/oshinko-cli/releases/download/.*@https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz@" image.*.yaml
-
-    # Fix the md5sum on the line following the url
-    sed -i '\@url: https://github.com/radanalyticsio/oshinko-cli/releases/download@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
-else
-    echo "Failed to get the md5 sum for the specified oshinko version, the version $OVER may not be a real version"
-    exit 1
-fi
-
-# Change spark distro and download urls
+# Change spark distro
 if [ ! -z ${SPARK+x} ]; then
 
     # Change the md5sum for pyspark and java, update base image for scala
@@ -120,10 +103,10 @@ if [ ! -z ${SCALA+x} ]; then
         sum=$(md5sum /tmp/scala-${SCALA}.tgz | cut -d ' ' -f 1)
 
         # Fix up the yaml files to hold the url for the new version of scala
-        sed -i "s@http://downloads.lightbend.com/scala.*@http://downloads.lightbend.com/scala/${SCALA}/scala-${SCALA}.tgz@" image.*.yaml
+        sed -i "s@http://downloads.lightbend.com/scala.*@http://downloads.lightbend.com/scala/${SCALA}/scala-${SCALA}.tgz@" image.scala.yaml
 
         # Replace the md5sum for the tarball on the line following the url
-        sed -i '\@url: http://downloads.lightbend.com/scala/@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
+        sed -i '\@url: http://downloads.lightbend.com/scala/@!b;n;s/md5.*/md5: '$sum'/' image.scala.yaml
 
     else
         echo "Failed to get the md5 sum for the specified scala version, the version $SCALA may not be a real version"
@@ -138,10 +121,10 @@ if [ ! -z ${SBT+x} ]; then
         sum=$(md5sum /tmp/sbt-${SBT}.tgz | cut -d ' ' -f 1)
 
         # Fix up the yaml files to hold the url for the new version of scala
-        sed -i "s@http://dl.bintray.com/sbt/native-packages/sbt/.*@http://dl.bintray.com/sbt/native-packages/sbt/${SBT}/sbt-${SBT}.tgz@" image.*.yaml
+        sed -i "s@http://dl.bintray.com/sbt/native-packages/sbt/.*@http://dl.bintray.com/sbt/native-packages/sbt/${SBT}/sbt-${SBT}.tgz@" image.scala.yaml
 
         # Replace the md5sum for the tarball on the line following the url
-        sed -i '\@url: http://dl.bintray.com/sbt/native-packages/sbt/@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
+        sed -i '\@url: http://dl.bintray.com/sbt/native-packages/sbt/@!b;n;s/md5.*/md5: '$sum'/' image.scala.yaml
 
     else
         echo "Failed to get the md5 sum file for the specified sbt version, the version $SBT may not be a real version"
@@ -149,15 +132,5 @@ if [ ! -z ${SBT+x} ]; then
     fi
 fi
 
-rm -rf target
-git rm pyspark-build/oshinko*.tar.gz
-git rm java-build/oshinko*.tar.gz
-git rm scala-build/oshinko*.tar.gz
-make clean-context
-make context
-make zero-tarballs
-
-git add pyspark-build/oshinko*.tar.gz
-git add java-build/oshinko*.tar.gz
-git add scala-build/oshinko*.tar.gz
-git commit -a -m "Change oshinko CLI version to $OVER"
+# Add any changes for commit
+git add image.*.yaml
