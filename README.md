@@ -17,25 +17,53 @@ The easiest way to build the s2i images is to use the makefiles provided:
     $ make -f Makefile.java
     $ make -f Makefile.scala
 
-The default repository for the image can be set with the `LOCAL_IMAGE` var:
+The default repository for the image can be overridden with the `LOCAL_IMAGE` var:
 
     $ LOCAL_IMAGE=myimage make -f Makefile.pyspark
 
-## Remaking Docker context directories when things change
+## Modifying dependencies in the image.*.yaml files
 
-The Docker context directories are generated with the dogen tool and contain
-the Docker files and artifacts needed to build the images. They are:
+The concreate tool generates the image context directories
+based on the content of the image.*.yaml files.
+
+A script has been provided to make altering the image.*.yaml files
+simpler. It handles modifying the specified versions of oshinko, spark,
+scala, and sbt. Run this for more details
+
+    $ change-yaml.sh -h
+
+## Remaking image context directories when things change
+
+The image context directories are generated with the concreate tool and contain
+the artifacts needed to build the images. They are:
 
     * pyspark-build
     * java-build
     * scala-build
 
-If the yaml files used by dogen change (ie image.pyspark.yaml) or the scripts
-included in an image change, the Docker context directory can be regenerated this way:
+If the yaml files used by concreate change (ie image.*.yaml) or the content
+included in an image changes (essentially anything under modules/), the
+image context directories need to be rebuilt.
+
+### Rebuilding context directories for an upstream pull request
+
+If the changes being made are part of a PR to github.com/radanalyticsio/oshinko-s2i
+then all of the build directories should be generated from scratch.
+The best way to do this is with the make-build-dirs.sh script
+
+    $ make-build-dirs.sh
+
+This will recreate the context directories starting from a clean environment,
+make sure any tarballs are truncated for github, and add all of the changes
+to the commit.
+
+### Rebuilding a particular context directory for testing/development
+
+To regenerate a particular context directory, like pyspark-build, do this
 
     $ make -f Makefile.pyspark clean-context context
 
-To regenerate the Docker context directory and build the image in one command:
+To regenerate the context directory and also build the image, do this
 
     $ make -f Makefile.pyspark clean build
 
