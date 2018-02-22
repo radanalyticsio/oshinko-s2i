@@ -143,7 +143,7 @@
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always",
+                        "imagePullPolicy": "IfNotPresent",
                         "volumeMounts": [
                            {
                               "mountPath": "/etc/podinfo",
