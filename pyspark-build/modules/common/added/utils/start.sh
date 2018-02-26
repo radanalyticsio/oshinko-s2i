@@ -319,6 +319,9 @@ else
 
     if [ -n "$APP_MAIN_CLASS" ]; then
         CLASS_OPTION="--class $APP_MAIN_CLASS"
+    elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
+        APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
+        CLASS_OPTION="--class $APP_MAIN_CLASS"
     fi
     echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
     spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &

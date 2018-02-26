@@ -39,8 +39,8 @@ artifacts:
     md5: e7e1f7ddc8873d228d611e801b8d2795
   - url: http://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz
     md5: 30a238d1b0cc2821da2b9b4e830ef204
-  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.4.4/oshinko_v0.4.4_linux_amd64.tar.gz
-    md5: 4c75df234f55e6032c8bb7492953043b
+  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.4.5/oshinko_v0.4.5_linux_amd64.tar.gz
+    md5: 4c947295bdd95ab4300ffdd60321ed8a
 run:
   user: 185
   cmd:
