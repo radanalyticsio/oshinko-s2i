@@ -24,6 +24,7 @@ function usage() {
 
 if [ "$#" -eq 0 ]; then
     echo No options specified, changing nothing.
+    exit 0
 fi
 
 # Set the hadoop version
@@ -89,7 +90,7 @@ if [ ! -z ${SPARK+x} ]; then
 
         # For the scala image, the openshift-spark base image is based on the first 2 characters in the spark version
         BV=$(echo ${SPARK} | cut -d'.' -f1,2)
-        sed -i "s@radanalyticsio/openshift-spark:.*-latest@radanalyticsio/openshift-spark:${BV}-latest@" image.*.yaml
+        sed -i "s@radanalyticsio/openshift-spark:.*-latest@radanalyticsio/openshift-spark:${BV}-latest@" image.scala.yaml
     else
         echo "Failed to get the md5 sum for the specified spark version, the version $SPARK may not be a real version"
         exit 1
