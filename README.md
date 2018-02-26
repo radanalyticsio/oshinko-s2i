@@ -21,7 +21,7 @@ The default repository for the image can be overridden with the `LOCAL_IMAGE` va
 
     $ LOCAL_IMAGE=myimage make -f Makefile.pyspark
 
-## Modifying dependencies in the image.*.yaml files
+## Modifying dependencies in the image yaml files
 
 The concreate tool generates the image context directories
 based on the content of the image.*.yaml files.
