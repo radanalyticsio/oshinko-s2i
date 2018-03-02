@@ -477,7 +477,12 @@ function fix_template() {
         docker push ${registry}/${pushproj}/${pushimage}
         if [ "$imagestream" == true ]; then
             sed -i "s^\"kind\": \"DockerImage\"^\"kind\": \"ImageStreamTag\"^" $file
-            sed -i "s^\"name\": \"$original_image\"^\"name\": \"$pushimage:latest\"^" $file
+            # if there is already a tag in the name, don't add latest
+            if [[ "$pushimage" == *:* ]]; then 
+                sed -i "s^\"name\": \"$original_image\"^\"name\": \"$pushimage\"^" $file
+            else
+                sed -i "s^\"name\": \"$original_image\"^\"name\": \"$pushimage:latest\"^" $file
+            fi
         else
             sed -i "s^\"name\": \"$original_image\"^\"name\": \"$pushproj/$pushimage\"^" $file
         fi
