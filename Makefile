@@ -67,6 +67,14 @@ test-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
 	test/e2e/run.sh templates
 
+test-operations:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
+	test/e2e/run.sh operations
+
+test-incomplete:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
+	test/e2e/run.sh incomplete
+
 test-e2e:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
