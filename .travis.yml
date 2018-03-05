@@ -12,6 +12,8 @@ matrix:
     - env: TO_TEST=pyspark-templates
     - env: TO_TEST=java-templates
     - env: TO_TEST=scala-templates
+    - env: TO_TEST=operations
+    - env: TO_TEST=incomplete
   fast_finish: true
 
 before_install:
@@ -74,6 +76,8 @@ script:
 - if [ "$TO_TEST" == "pyspark-templates" ]; then make test-pyspark-templates ; fi
 - if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; fi
 - if [ "$TO_TEST" == "scala-templates" ]; then make test-scala-templates ; fi
+- if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
+- if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
 notifications:
  email:
    on_success: never
