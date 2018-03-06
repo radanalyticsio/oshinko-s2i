@@ -177,12 +177,12 @@
             ],
             "replicas": 1,
             "selector": {
-               "deploymentconfig": "${APPLICATION_NAME}"
+               "deploymentConfig": "${APPLICATION_NAME}"
             },
             "template": {
                "metadata": {
                   "labels": {
-                     "deploymentconfig": "${APPLICATION_NAME}"
+                     "deploymentConfig": "${APPLICATION_NAME}"
                   }
                },
                "spec": {
