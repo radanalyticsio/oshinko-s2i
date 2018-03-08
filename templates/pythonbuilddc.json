@@ -2,7 +2,7 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-python-build-dc",
+      "name": "oshinko-python-spark-build-dc",
       "annotations": {
          "openshift.io/display-name": "Apache Spark Python",
          "description": "Create a buildconfig, imagestream and deploymentconfig using source-to-image and Python Spark source files hosted in git"

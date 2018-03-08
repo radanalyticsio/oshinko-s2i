@@ -2,7 +2,7 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-python-dc",
+      "name": "oshinko-python-spark-dc",
       "annotations": {
          "description": "Create a deploymentconfig using an existing Python Spark image"
       }
