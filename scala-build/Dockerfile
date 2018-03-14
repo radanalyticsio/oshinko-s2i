@@ -36,7 +36,7 @@ LABEL name="$JBOSS_IMAGE_NAME" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/local/s2i" \
       io.openshift.tags="builder,radanalytics,scala_spark" \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz" \
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.1/spark-2.2.1-bin-hadoop2.7.tgz" \
       org.concrt.version="1.4.0"
 
 
@@ -53,7 +53,7 @@ RUN yum install -y  epel-release git \
 COPY \
     scala-2.11.8.tgz \
     sbt-0.13.13.tgz \
-    oshinko_v0.4.5_linux_amd64.tar.gz \
+    oshinko_v0.4.6_linux_amd64.tar.gz \
     /tmp/artifacts/
 
 # Add scripts used to configure the image
