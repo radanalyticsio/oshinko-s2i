@@ -8,7 +8,6 @@ matrix:
   # no need to include the build target at present because the template
   # tests perform builds from the local source to do the tests
   include:
-    - env: TO_TEST=ephemeral
     - env: TO_TEST=pyspark-templates
     - env: TO_TEST=java-templates
     - env: TO_TEST=scala-templates
@@ -72,7 +71,6 @@ install:
 before_script:
 - test/travis-help/check-tarballs.sh
 script:
-- if [ "$TO_TEST" == "ephemeral" ]; then make test-ephemeral ; fi
 - if [ "$TO_TEST" == "pyspark-templates" ]; then make test-pyspark-templates ; fi
 - if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; fi
 - if [ "$TO_TEST" == "scala-templates" ]; then make test-scala-templates ; fi
