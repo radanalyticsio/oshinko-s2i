@@ -114,7 +114,8 @@ function run_app() {
             poll_build
 	    return $?
 	fi
-        os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster' $((10*minute))
+	get_driver_pod
+        #os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster' $((10*minute))
     fi
 }
 
@@ -129,7 +130,8 @@ function run_app_without_optionals() {
 	poll_build
 	return $?
     fi
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
+    get_driver_pod
+    #os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
 }
 
 function run_app_without_clustername() {
@@ -143,7 +145,8 @@ function run_app_without_clustername() {
 	poll_build
 	return $?
     fi
-    os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
+    get_driver_pod
+    #os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
 }
 
 function run_app_without_application_name() {
@@ -223,12 +226,10 @@ function test_app_args {
     set_defaults
     APPARGS="doodleydoodley"
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER APP_ARGS doodleydoodley
     cleanup_app $DRIVER
 
     run_app_without_optionals
-    get_driver_pod
     scrape_for_env $DRIVER APP_ARGS
     cleanup_app $DRIVER
 }
@@ -236,7 +237,6 @@ function test_app_args {
 function test_podinfo {
     set_defaults
     run_app
-    get_driver_pod
     os::cmd::try_until_success 'oc exec "$DRIVER" -- ls /etc/podinfo/labels'
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep POD_NAME="$DRIVER"'  $((5*minute))
     cleanup_app $DRIVER
@@ -245,18 +245,15 @@ function test_podinfo {
 function test_del_cluster {
     set_defaults
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_DEL_CLUSTER '\"false\"'
     cleanup_app $DRIVER
 
     DEL_CLUSTER=true
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_DEL_CLUSTER '\"true\"'
     cleanup_app $DRIVER
 
     run_app_without_optionals
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_DEL_CLUSTER '\"true\"'
     cleanup_app $DRIVER
 }
@@ -266,13 +263,11 @@ function test_cluster_name {
     DEL_CLUSTER=true
     GEN_CLUSTER_NAME=jerry
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_CLUSTER_NAME jerry
 
     cleanup_app $DRIVER
 
     run_app_without_clustername
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_CLUSTER_NAME
     cleanup_app $DRIVER
 }
@@ -287,12 +282,10 @@ function test_named_config {
     set_defaults
     NAMED_CONFIG=myconfig
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_NAMED_CONFIG myconfig
     cleanup_app $DRIVER
 
     run_app_without_optionals
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_NAMED_CONFIG
     cleanup_app $DRIVER
 }
@@ -301,7 +294,6 @@ function test_app_file {
     # Look in the default app for the app_file value unset
     set_defaults
     run_app
-    get_driver_pod
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_FILE=$' $((10*minute))
     cleanup_app $DRIVER
 
@@ -310,7 +302,6 @@ function test_app_file {
     force_random_app_name
     set_app_file $1
     run_app
-    get_driver_pod
     os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_FILE="$APP_FILE_NAME"$' $((10*minute))
     cleanup_app $DRIVER
     oc delete buildconfig $APP_NAME &> /dev/null
@@ -338,12 +329,10 @@ function test_driver_config {
     set_defaults
     DRIVER_CONFIG=myconfig
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_SPARK_DRIVER_CONFIG myconfig
     cleanup_app $DRIVER
 
     run_app_without_optionals
-    get_driver_pod
     scrape_for_env $DRIVER OSHINKO_SPARK_DRIVER_CONFIG
     cleanup_app $DRIVER
 }
@@ -352,12 +341,10 @@ function test_spark_options {
     set_defaults
     SPARK_OPTIONS="--conf somevalue=1"
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER SPARK_OPTIONS "$SPARK_OPTIONS"
     cleanup_app $DRIVER
 
     run_app_without_optionals
-    get_driver_pod
     scrape_for_env $DRIVER SPARK_OPTIONS
     cleanup_app $DRIVER
 }
@@ -365,19 +352,16 @@ function test_spark_options {
 function test_exit {
     set_defaults
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER APP_EXIT '\"false\"'
     cleanup_app $DRIVER
 
     set_exit_flag true
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER APP_EXIT '\"true\"'
     cleanup_app $DRIVER
 
     set_exit_flag false
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER APP_EXIT '\"false\"'
     cleanup_app $DRIVER
 }
@@ -385,7 +369,6 @@ function test_exit {
 function test_fixed_exit {
     set_defaults
     run_app
-    get_driver_pod
     scrape_for_env $DRIVER APP_EXIT '\"true\"'
     cleanup_app $DRIVER
 }
