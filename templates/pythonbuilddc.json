@@ -47,6 +47,17 @@
          "name": "SPARK_OPTIONS"
       },
       {
+         "description": "Choose whether to use native k8s Scheduler or Spark Standalone",
+         "name": "OSHINKO_KUBE_SCHEDULER",
+         "required": true,
+         "value": "false"
+      },
+      {
+        "description": "n case of using k8s scheduler, it is required to provide the registry location so S2i can find the Driver image.",
+        "name": "DOCKER_REGISTRY_LOCATION",
+        "value": "docker-registry.default.svc:5000"
+      },
+      {
          "description": "The name of the Spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
          "name": "OSHINKO_CLUSTER_NAME"
       },
@@ -221,6 +232,10 @@
                            {
                               "name": "OSHINKO_SPARK_DRIVER_CONFIG",
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
+                           },
+                           {
+                            "name": "DOCKER_REGISTRY_LOCATION",
+                            "value": "${DOCKER_REGISTRY_LOCATION}"
                            },
                            {
                               "name": "POD_NAME",

@@ -24,7 +24,8 @@ ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-java-spark" \
     RADANALYTICS_JAVA_SPARK="1.0" \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     SPARK_HOME="/opt/spark" \
-    APP_ROOT="/opt/app-root" 
+    APP_ROOT="/opt/app-root" \
+    STI_SCRIPTS_PATH="/usr/local/s2i" 
 
 # Labels
 LABEL name="$JBOSS_IMAGE_NAME" \
@@ -36,11 +37,7 @@ LABEL name="$JBOSS_IMAGE_NAME" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/local/s2i" \
       io.openshift.tags="builder,radanalytics,java_spark" \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz" \
       org.concrt.version="1.4.1"
-
-
-USER root
 
 
 # Install required RPMs and ensure that the packages were installed
@@ -73,5 +70,6 @@ RUN rm -rf /tmp/artifacts
 USER 185
 
 
+ENTRYPOINT ["/opt/app-root/src/bootstrap.sh"]
 
 CMD ["/usr/local/s2i/usage"]
