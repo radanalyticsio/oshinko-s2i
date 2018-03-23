@@ -41,4 +41,6 @@ artifacts:
 run:
   user: 185
   cmd:
-    - "/usr/local/s2i/usage"
+    - /usr/local/s2i/usage
+  entrypoint:
+      - "/opt/app-root/src/bootstrap.sh"
