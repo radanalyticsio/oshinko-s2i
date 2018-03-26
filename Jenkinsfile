@@ -167,6 +167,58 @@ parallel testEphemeral: {
 			}
 		}
 	}
+}, testIncomplete: {
+	node {
+		stage('Test incomplete') {
+			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
+				try {
+					prepareTests()
+
+					// run tests
+					dir('oshinko-s2i') {
+						sh('make test-incomplete | tee -a test-incomplete.log && exit ${PIPESTATUS[0]}')
+					}
+				} catch (err) {
+					try {
+						githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
+					} catch (errNotify) {
+						echo("Wasn't able to notify Github: ${errNotify}")
+					}
+					throw err
+				} finally {
+					dir('oshinko-s2i') {
+						archiveArtifacts(allowEmptyArchive: true, artifacts: 'test-incomplete.log')
+					}
+				}
+			}
+		}
+	}
+}, testOperations: {
+	node {
+		stage('Test operations') {
+			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
+				try {
+					prepareTests()
+
+					// run tests
+					dir('oshinko-s2i') {
+						sh('make test-operations | tee -a test-operations.log && exit ${PIPESTATUS[0]}')
+					}
+				} catch (err) {
+					try {
+						githubNotify(context: 'jenkins-ci/oshinko-s2i', description: 'There are test failures', status: 'FAILURE', targetUrl: buildUrl)
+					} catch (errNotify) {
+						echo("Wasn't able to notify Github: ${errNotify}")
+					}
+					throw err
+				} finally {
+					dir('oshinko-s2i') {
+						archiveArtifacts(allowEmptyArchive: true, artifacts: 'test-operations.log')
+					}
+				}
+			}
+		}
+	}
 }
 
 try {
