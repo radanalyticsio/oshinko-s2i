@@ -112,10 +112,12 @@ function run_app() {
     if [ "$#" -eq 0 ]; then
 	if [ "$stream_exists" -ne 0 ]; then
             poll_build
-	    return $?
+	    local res=$?
+	    if [ "$res" -ne 0 ]; then
+	        return $res
+	    fi
 	fi
 	get_driver_pod
-        #os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster' $((10*minute))
     fi
 }
 
@@ -127,11 +129,13 @@ function run_app_without_optionals() {
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME $APP_MAIN_CLASS &> /dev/null
     set -e
     if [ "$stream_exists" -ne 0 ]; then
-	poll_build
-	return $?
+        poll_build
+	local res=$?
+	if [ "$res" -ne 0 ]; then
+	    return $res
+	fi
     fi
     get_driver_pod
-    #os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
 }
 
 function run_app_without_clustername() {
@@ -142,11 +146,13 @@ function run_app_without_clustername() {
     oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME $APP_MAIN_CLASS &> /dev/null
     set -e
     if [ "$stream_exists" -ne 0 ]; then
-	poll_build
-	return $?
+        poll_build
+	local res=$?
+	if [ "$res" -ne 0 ]; then
+	    return $res
+	fi
     fi
     get_driver_pod
-    #os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Using.*cluster'  $((10*minute))
 }
 
 function run_app_without_application_name() {
