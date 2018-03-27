@@ -266,8 +266,16 @@ function poll_build() {
     local BUILDNUM
     while true; do
         BUILDNUM=$(oc get buildconfig $name --template='{{index .status "lastVersion"}}')
-        status=$(oc get build "$name"-$BUILDNUM --template="{{index .status \"phase\"}}")
-	if [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
+	if [ "$BUILDNUM" == "0" ]; then
+	    # Buildconfig is brand new, lastVersion hasn't been updated yet
+	    status="starting"
+	else
+            status=$(oc get build "$name"-$BUILDNUM --template="{{index .status \"phase\"}}")
+	fi
+	if [ "$status" == "starting" ]; then
+	    echo Build for $name is spinning up, waiting ...
+	    sleep 5
+	elif [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
 	    echo Build for $name-$BUILDNUM status is $status, waiting ...
 	    sleep 10
 	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
