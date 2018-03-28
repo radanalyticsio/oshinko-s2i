@@ -48,7 +48,7 @@ def buildUrl
 def globalEnvVariables = ["S2I_TEST_EXTERNAL_REGISTRY=$EXTERNAL_DOCKER_REGISTRY", "S2I_TEST_EXTERNAL_USER=$EXTERNAL_DOCKER_REGISTRY_USER", "S2I_TEST_EXTERNAL_PASSWORD=$EXTERNAL_DOCKER_REGISTRY_PASSWORD", "TEST_ONLY=1"]
 
 
-node {
+node('radanalytics-test') {
 	stage('init') {
 		// generate build url
 		buildUrl = sh(script: 'curl https://url.corp.redhat.com/new?$BUILD_URL', returnStdout: true)
@@ -61,7 +61,7 @@ node {
 }
 
 parallel testEphemeral: {
-	node {
+	node('radanalytics-test') {
 		stage('Test ephemeral') {
 			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 
@@ -88,7 +88,7 @@ parallel testEphemeral: {
 		}
 	}
 }, testPysparkTemplates: {
-	node {
+	node('radanalytics-test') {
 		stage('Test pyspark-templates') {
 			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 
@@ -115,7 +115,7 @@ parallel testEphemeral: {
 		}
 	}
 }, testJavaTemplates: {
-	node {
+	node('radanalytics-test') {
 		stage('Test java-templates') {
 			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 
@@ -142,7 +142,7 @@ parallel testEphemeral: {
 		}
 	}
 }, testScalaTemplates: {
-	node {
+	node('radanalytics-test') {
 		stage('Test scala-templates') {
 			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 				try {
@@ -168,7 +168,7 @@ parallel testEphemeral: {
 		}
 	}
 }, testIncomplete: {
-	node {
+	node('radanalytics-test') {
 		stage('Test incomplete') {
 			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 				try {
@@ -194,7 +194,7 @@ parallel testEphemeral: {
 		}
 	}
 }, testOperations: {
-	node {
+	node('radanalytics-test') {
 		stage('Test operations') {
 			withEnv(globalEnvVariables + ["GOPATH=$WORKSPACE", "KUBECONFIG=$WORKSPACE/client/kubeconfig", "PATH+OC_PATH=$WORKSPACE/client"]) {
 				try {
