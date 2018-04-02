@@ -31,15 +31,15 @@ ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-pyspark" \
 # Labels
 LABEL name="$JBOSS_IMAGE_NAME" \
       version="$JBOSS_IMAGE_VERSION" \
-      architecture="x86_64" \
-      com.redhat.component="radanalyticsio-radanalytics-pyspark-docker" \
+      architecture="x86_64"  \
+      com.redhat.component="radanalyticsio-radanalytics-pyspark-docker"  \
       io.k8s.description="Platform for building a radanalytics pyspark app" \
       io.k8s.display-name="radanalytics pyspark" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
       io.openshift.tags="builder,radanalytics,pyspark" \
       io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.1/spark-2.2.1-bin-hadoop2.7.tgz" \
-      org.concrt.version="1.4.0"
+      org.concrt.version="1.4.1"
 
 
 USER root
@@ -76,4 +76,4 @@ USER 185
 
 
 
-CMD ["/usr/local/s2i/usage"]
+CMD ["/usr/libexec/s2i/usage"]
