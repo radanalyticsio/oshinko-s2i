@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+SCRIPT_DIR=$(dirname $0)
+ADDED_DIR=${SCRIPT_DIR}/added
+ARTIFACTS_DIR=/tmp/artifacts
+
+mkdir -p $APP_ROOT/src && mkdir -p $APP_ROOT/etc
+chown -R 185:0 $APP_ROOT && chmod a+rwX -R $APP_ROOT
+cp $ADDED_DIR/utils/* $APP_ROOT/src
+cp $SCRIPT_DIR/generate_container_user $APP_ROOT/etc
+
+# In some cases where nss_wrapper has to follow installation
+# epel, we may not have been able to include it yet
+yum install -y nss_wrapper && yum clean all
+rpm -q nss_wrapper
+
+# If there is a zero-length oshinko-cli tarball, find the verison in the
+# name and download from github
+fullname=$(find $ARTIFACTS_DIR -name oshinko_v[0-9.]*_linux_amd64\.tar\.gz)
+/bin/sh -x $SCRIPT_DIR/check_for_download $fullname
+cp $fullname $APP_ROOT/src
+
+pushd $APP_ROOT/src
+tar -zxf $(basename $fullname)
+mv oshinko_linux_amd64/oshinko oshinko
+rm -rf oshinko_linux_amd64 $(basename $fullname)
+popd

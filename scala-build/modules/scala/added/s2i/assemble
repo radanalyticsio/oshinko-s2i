@@ -1,0 +1,144 @@
+#!/bin/sh
+
+# Global S2I variable setup
+source `dirname "$0"`/s2i-setup
+
+ivy_dir=/tmp/.ivy2
+sbt_dir=/tmp/.sbt/0.13
+sbt_version=""
+
+# sbt arguments setting up the environment
+sbt_env_args="-Dsbt.ivy.home=${ivy_dir} -Dsbt.global.base=${sbt_dir}"
+
+# =========================================================================
+# Helper functions:
+
+function check_error() {
+  local label=$1
+  local error=$2
+  if [ ${error} -ne 0 ]; then
+    echo "Aborting due to error code $error for $label"
+    exit ${error}
+  fi
+}
+
+function sanity_check() {
+  local dir=$1/project
+  local build_sbt=$1/build.sbt
+  if [ ! -d "${dir}" ] && [ ! -f "${build_sbt}" ]; then
+        echo "${dir} not found and no ${build_sbt}"
+        echo "This doesn't look like an sbt project repo...exiting"
+        exit 1
+  fi
+}
+
+function copy_artifacts() {
+    local dir=$1
+    local dest=$2
+
+    cd ${dir}
+
+    local cp_pattern=${ARTIFACT_COPY_PATTERN}
+    if [ x"${cp_pattern}" = x ]; then
+       cp_pattern="*.jar"
+    fi
+    echo "Finding and copying ${cp_pattern} to ${dest}"
+    find ${dir} -name ${cp_pattern} -exec cp -a {} ${dest} \;
+}
+
+# TODO: proxy repo and mirror settings?
+function setup_sbt() {
+	:
+}
+
+# crude utility to parse key setting output from sbt
+function parse_sbt_key() {
+  local key=$1
+  sbt ${sbt_env_args} -no-colors ${key} | awk 'NR==0; END{print $2}'
+}
+
+# decide whether we are using the provided sbt or not
+function check_project_sbt() {
+    local build_prop=$1/project/build.properties
+    if [ ! -f "${build_prop}" ]; then
+       echo "No ${build_prop} to process"
+    else
+       if [ x"${USE_PROJECT_SBT}" = x ]; then
+          # just overwrite whatever is there
+          echo "sbt.version=${sbt_version}" > ${build_prop}
+          echo "Updated sbt version in ${build_prop}"
+       fi
+    fi
+}
+
+function apply_plugins() {
+  if [[ "${GET_PACKAGES_FOR_SUBMIT+x}" ]]; then
+     SBT_ARGS_APPEND="${SBT_ARGS_APPEND} writePackages"
+  fi
+}
+
+function build_sbt() {
+  # Where to get the src
+  local src_dir=$1
+
+  # Where to put the artifacts
+  local app_dir=$2
+
+  # Default args: no tests
+  local sbt_args=${SBT_ARGS:-package}
+
+  echo "Running 'sbt ${sbt_env_args} ${sbt_args} ${SBT_ARGS_APPEND}'"
+
+  local old_dir=$(pwd)
+  cd ${src_dir}
+  check_error "changing directory to ${src_dir}" $?
+
+  # =========
+  # Run sbt
+  echo "Building using sbt ${sbt_version}"
+  sbt ${sbt_env_args} ${sbt_args} ${SBT_ARGS_APPEND}
+  check_error "sbt build" $?
+
+  # ==============
+  # Copy artifacts
+  echo "Copying sbt artifacts from root of ${src_dir} to ${app_dir} ..."
+  copy_artifacts ${src_dir} ${app_dir}
+  check_error "copying artifacts from root of ${src_dir} to ${app_dir}" $?
+
+  # ==============
+  # Copy generated packages file also, if needed
+  if [[ "${GET_PACKAGES_FOR_SUBMIT+x}" ]]; then
+     local packages_file=${src_dir}/$(parse_sbt_key sbtSparkPackagesFile)
+     if [ -s ${packages_file} ]; then
+        cp -a ${packages_file} ${app_dir}
+        check_error "copying packages file from root of ${src_dir} to ${app_dir}" $?
+     else
+        echo "WARNING: empty ${packages_file} not copied to ${app_dir}"
+     fi
+  fi
+
+  # ======================
+  # Remove Ivy repo if desired
+  if [[ "${IVY_CLEAR_REPO+x}" ]]; then
+    rm -rf "${ivy_dir}"
+    check_error "cannot remove local Ivy repository ${ivy_dir}" $?
+  fi
+
+  cd ${old_dir}
+}
+
+# =========================================================================
+# Main
+
+echo "=================================================================="
+echo "Starting S2I Scala Build ....."
+sanity_check ${S2I_SOURCE_DIR}
+echo "S2I source build for sbt detected"
+
+setup_sbt
+sbt_version=$(parse_sbt_key sbt-version)
+check_project_sbt ${S2I_SOURCE_DIR}
+apply_plugins ${S2I_SOURCE_DIR} ${sbt_dir}
+build_sbt ${S2I_SOURCE_DIR} ${DEPLOYMENTS_DIR}
+
+echo "... done"
