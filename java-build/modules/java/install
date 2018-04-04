@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -e
+
+SCRIPT_DIR=$(dirname $0)
+ADDED_DIR=${SCRIPT_DIR}/added
+ARTIFACTS_DIR=/tmp/artifacts
+
+fullname=$(find $ARTIFACTS_DIR -name spark-[0-9.]*-bin-hadoop[0-9.]*\.tgz)
+bash -x $SCRIPT_DIR/check_for_download $fullname
+cp $fullname /opt
+
+pushd /opt
+tar -zxf $(basename $fullname)
+ln -s $(basename $fullname .tgz) spark
+rm $(basename $fullname)
+popd
+
+mkdir -p /usr/local/s2i
+cp -r $ADDED_DIR/s2i/* /usr/local/s2i
+cp $ADDED_DIR/spark-conf/* /opt/spark/conf/
+
+if [ -f /home/jboss ]; then
+    chmod -R g+rwX /home/jboss
+fi
