@@ -38,7 +38,7 @@ LABEL name="$JBOSS_IMAGE_NAME" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
       io.openshift.tags="builder,radanalytics,pyspark" \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz" \
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.1/spark-2.2.1-bin-hadoop2.7.tgz" \
       org.concrt.version="1.4.1"
 
 
@@ -53,8 +53,8 @@ RUN yum install -y  java-1.8.0-openjdk \
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    spark-2.3.0-bin-hadoop2.7.tgz \
-    oshinko_v0.5.0_linux_amd64.tar.gz \
+    spark-2.2.1-bin-hadoop2.7.tgz \
+    oshinko_v0.4.6_linux_amd64.tar.gz \
     /tmp/artifacts/
 
 # Add scripts used to configure the image
