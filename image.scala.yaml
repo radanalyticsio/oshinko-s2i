@@ -12,7 +12,7 @@ labels:
   - name: "io.openshift.expose-services"
     value: "8080:http"
   - name: "io.openshift.s2i.scripts-url"
-    value: "image:///usr/local/s2i"
+    value: "image:///usr/libexec/s2i"
   - name: "io.openshift.tags"
     value: "builder,radanalytics,scala_spark"
   - name: "io.radanalytics.sparkdistro"
