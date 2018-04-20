@@ -16,7 +16,7 @@
 #
 # This is a Dockerfile for the radanalytics-scala-spark:1.0 image.
 
-FROM radanalyticsio/s2i-scala-container:latest
+FROM rimolive/scala-211-centos7:latest
 
 # Environment variables
 ENV JBOSS_IMAGE_NAME="radanalytics-scala-spark" \
@@ -34,7 +34,7 @@ LABEL name="$JBOSS_IMAGE_NAME" \
       io.k8s.description="Platform for building a radanalytics Scala Spark app" \
       io.k8s.display-name="radanalytics scala_spark" \
       io.openshift.expose-services="8080:http" \
-      io.openshift.s2i.scripts-url="image:///usr/local/s2i" \
+      io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
       io.openshift.tags="builder,radanalytics,scala_spark" \
       io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.1/spark-2.2.1-bin-hadoop2.7.tgz" \
       org.concrt.version="1.4.1"
