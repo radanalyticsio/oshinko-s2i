@@ -16,10 +16,9 @@ ln -s $(basename $fullname .tgz) spark
 rm $(basename $fullname)
 popd
 
-mkdir -p /usr/local/s2i
-cp -r $ADDED_DIR/s2i/* /usr/local/s2i
+cp -r $ADDED_DIR/s2i/* $STI_SCRIPTS_PATH
 cp -R $SCRIPT_DIR/s2i/sbt/plugins /tmp/.sbt/0.13
-chmod a+x /usr/local/s2i/*
+chmod a+x $STI_SCRIPTS_PATH/*
 chown -R 185:0 $APP_ROOT && chmod a+rwX -R $APP_ROOT
 chown -R 185:0 /opt/spark/conf && chmod g+rw -R /opt/spark/conf
 chown -R 185:0 /opt/sbt/conf && chmod g+rw -R /opt/sbt/conf

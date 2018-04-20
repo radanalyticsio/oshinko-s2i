@@ -16,7 +16,7 @@
 #
 # This is a Dockerfile for the radanalytics-scala-spark:1.0 image.
 
-FROM radanalyticsio/s2i-scala-container:latest
+FROM rimolive/scala-211-centos7:latest
 
 # Environment variables
 ENV JBOSS_IMAGE_NAME="radanalytics-scala-spark" \
