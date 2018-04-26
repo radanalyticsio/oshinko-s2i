@@ -61,6 +61,12 @@ test-scala-radio:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
 	test/e2e/run.sh templates/scala/radio
 
+test-scala-dc:
+	# pick up build and builddc tests along with dc
+	# separate this from radio for travis sake (try to get time below 50 minutes)
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
+	test/e2e/run.sh "(templates/scala/build|templates/scala/dc)"
+
 test-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
