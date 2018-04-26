@@ -10,7 +10,8 @@ matrix:
   include:
     - env: TO_TEST=pyspark-templates
     - env: TO_TEST=java-templates
-    - env: TO_TEST=scala-templates
+    - env: TO_TEST=scala-templates-radio
+    - env: TO_TEST=scala-templates-dc
     - env: TO_TEST=operations
     - env: TO_TEST=incomplete
   fast_finish: true
@@ -73,7 +74,8 @@ before_script:
 script:
 - if [ "$TO_TEST" == "pyspark-templates" ]; then make test-pyspark-templates ; fi
 - if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; fi
-- if [ "$TO_TEST" == "scala-templates" ]; then make test-scala-templates ; fi
+- if [ "$TO_TEST" == "scala-templates-radio" ]; then make test-scala-radio ; fi
+- if [ "$TO_TEST" == "scala-templates-dc" ]; then make test-scala-dc ; fi
 - if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
 - if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
 notifications:
