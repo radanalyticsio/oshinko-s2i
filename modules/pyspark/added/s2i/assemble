@@ -16,12 +16,12 @@ echo "---> Proceeding with customized assemble ..."
 r_file=`[ -f "$APP_ROOT/src/worker-requirements.txt" ] && echo worker-requirements.txt || echo requirements.txt`
 if [ -f "$APP_ROOT/src/$r_file" ]; then
     pushd $APP_ROOT/src
-    echo "---> Building dependencies.zip based on $r_file ..."
+    echo "---> Building worker-gen-dependencies.zip based on $r_file ..."
     pip install --upgrade pip
-    pip install -t dependencies -r $r_file
-    pushd dependencies
-    zip -r ../dependencies.zip .
-    export PYTHON_WORKER_DEPS=`readlink -f ../dependencies.zip`
+    pip install -t worker-gen-dependencies -r $r_file
+    pushd worker-gen-dependencies
+    zip -r ../worker-gen-dependencies.zip .
+    export PYTHON_WORKER_DEPS=`readlink -f ../worker-gen-dependencies.zip`
     popd
     popd
 fi
