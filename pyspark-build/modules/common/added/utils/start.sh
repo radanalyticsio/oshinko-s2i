@@ -317,8 +317,8 @@ else
     # app can use it if it likes.
     export OSHINKO_SPARK_MASTER=$master
 
-    if [ -f "$APP_ROOT/src/dependencies.zip" ]; then
-        PY_FILES="--py-files dependencies.zip"
+    if [ -f "$APP_ROOT/src/worker-gen-dependencies.zip" ]; then
+        PY_FILES="--py-files worker-gen-dependencies.zip"
     fi
 
     if [ -n "$APP_MAIN_CLASS" ]; then
