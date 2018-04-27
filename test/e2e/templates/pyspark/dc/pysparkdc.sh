@@ -65,6 +65,9 @@ test_driver_config
 echo "++ test_spark_options"
 test_spark_options
 
+echo "++ test_driver_host"
+test_driver_host
+
 echo "++ test_no_source_or_image"
 test_no_source_or_image
 

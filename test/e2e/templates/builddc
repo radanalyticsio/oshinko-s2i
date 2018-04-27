@@ -379,6 +379,13 @@ function test_fixed_exit {
     cleanup_app $DRIVER
 }
 
+function test_driver_host {
+    set_defaults
+    run_app
+    scrape_for_env $DRIVER DRIVER_HOST "$APP_NAME"-headless
+    cleanup_app $DRIVER
+}
+
 function test_sbt_args {
     set_defaults
     EXTRA_PARAMS="-p SBT_ARGS=mycommand"
