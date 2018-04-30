@@ -317,6 +317,10 @@ else
     # app can use it if it likes.
     export OSHINKO_SPARK_MASTER=$master
 
+    if [ -f "$APP_ROOT/src/worker-gen-dependencies.zip" ]; then
+        PY_FILES="--py-files worker-gen-dependencies.zip"
+    fi
+
     if [ -n "$APP_MAIN_CLASS" ]; then
         CLASS_OPTION="--class $APP_MAIN_CLASS"
     elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
@@ -330,8 +334,8 @@ else
         driver_host=
     fi
 
-    echo spark-submit $CLASS_OPTION --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
-    spark-submit $CLASS_OPTION --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
+    echo spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
+    spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
     PID=$!
     wait $PID
 
