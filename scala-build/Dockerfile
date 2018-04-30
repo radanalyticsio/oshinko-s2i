@@ -51,7 +51,7 @@ RUN yum install -y  git \
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    spark-2.2.1-bin-hadoop2.7.tgz \
+    spark-2.3.0-bin-hadoop2.7.tgz \
     oshinko_v0.4.6_linux_amd64.tar.gz \
     /tmp/artifacts/
 
