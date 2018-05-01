@@ -13,7 +13,7 @@ echo "---> Proceeding with customized assemble ..."
 # note: the idea of worker-requirements.txt is to isolate those dependencies that
 # are necessary only for spark workers, because not all the dependencies driver needs
 # are also needed on the worker nodes
-r_file=`[ -f "$APP_ROOT/src/worker-requirements.txt" ] && echo worker-requirements.txt || echo requirements.txt`
+r_file="worker-requirements.txt"
 if [ -f "$APP_ROOT/src/$r_file" ]; then
     pushd $APP_ROOT/src
     echo "---> Building worker-gen-dependencies.zip based on $r_file ..."
