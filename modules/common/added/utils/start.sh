@@ -293,6 +293,9 @@ function use_spark_standalone {
         wait_for_master_ui $masterweb
         wait_for_workers_alive $desired $masterweb
 
+        echo Cluster configuration is
+        $CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS -o json --nopods
+
         # Now that we know what the master url is, export it so that the
         # app can use it if it likes.
         export OSHINKO_SPARK_MASTER=$master
