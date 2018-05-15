@@ -14,6 +14,8 @@ the objects created by the template.
 * `pythonbuild.json` - Python based S2I for a BuildConfig
 * `pythonbuilddc.json` - Python based S2I for a BuildConfig and DeploymentConfig
 * `pythondc.json` - Python based for a DeploymentConfig
+* `python36build.json` - Python 3.6 based S2I for a BuildConfig
+* `python36builddc.json` - Python 3.6 based S2I for a BuildConfig and DeploymentConfig
 * `scalabuild.json` - Scala based S2I for a BuildConfig
 * `scalabuilddc.json` - Scala based S2I for a BuildConfig and DeploymentConfig
 * `scaladc.json` - Scala based for a DeploymentConfig
