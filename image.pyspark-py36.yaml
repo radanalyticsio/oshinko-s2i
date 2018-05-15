@@ -1,0 +1,50 @@
+schema_version: 1
+
+name: "radanalyticsio/radanalytics-pyspark-py36"
+version: 1.0
+release: dev
+from: "centos/python-36-centos7:latest"
+labels:
+  - name: "io.k8s.description"
+    value: "Platform for building a radanalytics Python 3.6 pyspark app"
+  - name: "io.k8s.display-name"
+    value: "radanalytics pyspark-py36"
+  - name: "io.openshift.expose-services"
+    value: "8080:http"
+  - name: "io.openshift.s2i.scripts-url"
+    value: "image:///usr/libexec/s2i"
+  - name: "io.openshift.tags"
+    value: "builder,radanalytics,pyspark"
+  - name: "io.radanalytics.sparkdistro"
+    value: "https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"
+envs:
+  - name: RADANALYTICS_PYSPARK
+    value: 1.0
+  - name: PATH
+    value: /opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin
+  - name: SPARK_HOME
+    value: /opt/spark
+  - name: PYTHONPATH
+    value: /opt/spark/python
+  - name: APP_ROOT
+    value: /opt/app-root
+  - name: APP_FILE
+    value: app.py
+modules:
+    install:
+      - name: common
+      - name: pyspark
+packages:
+    install:
+      - java-1.8.0-openjdk
+artifacts:
+  - url: https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz
+    md5: af45eeb06dc1beee6d4c70b92c0e0237
+  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.5.3/oshinko_v0.5.3_linux_amd64.tar.gz
+    md5: 1995c4eb4013c1b4b1750dd3299e2e30
+run:
+    user: 185
+    cmd:
+      - /usr/libexec/s2i/usage
+    entrypoint:
+      - "/opt/app-root/etc/bootstrap.sh"

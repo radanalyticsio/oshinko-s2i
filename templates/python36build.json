@@ -1,0 +1,120 @@
+{
+   "kind": "Template",
+   "apiVersion": "v1",
+   "metadata": {
+      "name": "oshinko-python36-spark-build",
+      "annotations": {
+         "description": "Create a buildconfig and imagestream using source-to-image and Python 3.6 Spark source files hosted in git"
+      }
+   },
+   "labels": {
+      "application": "oshinko-python-spark",
+      "createdBy": "template-oshinko-python-spark-build"
+   },
+   "parameters": [
+      {
+         "description": "The name to to use for the buildconfig and imagestream",
+         "name": "APPLICATION_NAME",
+         "generate": "expression",
+         "from": "python-spark-[a-z0-9]{4}",
+         "required": true
+      },
+      {
+         "description": "The name of the main py file to run. If this is not specified and there is a single py file at top level of the git respository, that file will be chosen.",
+         "name": "APP_FILE"
+      },
+      {
+         "description": "Git source URI for application",
+         "name": "GIT_URI"
+      },
+      {
+         "description": "Git branch/tag reference",
+         "name": "GIT_REF",
+         "value": "master"
+      },
+      {
+         "description": "Git sub-directory path",
+         "name": "CONTEXT_DIR"
+      }
+   ],
+   "objects": [
+      {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "dockerImageRepository": "${APPLICATION_NAME}",
+            "lookupPolicy": {
+                "local": true
+            },
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      },
+      {
+         "kind": "BuildConfig",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "triggers": [
+               {
+                  "type": "ImageChange",
+                  "imageChange": {}
+               },
+               {
+                  "type": "ConfigChange"
+               },
+               {
+                  "type": "GitHub",
+                  "github": {
+                      "secret": "${APPLICATION_NAME}"
+                  }
+               },
+               {
+                  "type": "Generic",
+                  "generic": {
+                      "secret": "${APPLICATION_NAME}"
+                  }
+               }
+            ],
+            "source": {
+               "type": "Git",
+               "git": {
+                  "uri": "${GIT_URI}",
+                  "ref": "${GIT_REF}"
+               },
+               "contextDir": "${CONTEXT_DIR}"
+            },
+            "strategy": {
+               "type": "Source",
+               "sourceStrategy": {
+                  "from": {
+                     "kind": "DockerImage",
+                     "name": "radanalyticsio/radanalytics-pyspark-py36"
+                  },
+                  "forcePull": true,
+                  "env": [
+                     {
+                        "name": "APP_FILE",
+                        "value": "${APP_FILE}"
+                     }
+                  ]
+               }
+            },
+            "output": {
+               "to": {
+                  "kind": "ImageStreamTag",
+                  "name": "${APPLICATION_NAME}:latest"
+               }
+            }
+         }
+      }
+   ]
+}
