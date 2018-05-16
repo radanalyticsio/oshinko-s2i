@@ -73,5 +73,6 @@ RUN rm -rf /tmp/artifacts
 USER 185
 
 
+ENTRYPOINT ["/opt/app-root/src/bootstrap.sh"]
 
-CMD ["/usr/local/s2i/usage"]
+CMD ["/usr/libexec/s2i/usage"]

@@ -30,8 +30,6 @@ envs:
     value: /opt/app-root
   - name: APP_FILE
     value: app.py
-  - name: STI_SCRIPTS_PATH
-    value: /usr/local/s2i
 modules:
     install:
       - name: common
@@ -47,6 +45,6 @@ artifacts:
 run:
     user: 185
     cmd:
-      - /usr/local/s2i/usage
+      - "/usr/libexec/s2i/usage"
     entrypoint:
       - "/opt/app-root/src/bootstrap.sh"
