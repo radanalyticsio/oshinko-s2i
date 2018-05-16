@@ -16,7 +16,7 @@
 #
 # This is a Dockerfile for the radanalytics-scala-spark:1.0 image.
 
-FROM radanalyticsio/s2i-scala-container:latest
+FROM radanalyticsio/openshift-spark:2.2-latest
 
 # Environment variables
 ENV JBOSS_IMAGE_NAME="radanalytics-scala-spark" \
@@ -34,9 +34,9 @@ LABEL name="$JBOSS_IMAGE_NAME" \
       io.k8s.description="Platform for building a radanalytics Scala Spark app" \
       io.k8s.display-name="radanalytics scala_spark" \
       io.openshift.expose-services="8080:http" \
-      io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
+      io.openshift.s2i.scripts-url="image:///usr/local/s2i" \
       io.openshift.tags="builder,radanalytics,scala_spark" \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz" \
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.1/spark-2.2.1-bin-hadoop2.7.tgz" \
       org.concrt.version="1.4.1"
 
 
@@ -44,15 +44,16 @@ USER root
 
 
 # Install required RPMs and ensure that the packages were installed
-RUN yum install -y  git \
+RUN yum install -y  epel-release git \
     && yum clean all && \
-    rpm -q  git
+    rpm -q  epel-release git
 
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    spark-2.3.0-bin-hadoop2.7.tgz \
-    oshinko_v0.5.1_linux_amd64.tar.gz \
+    scala-2.11.8.tgz \
+    sbt-0.13.13.tgz \
+    oshinko_v0.5.2_linux_amd64.tar.gz \
     /tmp/artifacts/
 
 # Add scripts used to configure the image
