@@ -317,11 +317,25 @@ else
     # app can use it if it likes.
     export OSHINKO_SPARK_MASTER=$master
 
+    if [ -f "$APP_ROOT/src/worker-gen-dependencies.zip" ]; then
+        PY_FILES="--py-files worker-gen-dependencies.zip"
+    fi
+
     if [ -n "$APP_MAIN_CLASS" ]; then
         CLASS_OPTION="--class $APP_MAIN_CLASS"
+    elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
+        APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
+        CLASS_OPTION="--class $APP_MAIN_CLASS"
     fi
-    echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
-    spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
+
+    if [ -n "$DRIVER_HOST" ]; then
+        driver_host="--conf spark.driver.host=${DRIVER_HOST}"
+    else
+        driver_host=
+    fi
+
+    echo spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
+    spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
     PID=$!
     wait $PID
 
