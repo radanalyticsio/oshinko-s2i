@@ -6,31 +6,19 @@ SCRIPT_DIR=$(dirname $0)
 ADDED_DIR=${SCRIPT_DIR}/added
 ARTIFACTS_DIR=/tmp/artifacts
 
-scala_fullname=$(find $ARTIFACTS_DIR -name scala-[0-9.]*\.tgz)
-bash -x $SCRIPT_DIR/check_for_download_scala $scala_fullname
-cp $scala_fullname /opt
-
-sbt_fullname=$(find $ARTIFACTS_DIR -name sbt-[0-9.]*\.tgz)
-bash -x $SCRIPT_DIR/check_for_download_sbt $sbt_fullname
-cp $sbt_fullname /opt
+fullname=$(find $ARTIFACTS_DIR -name spark-[0-9.]*-bin-hadoop[0-9.]*\.tgz)
+bash -x $SCRIPT_DIR/check_for_download $fullname
+cp $fullname /opt
 
 pushd /opt
-tar -zxf $(basename $scala_fullname)
-ln -s $(basename $scala_fullname .tgz) scala
-rm $(basename $scala_fullname)
-
-tar -zxf $(basename $sbt_fullname)
-sbt_version=$(echo $(basename $sbt_fullname .tgz) | cut -d '-' -f2)
-ln -s sbt-launcher-packaging-$sbt_version sbt
-rm $(basename $sbt_fullname)
+tar -zxf $(basename $fullname)
+ln -s $(basename $fullname .tgz) spark
+rm $(basename $fullname)
 popd
 
-/opt/sbt/bin/sbt
-
-mkdir -p /usr/local/s2i
-cp -r $ADDED_DIR/s2i/* /usr/local/s2i
+cp -r $ADDED_DIR/s2i/* $STI_SCRIPTS_PATH
 cp -R $SCRIPT_DIR/s2i/sbt/plugins /tmp/.sbt/0.13
-chmod a+x /usr/local/s2i/*
+chmod a+x $STI_SCRIPTS_PATH/*
 chown -R 185:0 $APP_ROOT && chmod a+rwX -R $APP_ROOT
 chown -R 185:0 /opt/spark/conf && chmod g+rw -R /opt/spark/conf
 chown -R 185:0 /opt/sbt/conf && chmod g+rw -R /opt/sbt/conf

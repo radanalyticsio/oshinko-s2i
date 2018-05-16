@@ -8,7 +8,7 @@ SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
 source $SCRIPT_DIR/../../builddc
 
 RESOURCE_DIR=$TEST_DIR/resources
-set_template $RESOURCE_DIR/oshinko-python-build-dc.json
+set_template $RESOURCE_DIR/oshinko-python-spark-build-dc.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name pyspark-build
@@ -23,8 +23,8 @@ else
     echo Using https://radanalytics.io/resources.yaml
     oc create -f https://radanalytics.io/resources.yaml &> /dev/null
 fi
-oc export template oshinko-python-build-dc -o json > $RESOURCE_DIR/oshinko-python-build-dc.json
-fix_template $RESOURCE_DIR/oshinko-python-build-dc.json radanalyticsio/radanalytics-pyspark:stable $S2I_TEST_IMAGE_PYSPARK
+oc export template oshinko-python-spark-build-dc -o json > $RESOURCE_DIR/oshinko-python-spark-build-dc.json
+fix_template $RESOURCE_DIR/oshinko-python-spark-build-dc.json radanalyticsio/radanalytics-pyspark:stable $S2I_TEST_IMAGE_PYSPARK
 set -e
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"

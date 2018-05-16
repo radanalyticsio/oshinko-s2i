@@ -87,48 +87,8 @@ if [ ! -z ${SPARK+x} ]; then
 
 	# Fix the md5 sum references on the line following the url
         sed -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
-
-        # For the scala image, the openshift-spark base image is based on the first 2 characters in the spark version
-        BV=$(echo ${SPARK} | cut -d'.' -f1,2)
-        sed -i "s@radanalyticsio/openshift-spark:.*-latest@radanalyticsio/openshift-spark:${BV}-latest@" image.scala.yaml
     else
         echo "Failed to get the md5 sum for the specified spark version, the version $SPARK may not be a real version"
-        exit 1
-    fi
-fi
-
-# Change scala version (scala image only)
-if [ ! -z ${SCALA+x} ]; then
-    wget http://downloads.lightbend.com/scala/${SCALA}/scala-${SCALA}.tgz -O /tmp/scala-${SCALA}.tgz
-    if [ "$?" -eq 0 ]; then
-        sum=$(md5sum /tmp/scala-${SCALA}.tgz | cut -d ' ' -f 1)
-
-        # Fix up the yaml files to hold the url for the new version of scala
-        sed -i "s@http://downloads.lightbend.com/scala.*@http://downloads.lightbend.com/scala/${SCALA}/scala-${SCALA}.tgz@" image.scala.yaml
-
-        # Replace the md5sum for the tarball on the line following the url
-        sed -i '\@url: http://downloads.lightbend.com/scala/@!b;n;s/md5.*/md5: '$sum'/' image.scala.yaml
-
-    else
-        echo "Failed to get the md5 sum for the specified scala version, the version $SCALA may not be a real version"
-        exit 1
-    fi
-fi
-
-# Change the sbt version (scala image only)
-if [ ! -z ${SBT+x} ]; then
-    wget http://dl.bintray.com/sbt/native-packages/sbt/${SBT}/sbt-${SBT}.tgz -O /tmp/sbt-${SBT}.tgz
-    if [ "$?" -eq 0 ]; then
-        sum=$(md5sum /tmp/sbt-${SBT}.tgz | cut -d ' ' -f 1)
-
-        # Fix up the yaml files to hold the url for the new version of scala
-        sed -i "s@http://dl.bintray.com/sbt/native-packages/sbt/.*@http://dl.bintray.com/sbt/native-packages/sbt/${SBT}/sbt-${SBT}.tgz@" image.scala.yaml
-
-        # Replace the md5sum for the tarball on the line following the url
-        sed -i '\@url: http://dl.bintray.com/sbt/native-packages/sbt/@!b;n;s/md5.*/md5: '$sum'/' image.scala.yaml
-
-    else
-        echo "Failed to get the md5 sum file for the specified sbt version, the version $SBT may not be a real version"
         exit 1
     fi
 fi
