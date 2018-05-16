@@ -3,7 +3,7 @@ schema_version: 1
 name: "radanalytics-scala-spark"
 version: 1.0
 release: dev
-from: "radanalyticsio/openshift-spark:2.2-latest"
+from: "radanalyticsio/s2i-scala-container:latest"
 labels:
   - name: "io.k8s.description"
     value: "Platform for building a radanalytics Scala Spark app"
@@ -12,11 +12,11 @@ labels:
   - name: "io.openshift.expose-services"
     value: "8080:http"
   - name: "io.openshift.s2i.scripts-url"
-    value: "image:///usr/local/s2i"
+    value: "image:///usr/libexec/s2i"
   - name: "io.openshift.tags"
     value: "builder,radanalytics,scala_spark"
   - name: "io.radanalytics.sparkdistro"
-    value: "https://archive.apache.org/dist/spark/spark-2.2.1/spark-2.2.1-bin-hadoop2.7.tgz"
+    value: "https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"
 envs:
   - name: PATH
     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin:/opt/scala/bin:/opt/sbt/bin
@@ -32,16 +32,13 @@ modules:
     - name: scala
 packages:
   install:
-    - epel-release
     - git
 artifacts:
-  - url: http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz
-    md5: e7e1f7ddc8873d228d611e801b8d2795
-  - url: http://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz
-    md5: 30a238d1b0cc2821da2b9b4e830ef204
-  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.5.2/oshinko_v0.5.2_linux_amd64.tar.gz
-    md5: 020c481017e944cc97d05eaf70d75067
+  - url: https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz
+    md5: af45eeb06dc1beee6d4c70b92c0e0237
+  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.5.1/oshinko_v0.5.1_linux_amd64.tar.gz
+    md5: 73f0541d094a23972611d54a0268a489
 run:
   user: 185
   cmd:
-    - /usr/local/s2i/usage
+    - "/usr/local/s2i/usage"
