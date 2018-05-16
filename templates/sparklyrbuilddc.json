@@ -192,6 +192,10 @@
                         "image": "${APPLICATION_NAME}",
                         "env": [
                            {
+                              "name": "DRIVER_HOST",
+                              "value": "${APPLICATION_NAME}-headless"
+                           },
+                           {
                               "name": "OSHINKO_CLUSTER_NAME",
                               "value": "${OSHINKO_CLUSTER_NAME}"
                            },
@@ -282,6 +286,33 @@
                  "deploymentConfig": "${APPLICATION_NAME}"
              }
          }
-      }
+      },
+      {
+        "kind": "Service",
+        "apiVersion": "v1",
+        "metadata": {
+           "name": "${APPLICATION_NAME}-headless"
+        },
+        "spec": {
+            "clusterIP": "None",
+            "ports": [
+                {
+                    "name": "driver-rpc-port",
+                    "port": 7078,
+                    "protocol": "TCP",
+                    "targetPort": 7078
+                },
+                {
+                    "name": "blockmanager",
+                    "port": 7079,
+                    "protocol": "TCP",
+                    "targetPort": 7079
+                }
+            ],
+            "selector": {
+                "deploymentConfig": "${APPLICATION_NAME}"
+            }
+        }
+     }
    ]
 }

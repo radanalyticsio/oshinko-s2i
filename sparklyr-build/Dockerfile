@@ -28,14 +28,15 @@ ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-sparklyr" \
 # Labels
 LABEL name="$JBOSS_IMAGE_NAME" \
       version="$JBOSS_IMAGE_VERSION" \
-      architecture="x86_64" \
-      com.redhat.component="radanalyticsio-radanalytics-sparklyr-docker" \
+      architecture="x86_64"  \
+      com.redhat.component="radanalyticsio-radanalytics-sparklyr-docker"  \
       io.k8s.description="Platform for building a radanalytics sparklyr app" \
       io.k8s.display-name="radanalytics sparklyr" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
       io.openshift.tags="builder,radanalytics,sparklyr" \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz"
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz" \
+      org.concrt.version="1.4.1"
 
 
 USER root
@@ -49,12 +50,12 @@ RUN yum install -y  java-1.8.0-openjdk \
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    oshinko_v0.4.3_linux_amd64.tar.gz \
-    spark-2.2.0-bin-hadoop2.7.tgz \
+    spark-2.3.0-bin-hadoop2.7.tgz \
+    oshinko_v0.5.1_linux_amd64.tar.gz \
     /tmp/artifacts/
 
 # Add scripts used to configure the image
-COPY scripts /tmp/scripts
+COPY modules /tmp/scripts
 
 # Custom scripts
 USER root
@@ -63,13 +64,13 @@ RUN [ "bash", "-x", "/tmp/scripts/common/install" ]
 USER root
 RUN [ "bash", "-x", "/tmp/scripts/sparklyr/install" ]
 
-
 USER root
 RUN rm -rf /tmp/scripts
 USER root
 RUN rm -rf /tmp/artifacts
 
 USER 185
+
 
 
 CMD ["/usr/local/s2i/usage"]
