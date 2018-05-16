@@ -56,7 +56,7 @@
         "value": "false"
       },
       {
-        "description": "n case of using k8s scheduler, it is required to provide the registry location so S2i can find the Driver image.",
+        "description": "In case of using k8s scheduler, it is required to provide the registry location so S2i can find the Driver image.",
         "name": "DOCKER_REGISTRY_LOCATION",
         "value": "docker-registry.default.svc:5000"
       },
@@ -258,6 +258,10 @@
                            {
                               "name": "OSHINKO_SPARK_DRIVER_CONFIG",
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
+                           },
+                           {
+                               "name": "OSHINKO_KUBE_SCHEDULER",
+                               "value": "${OSHINKO_KUBE_SCHEDULER}"
                            },
                            {
                             "name": "DOCKER_REGISTRY_LOCATION",

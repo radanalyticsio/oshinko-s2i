@@ -234,6 +234,10 @@
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
                            },
                            {
+                            "name": "OSHINKO_KUBE_SCHEDULER",
+                            "value": "${OSHINKO_KUBE_SCHEDULER}"
+                           },
+                           {
                             "name": "DOCKER_REGISTRY_LOCATION",
                             "value": "${DOCKER_REGISTRY_LOCATION}"
                            },
