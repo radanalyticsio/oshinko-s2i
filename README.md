@@ -107,3 +107,14 @@ For example:
 
     $ oc create -f release_templates/pysparkbuilddc.json
 
+## MacOS Tips
+
+For MacOS you will also need to download these tools: gsed and truncate.
+You can install these using homebrew and these commands:
+sh ```
+brew install truncate
+```
+
+sh```
+brew install gnu-sed
+```
