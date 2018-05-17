@@ -61,12 +61,17 @@ if [ ! -z ${OVER+x} ]; then
     if [ "$?" -eq 0 ]; then
 
         sum=$(md5sum /tmp/oshinko_${OVER}_linux_amd64.tar.gz | cut -d ' ' -f 1)
-
-        # Fix the url references
-        sed -i "s@https://github.com/radanalyticsio/oshinko-cli/releases/download/.*@https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz@" image.*.yaml
-
-        # Fix the md5sum on the line following the url
-        sed -i '\@url: https://github.com/radanalyticsio/oshinko-cli/releases/download@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+          # Fix the url references
+          gsed -i "s@https://github.com/radanalyticsio/oshinko-cli/releases/download/.*@https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz@" image.*.yaml
+          # Fix the md5sum on the line following the url
+          gsed -i '\@url: https://github.com/radanalyticsio/oshinko-cli/releases/download@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
+        else
+          sed -i "s@https://github.com/radanalyticsio/oshinko-cli/releases/download/.*@https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz@" image.*.yaml
+          # Fix the md5sum on the line following the url
+          sed -i '\@url: https://github.com/radanalyticsio/oshinko-cli/releases/download@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
+        fi
     else
         echo "Failed to get the md5 sum for the specified oshinko version, the version $OVER may not be a real version"
         exit 1
