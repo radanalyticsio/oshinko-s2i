@@ -7,7 +7,7 @@ shopt -s dotglob
 
 echo "---> Proceeding with customized assemble ..."
 
-# If the root of the repo contains file (worker-)requirements.txt, install them and bundle
+# If the root of the repo contains file called worker-requirements.txt, install them and bundle
 # them together into big zip file that will be passed to spark-submit.
 
 # note: the idea of worker-requirements.txt is to isolate those dependencies that
