@@ -28,9 +28,14 @@ function get_deployment {
 function delete_ephemeral {
     local appstatus=$1
     local line
-    echo "Deleting cluster $OSHINKO_CLUSTER_NAME"
-    line=$($CLI delete_eph $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
-    echo $line
+    echo "Deleting cluster '$OSHINKO_CLUSTER_NAME'"
+    if [ "$ephemeral" == "<shared>" ]; then
+	echo "cluster is not ephemeral"
+	echo "cluster not deleted '$OSHINKO_CLUSTER_NAME'"
+    else
+        line=$($CLI delete_eph $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
+        echo $line
+    fi
 }
 
 function handle_term {
@@ -292,11 +297,25 @@ function use_spark_standalone {
 	# app can use it if it likes.
 	export OSHINKO_SPARK_MASTER=$master
 
+	if [ -f "$APP_ROOT/src/worker-gen-dependencies.zip" ]; then
+	    PY_FILES="--py-files worker-gen-dependencies.zip"
+	fi
+
 	if [ -n "$APP_MAIN_CLASS" ]; then
 	    CLASS_OPTION="--class $APP_MAIN_CLASS"
+	elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
+	    APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
+	    CLASS_OPTION="--class $APP_MAIN_CLASS"
 	fi
-	echo spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
-	spark-submit $CLASS_OPTION --master $master $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
+
+	if [ -n "$DRIVER_HOST" ]; then
+	    driver_host="--conf spark.driver.host=${DRIVER_HOST}"
+	else
+	    driver_host=
+	fi
+
+	echo spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
+	spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
 	PID=$!
 	wait $PID
 
@@ -312,14 +331,7 @@ function use_spark_standalone {
 	# app completed, we take the cluster with us, as long as our repl count is 0 or 1 (if it's more
 	# then someone scaled the driver and we have to leave the cluster anyway).
 	trap exit_flag TERM INT
-	if [ "$ephemeral" == "<shared>" ]; then
-	    echo "cluster is not ephemeral"
-	    echo "cluster not deleted '$OSHINKO_CLUSTER_NAME'"
-	else
-	    delete_ephemeral completed
-	fi
-    fi
-
+	delete_ephemeral completed
 }
 
 function use_spark_on_kube {
@@ -337,9 +349,17 @@ function use_spark_on_kube {
             fi
         fi
     fi
+
+    if [ -f "$APP_ROOT/src/worker-gen-dependencies.zip" ]; then
+        PY_FILES="--py-files worker-gen-dependencies.zip"
+    fi
+
     if [ -n "$APP_MAIN_CLASS" ]; then
-	    CLASS_OPTION="--class $APP_MAIN_CLASS"
-	fi
+        CLASS_OPTION="--class $APP_MAIN_CLASS"
+    elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
+        APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
+        CLASS_OPTION="--class $APP_MAIN_CLASS"
+    fi
 
     echo spark-submit \
             --master k8s://$KUBE \
@@ -349,7 +369,7 @@ function use_spark_on_kube {
             --conf spark.kubernetes.container.image=$DOCKER_REGISTRY_LOCATION/$OPENSHIFT_BUILD_NAMESPACE/$APPLICATION_NAME \
             --conf spark.kubernetes.namespace=$NS \
             --conf spark.executor.instances=$workers \
-            $CLASS_OPTION $SPARK_OPTIONS local://$APP_ROOT/src/$APP_FILE $APP_ARGS
+            $CLASS_OPTION $PY_FILES $SPARK_OPTIONS local://$APP_ROOT/src/$APP_FILE $APP_ARGS
     
     spark-submit \
         --master k8s://$KUBE \
@@ -359,7 +379,7 @@ function use_spark_on_kube {
         --conf spark.kubernetes.container.image=$DOCKER_REGISTRY_LOCATION/$OPENSHIFT_BUILD_NAMESPACE/$APPLICATION_NAME \
         --conf spark.kubernetes.namespace=$NS \
         --conf spark.executor.instances=$workers \
-        $CLASS_OPTION $SPARK_OPTIONS local://$APP_ROOT/src/$APP_FILE $APP_ARGS
+        $CLASS_OPTION $PY_FILES $SPARK_OPTIONS local://$APP_ROOT/src/$APP_FILE $APP_ARGS
     PID=$!
     wait $PID
 }

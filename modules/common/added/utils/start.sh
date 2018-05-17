@@ -355,7 +355,7 @@ function use_spark_on_kube {
     fi
 
     if [ -n "$APP_MAIN_CLASS" ]; then
-	CLASS_OPTION="--class $APP_MAIN_CLASS"
+        CLASS_OPTION="--class $APP_MAIN_CLASS"
     elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
         APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
         CLASS_OPTION="--class $APP_MAIN_CLASS"
