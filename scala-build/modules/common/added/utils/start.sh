@@ -332,6 +332,7 @@ function use_spark_standalone {
 	# then someone scaled the driver and we have to leave the cluster anyway).
 	trap exit_flag TERM INT
 	delete_ephemeral completed
+    fi
 }
 
 function use_spark_on_kube {
