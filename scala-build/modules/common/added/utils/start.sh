@@ -367,7 +367,7 @@ function use_spark_on_kube {
             --deploy-mode cluster \
             --name $APPLICATION_NAME \
             --conf spark.kubernetes.authenticate.driver.serviceAccountName=oshinko \
-            --conf spark.kubernetes.container.image=$DOCKER_REGISTRY_LOCATION/$OPENSHIFT_BUILD_NAMESPACE/$APPLICATION_NAME \
+            --conf spark.kubernetes.container.image=$APPLICATION_NAME:latest \
             --conf spark.kubernetes.namespace=$NS \
             --conf spark.executor.instances=$workers \
             $CLASS_OPTION $PY_FILES $SPARK_OPTIONS local://$APP_ROOT/src/$APP_FILE $APP_ARGS
@@ -377,7 +377,7 @@ function use_spark_on_kube {
         --deploy-mode cluster \
         --name $APPLICATION_NAME \
         --conf spark.kubernetes.authenticate.driver.serviceAccountName=oshinko \
-        --conf spark.kubernetes.container.image=$DOCKER_REGISTRY_LOCATION/$OPENSHIFT_BUILD_NAMESPACE/$APPLICATION_NAME \
+        --conf spark.kubernetes.container.image=$APPLICATION_NAME:latest \
         --conf spark.kubernetes.namespace=$NS \
         --conf spark.executor.instances=$workers \
         $CLASS_OPTION $PY_FILES $SPARK_OPTIONS local://$APP_ROOT/src/$APP_FILE $APP_ARGS
