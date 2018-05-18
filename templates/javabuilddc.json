@@ -89,6 +89,9 @@
          },
          "spec": {
             "dockerImageRepository": "${APPLICATION_NAME}",
+            "lookupPolicy": {
+                "local": true
+            },
             "tags": [
                {
                   "name": "latest"
