@@ -1,5 +1,4 @@
 #/bin/bash
-set -ex
 if [ "$#" -ne 1 ]; then
     echo
     echo "Generates the s2i templtaes in the release_templates subdirectory"

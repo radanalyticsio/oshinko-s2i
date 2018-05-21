@@ -41,7 +41,7 @@ artifacts:
   - url: https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz
     md5: af45eeb06dc1beee6d4c70b92c0e0237
   - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.5.2/oshinko_v0.5.2_linux_amd64.tar.gz
-    md5: 60a1ae0af1311b4b0b8a116b08b46da7
+    md5: 020c481017e944cc97d05eaf70d75067
 run:
     user: 185
     cmd:
