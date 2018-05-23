@@ -30,8 +30,8 @@ function delete_ephemeral {
     local line
     echo "Deleting cluster '$OSHINKO_CLUSTER_NAME'"
     if [ "$ephemeral" == "<shared>" ]; then
-	echo "cluster is not ephemeral"
-	echo "cluster not deleted '$OSHINKO_CLUSTER_NAME'"
+        echo "cluster is not ephemeral"
+        echo "cluster not deleted '$OSHINKO_CLUSTER_NAME'"
     else
         line=$($CLI delete_eph $OSHINKO_CLUSTER_NAME --app=$POD_NAME --app-status=$1 $CLI_ARGS 2>&1)
         echo $line
@@ -195,8 +195,8 @@ function wait_for_workers_alive {
         cnt=($(echo $workers | sed "s,[^0-9],\\ ,g"))
         echo "Waiting for spark workers (${cnt[-1]}/$desired alive) ..."
         if [ ${cnt[-1]} -eq "$desired" ]; then
-	    break
-	fi
+            break
+        fi
         sleep 5
         # If someone scales down the cluster while we're still waiting
         # then we need to know what the real target is so check again
@@ -218,120 +218,120 @@ function use_spark_standalone {
     wait_if_cluster_incomplete
 
     if [ "$CLI_RES" -ne 0 ]; then
-	if [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
-	    echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster" 
-	    APP_FLAG="--app=$POD_NAME --ephemeral"
-	    CREATED_EPHEMERAL=true
-	else
-	    echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating shared cluster"
-	    APP_FLAG="--app=$POD_NAME"
-	fi
-	CLI_LINE=$($CLI create_eph $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $APP_FLAG $CLI_ARGS 2>&1)
-	CLI_RES=$?
-	if [ "$CLI_RES" -eq 0 ]; then
-	    for i in {1..60}; do # wait up to 30 seconds
-		CLI_LINE=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
-		CLI_RES=$?
-		# If for some reason the get failed, keep trying
-		# Since create reported success, it's extremely unlikely
-		# that the get will ever fail but just in case ...
-		if [ "$CLI_RES" -eq 0 ]; then
-		    if [ -n "$CLI_LINE" ]; then
-			output=($(echo $CLI_LINE))
-			status=${output[5]}
-			if [ "$status" == "Running" ]; then
-			    break
-			fi
-		    else
-			# uh oh, cli is broken, success but no output
-			break
-		    fi
-		fi
-		sleep 0.5
-	    done
-	fi
+        if [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
+            echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster" 
+            APP_FLAG="--app=$POD_NAME --ephemeral"
+            CREATED_EPHEMERAL=true
+        else
+            echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating shared cluster"
+            APP_FLAG="--app=$POD_NAME"
+        fi
+        CLI_LINE=$($CLI create_eph $OSHINKO_CLUSTER_NAME --storedconfig=$OSHINKO_NAMED_CONFIG $APP_FLAG $CLI_ARGS 2>&1)
+        CLI_RES=$?
+        if [ "$CLI_RES" -eq 0 ]; then
+            for i in {1..60}; do # wait up to 30 seconds
+                CLI_LINE=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
+                CLI_RES=$?
+                # If for some reason the get failed, keep trying
+                # Since create reported success, it's extremely unlikely
+                # that the get will ever fail but just in case ...
+                if [ "$CLI_RES" -eq 0 ]; then
+                    if [ -n "$CLI_LINE" ]; then
+                        output=($(echo $CLI_LINE))
+                        status=${output[5]}
+                        if [ "$status" == "Running" ]; then
+                            break
+                        fi
+                    else
+                        # uh oh, cli is broken, success but no output
+                        break
+                    fi
+                fi
+                sleep 0.5
+            done
+        fi
     else
-	echo "Found cluster $OSHINKO_CLUSTER_NAME"
+        echo "Found cluster $OSHINKO_CLUSTER_NAME"
     fi
 
     # If CLI_RES is not 0 then create or get failed (possibly repeatedly)
     if [ "$CLI_RES" -ne 0 ]; then
-	echo "Error, unable to find or create cluster, output from oshinko-cli:"
-	echo "$CLI_LINE"
+        echo "Error, unable to find or create cluster, output from oshinko-cli:"
+        echo "$CLI_LINE"
 
     # Just in case a change breaks the CLI, test for output
     elif [ -z "$CLI_LINE" ]; then
-	echo "Error, the cli returned success on 'get' but gave no output, giving up"
+        echo "Error, the cli returned success on 'get' but gave no output, giving up"
 
     else
-	# Build the spark-submit command and execute
-	output=($(echo $CLI_LINE))
-	desired=${output[1]}
-	master=${output[2]}
-	masterweb=${output[3]}
-	status=${output[5]}
-	ephemeral=${output[6]}
+        # Build the spark-submit command and execute
+        output=($(echo $CLI_LINE))
+        desired=${output[1]}
+        master=${output[2]}
+        masterweb=${output[3]}
+        status=${output[5]}
+        ephemeral=${output[6]}
 
-	if [ "$ephemeral" != "$DEPLOYMENT" -a "$ephemeral" != "<shared>" ]; then
-	    if [ "$DEPLOYMENT" == "" ]; then
-		echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this driver is not part of a deployment, exiting"
-	    else
-		echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this is "$DEPLOYMENT", exiting"
-	    fi
-	    echo output from CLI on get was:
-	    echo $CLI_LINE
-	    app_exit
-	fi
-	if [ "$ephemeral" == "<shared>" ]; then
-	    if [ "$CREATED_EPHEMERAL" == "true" ]; then
-		echo Cound not create an ephemeral cluster, created a shared cluster instead
-	    fi
-	    echo Using shared cluster $OSHINKO_CLUSTER_NAME
-	else
-	    echo Using ephemeral cluster $OSHINKO_CLUSTER_NAME
-	fi
-	wait_for_master_ui $masterweb
-	wait_for_workers_alive $desired $masterweb
+        if [ "$ephemeral" != "$DEPLOYMENT" -a "$ephemeral" != "<shared>" ]; then
+            if [ "$DEPLOYMENT" == "" ]; then
+                echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this driver is not part of a deployment, exiting"
+            else
+                echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this is "$DEPLOYMENT", exiting"
+            fi
+            echo output from CLI on get was:
+            echo $CLI_LINE
+            app_exit
+        fi
+        if [ "$ephemeral" == "<shared>" ]; then
+            if [ "$CREATED_EPHEMERAL" == "true" ]; then
+                echo Cound not create an ephemeral cluster, created a shared cluster instead
+            fi
+            echo Using shared cluster $OSHINKO_CLUSTER_NAME
+        else
+            echo Using ephemeral cluster $OSHINKO_CLUSTER_NAME
+        fi
+        wait_for_master_ui $masterweb
+        wait_for_workers_alive $desired $masterweb
 
-	# Now that we know what the master url is, export it so that the
-	# app can use it if it likes.
-	export OSHINKO_SPARK_MASTER=$master
+        # Now that we know what the master url is, export it so that the
+        # app can use it if it likes.
+        export OSHINKO_SPARK_MASTER=$master
 
-	if [ -f "$APP_ROOT/src/worker-gen-dependencies.zip" ]; then
-	    PY_FILES="--py-files worker-gen-dependencies.zip"
-	fi
+        if [ -f "$APP_ROOT/src/worker-gen-dependencies.zip" ]; then
+            PY_FILES="--py-files worker-gen-dependencies.zip"
+        fi
 
-	if [ -n "$APP_MAIN_CLASS" ]; then
-	    CLASS_OPTION="--class $APP_MAIN_CLASS"
-	elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
-	    APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
-	    CLASS_OPTION="--class $APP_MAIN_CLASS"
-	fi
+        if [ -n "$APP_MAIN_CLASS" ]; then
+            CLASS_OPTION="--class $APP_MAIN_CLASS"
+        elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
+            APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
+            CLASS_OPTION="--class $APP_MAIN_CLASS"
+        fi
 
-	if [ -n "$DRIVER_HOST" ]; then
-	    driver_host="--conf spark.driver.host=${DRIVER_HOST}"
-	else
-	    driver_host=
-	fi
+        if [ -n "$DRIVER_HOST" ]; then
+            driver_host="--conf spark.driver.host=${DRIVER_HOST}"
+        else
+            driver_host=
+        fi
 
-	echo spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
-	spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
-	PID=$!
-	wait $PID
+        echo spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
+        spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
+        PID=$!
+        wait $PID
 
-	# At this point the subprocess completed and we are about to clean up the cluster.
-	# Switch to a signal handler that just sets a flag, so that we can delete the cluster
-	# without interruption and then loop in app_exit depending on the settings. app_exit
-	# will return if the flag is changed by the signal handler.
+        # At this point the subprocess completed and we are about to clean up the cluster.
+        # Switch to a signal handler that just sets a flag, so that we can delete the cluster
+        # without interruption and then loop in app_exit depending on the settings. app_exit
+        # will return if the flag is changed by the signal handler.
 
-	# Note that the cluster MUST be cleaned up here, because once this pod exits there is not
-	# guaranteed to be an agent to do cleanup.  Consider the case of a job, where no new instance
-	# of this driver will be scheduled, or the case of a dc where the dc is deleted while the pod
-	# is in the COMPLETED or crash loop backoff state. The cluster would be orhpaned. So, since the
-	# app completed, we take the cluster with us, as long as our repl count is 0 or 1 (if it's more
-	# then someone scaled the driver and we have to leave the cluster anyway).
-	trap exit_flag TERM INT
-	delete_ephemeral completed
+        # Note that the cluster MUST be cleaned up here, because once this pod exits there is not
+        # guaranteed to be an agent to do cleanup.  Consider the case of a job, where no new instance
+        # of this driver will be scheduled, or the case of a dc where the dc is deleted while the pod
+        # is in the COMPLETED or crash loop backoff state. The cluster would be orhpaned. So, since the
+        # app completed, we take the cluster with us, as long as our repl count is 0 or 1 (if it's more
+        # then someone scaled the driver and we have to leave the cluster anyway).
+        trap exit_flag TERM INT
+        delete_ephemeral completed
     fi
 }
 
