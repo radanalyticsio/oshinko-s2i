@@ -247,10 +247,6 @@
                             "value": "${OSHINKO_KUBE_SCHEDULER}"
                            },
                            {
-                            "name": "DOCKER_REGISTRY_LOCATION",
-                            "value": "${DOCKER_REGISTRY_LOCATION}"
-                           },
-                           {
                               "name": "POD_NAME",
                               "valueFrom":
                                 {
