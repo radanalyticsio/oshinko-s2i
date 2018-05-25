@@ -16,6 +16,8 @@ ln -s $(basename $fullname .tgz) spark
 rm $(basename $fullname)
 popd
 
+/opt/sbt/bin/sbt
+
 cp -r $ADDED_DIR/s2i/* $STI_SCRIPTS_PATH
 cp -R $SCRIPT_DIR/s2i/sbt/plugins /tmp/.sbt/0.13
 chmod a+x $STI_SCRIPTS_PATH/*
