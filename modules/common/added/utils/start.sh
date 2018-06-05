@@ -219,7 +219,7 @@ function use_spark_standalone {
 
     if [ "$CLI_RES" -ne 0 ]; then
         if [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
-            echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster" 
+            echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster"
             APP_FLAG="--app=$POD_NAME --ephemeral"
             CREATED_EPHEMERAL=true
         else
