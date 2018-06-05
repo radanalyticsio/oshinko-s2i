@@ -47,4 +47,4 @@ run:
     cmd:
       - "/usr/libexec/s2i/usage"
     entrypoint:
-      - "/opt/app-root/src/bootstrap.sh"
+      - "/opt/app-root/etc/bootstrap.sh"

@@ -16,10 +16,6 @@ ln -s $(basename $fullname .tgz) spark
 rm $(basename $fullname)
 popd
 
-#SPARK-23680: remove 'set -e' from entrypoint script to avoid return an error when using arbitrary UIDs
-#MUST BE REMOVED AFTER SPARK-23680 IS MERGED
-sed -i "s/set -xe/set -x/" /opt/spark/kubernetes/dockerfiles/spark/entrypoint.sh 
-
 mkdir -p /usr/local/s2i
 cp -r $ADDED_DIR/s2i/* /usr/local/s2i
 cp $ADDED_DIR/spark-conf/* /opt/spark/conf/
