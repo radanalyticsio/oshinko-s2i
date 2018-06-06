@@ -83,6 +83,10 @@
                               "name": "${APPLICATION_NAME}",
                               "env": [
                                 {
+                                   "name": "APPLICATION_NAME",
+                                   "value": "${APPLICATION_NAME}"
+                                },
+                                {
                                    "name": "DRIVER_HOST",
                                    "value": "${APPLICATION_NAME}-headless"
                                 },
