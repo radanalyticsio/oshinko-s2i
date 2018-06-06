@@ -35,7 +35,7 @@ function test_ivy_perms {
     SPARK_OPTIONS=" --packages com.typesafe.akka:akka-http_2.11:10.0.9,com.typesafe.akka:akka-http-xml_2.11:10.0.9,com.typesafe.akka:akka-stream_2.11:2.5.3 --conf spark.jars.ivy=/tmp/.ivy2"
     run_app
     os::cmd::try_until_text "oc log dc/$APP_NAME" "Press RETURN to stop"
-    os::cmd::expect_success_and_not_text "oc log dc $APP_NAME" "Permission denied"
+    os::cmd::expect_success_and_not_text "oc log dc/$APP_NAME" "Permission denied"
     cleanup_app
 }
 
