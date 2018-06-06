@@ -11,7 +11,7 @@ RESOURCE_DIR=$TEST_DIR/resources
 set_template $RESOURCE_DIR/oshinko-scala-spark-build-dc.json
 set_git_uri https://github.com/radanalyticsio/tutorial-sparkpi-scala-akka
 set_worker_count $S2I_TEST_WORKERS
-set_fixed_app_name scala-build
+set_fixed_app_name test-ivy
 set_app_main_class io.radanalytics.examples.akka.sparkpi.WebServerHttpApp
 
 # Need a little preamble here to read the resources.yaml, create the scala template, and save
