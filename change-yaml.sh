@@ -15,10 +15,6 @@ function usage() {
     echo "                      This value is used to download the spark distribution, and for the"
     echo "                      scala image it's used to determine the openshift-spark base image"
     echo
-    echo "  -l SCALA_VERSION    The scala version, like 2.11.8. Applies to the scala image"
-    echo
-    echo "  -t SBT_VERSION      The sbt version, like 0.13.13. Applies to the scala image"
-    echo
     echo "  -h                  Show this message"
 }
 
@@ -30,7 +26,7 @@ fi
 # Set the hadoop version
 HVER=2.7
 
-while getopts r:o:s:l:t:h opt; do
+while getopts o:s:h opt; do
     case $opt in
         o)
             OVER=$OPTARG
@@ -38,12 +34,6 @@ while getopts r:o:s:l:t:h opt; do
         s)
             SPARK=$OPTARG
             ;;
-	l)
-	    SCALA=$OPTARG
-	    ;;
-	t)
-	    SBT=$OPTARG
-	    ;;
         h)
             usage
             exit 0
