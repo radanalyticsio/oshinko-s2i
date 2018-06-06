@@ -35,3 +35,10 @@ cd /tmp
 gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 0527A9B7 && gpg --verify /tmp/tini.asc
 mv /tmp/tini /sbin/tini
 chmod +x /sbin/tini
+
+
+# Since the s2i generated images can be run as the driver/executor images
+# in the kubernetes native scheduling case, /etc/passwd needs group permission
+# to support the spark entry point user handling (radanalytics.io scripts
+# use a shadow password file instead)
+chgrp root /etc/passwd && chmod ug+rw /etc/passwd
