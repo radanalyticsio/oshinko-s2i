@@ -2,21 +2,22 @@
     "kind": "Template",
     "apiVersion": "v1",
     "metadata": {
-        "name": "oshinko-scala-spark-dc",
+        "name": "oshinko-sparklyr-build-dc",
         "annotations": {
-            "description": "Create a deploymentconfig using an existing Scala Spark image"
+            "openshift.io/display-name": "Apache Spark R",
+            "description": "Create a buildconfig, imagestream and deploymentconfig using source-to-image and R Spark source files hosted in git"
         }
     },
     "labels": {
-        "application": "oshinko-scala-spark",
-        "createdBy": "template-oshinko-scala-spark-dc"
+        "application": "oshinko-sparklyr-spark",
+        "createdBy": "template-oshinko-r-spark-build-dc"
     },
     "parameters": [
         {
-            "description": "The name to use for the deployment objects",
+            "description": "The name to use for the deployment components",
             "name": "APPLICATION_NAME",
             "generate": "expression",
-            "from": "scala-spark-[a-z0-9]{4}",
+            "from": "sparklyr-spark-[a-z0-9]{4}",
             "required": true
         },
         {
@@ -29,8 +30,9 @@
             "name": "APP_ARGS"
         },
         {
-            "description": "Application main class for jar-based applications",
-            "name": "APP_MAIN_CLASS"
+            "description": "The name of the main R file to run.",
+            "name": "MAIN_FILE",
+            "value": "app.R"
         },
         {
             "description": "List of additional Spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
@@ -41,7 +43,7 @@
             "name": "OSHINKO_CLUSTER_NAME"
         },
         {
-            "description": "The name of a stored cluster configuration to use if a cluster is created, default is 'default.",
+            "description": "The name of a stored cluster configuration to use if a cluster is created, default is 'default'.",
             "name": "OSHINKO_NAMED_CONFIG"
         },
         {
@@ -126,8 +128,8 @@
                                         "value": "${SPARK_OPTIONS}"
                                     },
                                     {
-                                        "name": "APP_MAIN_CLASS",
-                                        "value": "${APP_MAIN_CLASS}"
+                                        "name": "MAIN_FILE",
+                                        "value": "${MAIN_FILE}"
                                     },
                                     {
                                         "name": "OSHINKO_DEL_CLUSTER",
@@ -156,7 +158,7 @@
                                 ],
                                 "resources": {},
                                 "terminationMessagePath": "/dev/termination-log",
-                                "imagePullPolicy": "IfNotPresent",
+                                "imagePullPolicy": "Always",
                                 "volumeMounts": [
                                     {
                                         "mountPath": "/etc/podinfo",
@@ -214,100 +216,25 @@
             "metadata": {
                 "name": "${APPLICATION_NAME}-headless"
             },
-            "template": {
-               "metadata": {
-                  "labels": {
-                     "deploymentConfig": "${APPLICATION_NAME}"
-                  }
-               },
-               "spec": {
-                  "containers": [
-                     {
-                        "name": "${APPLICATION_NAME}",
-                        "image": "${IMAGE}",
-                        "env": [
-                           {
-                              "name": "APPLICATION_NAME",
-                              "value": "${APPLICATION_NAME}"
-                           },
-                           {
-                              "name": "DRIVER_HOST",
-                              "value": "${APPLICATION_NAME}-headless"
-                           },
-                           {
-                              "name": "OSHINKO_CLUSTER_NAME",
-                              "value": "${OSHINKO_CLUSTER_NAME}"
-                           },
-                           {
-                              "name": "APP_ARGS",
-                              "value": "${APP_ARGS}"
-                           },
-                           {
-                              "name": "SPARK_OPTIONS",
-                              "value": "${SPARK_OPTIONS}"
-                           },
-                           {
-                              "name": "APP_MAIN_CLASS",
-                              "value": "${APP_MAIN_CLASS}"
-                           },
-                           {
-                             "name": "OSHINKO_DEL_CLUSTER",
-                             "value": "${OSHINKO_DEL_CLUSTER}"
-                           },
-                           {
-                              "name": "APP_EXIT",
-                              "value": "${APP_EXIT}"
-                           },
-                           {
-                              "name": "OSHINKO_NAMED_CONFIG",
-                              "value": "${OSHINKO_NAMED_CONFIG}"
-                           },
-                           {
-                              "name": "OSHINKO_SPARK_DRIVER_CONFIG",
-                              "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
-                           },
-                           {
-                              "name": "POD_NAME",
-                              "valueFrom":
-                                {
-                                   "fieldRef":
-                                      {
-                                         "fieldPath": "metadata.name"
-                                      }
-                                }
-                           }
-                        ],
-                        "resources": {},
-                        "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "IfNotPresent",
-                        "volumeMounts": [
-                           {
-                              "mountPath": "/etc/podinfo",
-                              "name": "podinfo",
-                              "readOnly": false
-                           }
-                        ]
-                     }
-                  ],
-                  "volumes": [
-                     {
-                        "downwardAPI": {
-                           "items": [
-                              {
-                                 "fieldRef": {
-                                    "fieldPath": "metadata.labels"
-                                 },
-                                 "path": "labels"
-                              }
-                           ]
-                        },
-                        "name": "podinfo"
-                     }
-                  ],
-                  "restartPolicy": "Always",
-                  "serviceAccount": "oshinko",
-                  "dnsPolicy": "ClusterFirst"
-               }
+            "spec": {
+                "clusterIP": "None",
+                "ports": [
+                    {
+                        "name": "driver-rpc-port",
+                        "port": 7078,
+                        "protocol": "TCP",
+                        "targetPort": 7078
+                    },
+                    {
+                        "name": "blockmanager",
+                        "port": 7079,
+                        "protocol": "TCP",
+                        "targetPort": 7079
+                    }
+                ],
+                "selector": {
+                    "deploymentConfig": "${APPLICATION_NAME}"
+                }
             }
         }
     ]
