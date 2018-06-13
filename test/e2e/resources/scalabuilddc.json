@@ -2,53 +2,61 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-sparklyr-build-dc",
+      "name": "oshinko-scala-spark-build-dc",
       "annotations": {
-         "openshift.io/display-name": "Apache Spark R",
-         "description": "Create a buildconfig, imagestream and deploymentconfig using source-to-image and R Spark source files hosted in git"
+         "openshift.io/display-name": "Apache Spark Scala",
+         "description": "Create a buildconfig, imagestream and deploymentconfig using source-to-image and Scala Spark source files hosted in git"
       }
    },
    "labels": {
-      "application": "oshinko-sparklyr-spark",
-      "createdBy": "template-oshinko-r-spark-build-dc"
+      "application": "oshinko-scala-spark",
+      "createdBy": "template-oshinko-scala-spark-build-dc"
    },
    "parameters": [
       {
-         "description": "The name to use for the buildconfig, imagestream and deployment components",
+         "description": "The name to use for the buildconfig, imagestream and deployment objects",
          "name": "APPLICATION_NAME",
          "generate": "expression",
-         "from": "python-spark-[a-z0-9]{4}",
+         "from": "scala-spark-[a-z0-9]{4}",
          "required": true
       },
       {
-         "displayName": "Git Repository URL",
-         "description": "The URL of the repository with your application source code",
+         "description": "Git source URI for application",
          "name": "GIT_URI"
       },
       {
-         "displayName": "Git Reference",
-         "description": "Optional branch, tag or commit",
-         "name": "GIT_REF"
+         "description": "Git branch/tag reference",
+         "name": "GIT_REF",
+         "value": "master"
       },
       {
          "description": "Git sub-directory path",
          "name": "CONTEXT_DIR"
       },
       {
-         "description": "The name of the main R file to run.",
-         "name": "MAIN_FILE",
-         "value": "app.R"
+         "description": "The name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
+         "name": "APP_FILE"
       },
       {
-         "description": "Command line arguments to pass to the Spark application",
+         "description": "Command line arguments to pass to the spark application",
          "name": "APP_ARGS"
       },
       {
-          "description": "List of additional Spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
+         "description": "Application main class for jar-based applications",
+         "name": "APP_MAIN_CLASS"
+      },
+      {
+          "description": "List of additional spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
          "name": "SPARK_OPTIONS"
       },
       {
-         "description": "The name of the Spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
+        "description": "Choose whether to use native k8s Scheduler or Spark Standalone",
+        "name": "OSHINKO_KUBE_SCHEDULER",
+        "required": true,
+        "value": "false"
+      },
+      {
+         "description": "The name of the spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
          "name": "OSHINKO_CLUSTER_NAME"
       },
       {
@@ -56,7 +64,7 @@
          "name": "OSHINKO_NAMED_CONFIG"
       },
       {
-         "description": "The name of a configmap to use for the Spark configuration of the driver. If this configmap is empty the default Spark configuration will be used.",
+         "description": "The name of a configmap to use for the spark configuration of the driver. If this configmap is empty the default spark configuration will be used.",
          "name": "OSHINKO_SPARK_DRIVER_CONFIG"
       },
       {
@@ -64,6 +72,14 @@
          "name": "OSHINKO_DEL_CLUSTER",
          "value": "true",
          "required": true
+      },
+      {
+         "description": "Arguments to use when calling sbt, replacing the default `package`",
+         "name": "SBT_ARGS"
+      },
+      {
+         "description": "Additional sbt arguments, useful for adding task arguments to sbt like `publish makePom`",
+         "name": "SBT_ARGS_APPEND"
       },
       {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
@@ -81,6 +97,9 @@
          },
          "spec": {
             "dockerImageRepository": "${APPLICATION_NAME}",
+            "lookupPolicy": {
+                "local": true
+            },
             "tags": [
                {
                   "name": "latest"
@@ -129,13 +148,21 @@
                "sourceStrategy": {
                   "from": {
                      "kind": "DockerImage",
-                     "name": "rimolive/radanalytics-sparklyr"
+                     "name": "s2i-testimage-scala"
                   },
-                  "forcePull": true,
+                  
                   "env": [
                      {
                         "name": "APP_FILE",
                         "value": "${APP_FILE}"
+                     },
+                     {
+                         "name": "SBT_ARGS",
+                         "value": "${SBT_ARGS}"
+                     },
+                     {
+                         "name": "SBT_ARGS_APPEND",
+                         "value": "${SBT_ARGS_APPEND}"
                      }
                   ]
                }
@@ -152,7 +179,10 @@
          "kind": "DeploymentConfig",
          "apiVersion": "v1",
          "metadata": {
-            "name": "${APPLICATION_NAME}"
+            "name": "${APPLICATION_NAME}",
+            "labels": {
+               "deploymentConfig": "${APPLICATION_NAME}"
+            }
          },
          "spec": {
             "strategy": {
@@ -178,12 +208,12 @@
             ],
             "replicas": 1,
             "selector": {
-               "deploymentconfig": "${APPLICATION_NAME}"
+               "deploymentConfig": "${APPLICATION_NAME}"
             },
             "template": {
                "metadata": {
                   "labels": {
-                     "deploymentconfig": "${APPLICATION_NAME}"
+                     "deploymentConfig": "${APPLICATION_NAME}"
                   }
                },
                "spec": {
@@ -205,12 +235,12 @@
                               "value": "${APP_ARGS}"
                            },
                            {
-                              "name": "MAIN_FILE",
-                              "value": "${MAIN_FILE}"
-                           },
-                           {
                               "name": "SPARK_OPTIONS",
                                "value": "${SPARK_OPTIONS}"
+                           },
+                           {
+                              "name": "APP_MAIN_CLASS",
+                              "value": "${APP_MAIN_CLASS}"
                            },
                            {
                              "name": "OSHINKO_DEL_CLUSTER",
@@ -228,6 +258,10 @@
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
                            },
                            {
+                               "name": "OSHINKO_KUBE_SCHEDULER",
+                               "value": "${OSHINKO_KUBE_SCHEDULER}"
+                           },
+                           {
                               "name": "POD_NAME",
                               "valueFrom":
                                 {
@@ -236,11 +270,11 @@
                                          "fieldPath": "metadata.name"
                                       }
                                 }
-                            }
+                           }
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always",
+                        "imagePullPolicy": "IfNotPresent",
                         "volumeMounts": [
                            {
                               "mountPath": "/etc/podinfo",
@@ -293,31 +327,31 @@
          }
       },
       {
-        "kind": "Service",
-        "apiVersion": "v1",
-        "metadata": {
-           "name": "${APPLICATION_NAME}-headless"
-        },
-        "spec": {
-            "clusterIP": "None",
-            "ports": [
-                {
-                    "name": "driver-rpc-port",
-                    "port": 7078,
-                    "protocol": "TCP",
-                    "targetPort": 7078
-                },
-                {
-                    "name": "blockmanager",
-                    "port": 7079,
-                    "protocol": "TCP",
-                    "targetPort": 7079
-                }
-            ],
-            "selector": {
-                "deploymentConfig": "${APPLICATION_NAME}"
-            }
-        }
-     }
+         "kind": "Service",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}-headless"
+         },
+         "spec": {
+             "clusterIP": "None",
+             "ports": [
+                 {
+                     "name": "driver-rpc-port",
+                     "port": 7078,
+                     "protocol": "TCP",
+                     "targetPort": 7078
+                 },
+                 {
+                     "name": "blockmanager",
+                     "port": 7079,
+                     "protocol": "TCP",
+                     "targetPort": 7079
+                 }
+             ],
+             "selector": {
+                 "deploymentConfig": "${APPLICATION_NAME}"
+             }
+         }
+      }
    ]
 }

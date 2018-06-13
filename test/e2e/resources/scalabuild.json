@@ -1,0 +1,136 @@
+{
+   "kind": "Template",
+   "apiVersion": "v1",
+   "metadata": {
+      "name": "oshinko-scala-spark-build",
+      "annotations": {
+         "description": "Create a buildconfig and imagestream using source-to-image and Scala Spark source files hosted in git"
+      }
+   },
+   "labels": {
+      "application": "oshinko-scala-spark",
+      "createdBy": "template-oshinko-scala-spark-build"
+   },
+   "parameters": [
+      {
+         "description": "The name to to use for the buildconfig and imagestream objects",
+         "name": "APPLICATION_NAME",
+         "generate": "expression",
+         "from": "scala-spark-[a-z0-9]{4}",
+         "required": true
+      },
+      {
+         "description": "Git source URI for application",
+         "name": "GIT_URI"
+      },
+      {
+         "description": "Git branch/tag reference",
+         "name": "GIT_REF",
+         "value": "master"
+      },
+      {
+         "description": "Git sub-directory path",
+         "name": "CONTEXT_DIR"
+      },
+      {
+         "description": "The name of the main JAR file. If this is not specified and there is a single JAR produced by the build, that JAR will be chosen.",
+         "name": "APP_FILE"
+      },
+      {
+         "description": "Arguments to use when calling sbt, replacing the default `package`",
+         "name": "SBT_ARGS"
+      },
+      {
+         "description": "Additional sbt arguments, useful for adding task arguments to sbt like `publish makePom`",
+         "name": "SBT_ARGS_APPEND"
+      }
+   ],
+   "objects": [
+      {
+         "kind": "BuildConfig",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "triggers": [
+               {
+                  "type": "ImageChange",
+                  "imageChange": {}
+               },
+               {
+                  "type": "ConfigChange"
+               },
+               {
+                  "type": "GitHub",
+                  "github": {
+                      "secret": "${APPLICATION_NAME}"
+                  }
+               },
+               {
+                  "type": "Generic",
+                  "generic": {
+                      "secret": "${APPLICATION_NAME}"
+                  }
+               }
+            ],
+            "source": {
+               "type": "Git",
+               "git": {
+                  "uri": "${GIT_URI}",
+                  "ref": "${GIT_REF}"
+               },
+               "contextDir": "${CONTEXT_DIR}"
+            },
+            "strategy": {
+               "type": "Source",
+               "sourceStrategy": {
+                  "from": {
+                     "kind": "DockerImage",
+                     "name": "s2i-testimage-scala"
+                  },
+                  
+                  "env": [
+                     {
+                        "name": "APP_FILE",
+                        "value": "${APP_FILE}"
+                     },
+                     {
+                         "name": "SBT_ARGS",
+                         "value": "${SBT_ARGS}"
+                     },
+                     {
+                         "name": "SBT_ARGS_APPEND",
+                         "value": "${SBT_ARGS_APPEND}"
+                     }
+                  ]
+               }
+            },
+            "output": {
+               "to": {
+                  "kind": "ImageStreamTag",
+                  "name": "${APPLICATION_NAME}:latest"
+               }
+            }
+         }
+      },
+      {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}"
+         },
+         "spec": {
+            "dockerImageRepository": "${APPLICATION_NAME}",
+            "lookupPolicy": {
+                "local": true
+            },
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      }
+   ]
+}

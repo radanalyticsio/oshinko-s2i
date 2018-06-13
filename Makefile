@@ -7,9 +7,14 @@ S2I_TEST_IMAGE_PREFIX ?= s2i-testimage
 S2I_TEST_IMAGE_PYSPARK ?= $(S2I_TEST_IMAGE_PREFIX)-pyspark
 S2I_TEST_IMAGE_JAVA ?= $(S2I_TEST_IMAGE_PREFIX)-java
 S2I_TEST_IMAGE_SCALA ?= $(S2I_TEST_IMAGE_PREFIX)-scala
+S2I_TEST_IMAGE_SPARKLYR ?= rimolive/$(S2I_TEST_IMAGE_PREFIX)-sparklyr
+S2I_TEST_EXTERNAL_REGISTRY=docker.io
+S2I_TEST_EXTERNAL_USER=rimolive
+S2I_TEST_EXTERNAL_PASSWORD=rr4tty65
 export S2I_TEST_IMAGE_PYSPARK
 export S2I_TEST_IMAGE_JAVA
 export S2I_TEST_IMAGE_SCALA
+export S2I_TEST_IMAGE_SPARKLYR
 
 build: CMD=build
 push: CMD=push
@@ -67,10 +72,17 @@ test-scala-dc:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
 	test/e2e/run.sh "(templates/scala/build|templates/scala/dc)"
 
+test-sparklyr-dc:
+	# pick up build and builddc tests along with dc
+	# separate this from radio for travis sake (try to get time below 50 minutes)
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build
+	test/e2e/run.sh templates/sparklyr/dc
+
 test-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build
 	test/e2e/run.sh templates
 
 test-operations:
@@ -85,6 +97,7 @@ test-e2e:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build
 	test/e2e/run.sh
 
 .PHONY: build clean push $(allimgs) test-e2e test-ephemeral test-java-templates test-pyspark-templates test-scala-templates test-templates test-pyspark-radio test-scala-radio test-java-radio

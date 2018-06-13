@@ -30,6 +30,7 @@ script:
 - if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; fi
 - if [ "$TO_TEST" == "scala-templates-radio" ]; then make test-scala-radio ; fi
 - if [ "$TO_TEST" == "scala-templates-dc" ]; then make test-scala-dc ; fi
+- if [ "$TO_TEST" == "sparklyr-templates-dc" ]; then make test-sparklyr-dc ; fi
 - if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
 - if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
 notifications:
