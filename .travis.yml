@@ -9,6 +9,7 @@ matrix:
   # tests perform builds from the local source to do the tests
   include:
     - env: TO_TEST=pyspark-templates OPENSHIFT_VERSION=v3.9
+    - env: TO_TEST=pyspark-py36-templates OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=java-templates OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=scala-templates-radio OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=scala-templates-dc OPENSHIFT_VERSION=v3.9
@@ -27,6 +28,7 @@ before_script:
 - test/travis-help/check-tarballs.sh
 script:
 - if [ "$TO_TEST" == "pyspark-templates" ]; then make test-pyspark-templates ; fi
+- if [ "$TO_TEST" == "pyspark-py36-templates" ]; then make test-pyspark-py36-templates ; fi
 - if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; fi
 - if [ "$TO_TEST" == "scala-templates-radio" ]; then make test-scala-radio ; fi
 - if [ "$TO_TEST" == "scala-templates-dc" ]; then make test-scala-dc ; fi
