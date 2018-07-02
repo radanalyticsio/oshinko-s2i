@@ -91,7 +91,6 @@ function get_app_file {
     # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
     # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
     # For Python applications, look for a single .py file
-    set -x
     local cnt
     if [ -z "$APP_FILE" ]; then
         if [ -n "$APP_MAIN_CLASS" ]; then
@@ -114,7 +113,6 @@ function get_app_file {
             fi
         fi
     fi
-    set +x
 }
 
 function get_cluster_name {
