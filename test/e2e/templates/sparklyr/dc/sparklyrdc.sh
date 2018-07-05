@@ -16,20 +16,12 @@ set_fixed_app_name
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
-function poll_build() {
-    # override poll_build from builddc because
-    # in this case we never do a build beyond the
-    # binary build we do directly, so polls will break!
-    return
-}
-
 function test_no_app_name {
     set_defaults
     os::cmd::expect_success 'oc delete dc --all'
     os::cmd::try_until_text 'oc get pod -l deploymentconfig' 'No resources found'
     SPARK_MAIN_FILE=" -p MAIN_FILE=app.R"
     run_app_without_application_name
-    get_driver_pod
     os::cmd::try_until_not_text 'oc get pod -l deploymentconfig' 'No resources found' $((15*minute))
     DRIVER=$(oc get pod -l deploymentconfig --template='{{index .items 0 "metadata" "name"}}')
     os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster'
