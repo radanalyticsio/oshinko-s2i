@@ -20,7 +20,7 @@ before_install:
 install:
 before_script:
 - test/travis-help/check-tarballs.sh
-- LOCAL_IMAGE=s2i-testimage-sparklyr make -f Makefile.sparklyr build
+## - LOCAL_IMAGE=s2i-testimage-sparklyr make -f Makefile.sparklyr build
 
 script:
 - if [ "$TO_TEST" == "pyspark-templates" ]; then make test-pyspark-templates ; fi
@@ -28,7 +28,7 @@ script:
 - if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; fi
 - if [ "$TO_TEST" == "scala-templates-radio" ]; then make test-scala-radio ; fi
 - if [ "$TO_TEST" == "scala-templates-dc" ]; then make test-scala-dc ; fi
-- if [ "$TO_TEST" == "sparklyr-templates-dc" ]; then test/e2e/run.sh templates/sparklyr/dc ; fi
+- if [ "$TO_TEST" == "sparklyr-templates-dc" ]; then S2I_TEST_IMAGE_SPARKLYR=docker.io/tmckay/s2i-testimage-sparklyr:latest test/e2e/run.sh templates/sparklyr/dc ; fi
 - if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
 - if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
 notifications:
