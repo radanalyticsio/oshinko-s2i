@@ -273,6 +273,19 @@ function poll_build() {
     local tries=0
     local status
     local BUILDNUM
+
+
+    set +e
+    oc get buildconfig $name
+    res=$?
+    set -e
+    if [ "$res" -ne 0 ]; then
+       # this utility routine will end up getting run for some tests
+       # that use an existing image and have no buildconfig as part
+       # of the app deployment. If the bc just doesn't exist, return
+       return
+    fi
+
     while true; do
         BUILDNUM=$(oc get buildconfig $name --template='{{index .status "lastVersion"}}')
 	if [ "$BUILDNUM" == "0" ]; then

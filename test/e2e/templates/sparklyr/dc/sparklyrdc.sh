@@ -16,13 +16,6 @@ set_fixed_app_name
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
-function poll_build() {
-    # override poll_build from builddc because
-    # in this case we never do a build beyond the
-    # binary build we do directly, so polls will break!
-    return
-}
-
 function test_no_app_name {
     set_defaults
     os::cmd::expect_success 'oc delete dc --all'
@@ -35,13 +28,11 @@ function test_no_app_name {
     os::cmd::expect_success 'oc delete dc --all'
 }
 
-set_git_uri https://github.com/rimolive/r-openshift-ex.git
 set_app_file app.R
 
 # Make the S2I test image if it's not already in the project
-export TEST_IMAGE=play
-oc new-build --name=$TEST_IMAGE $S2I_TEST_IMAGE_SPARKLYR~$GIT_URI
-oc patch bc/$TEST_IMAGE -p '{"spec": {"strategy": {"sourceStrategy": {"forcePull": true} } } }'
+set_git_uri https://github.com/tmckayus/r-openshift-ex.git
+make_image $S2I_TEST_IMAGE_SPARKLYR $GIT_URI
 set_image $TEST_IMAGE
 
 echo "++ test_no_app_name"
