@@ -92,25 +92,39 @@ function get_app_file {
     # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
     # For Python applications, look for a single .py file
     local cnt
-    if [ -z "$APP_FILE" ]; then
-        if [ -n "$APP_MAIN_CLASS" ]; then
-            cnt=$(cd $APP_ROOT/src/; ls -1 *.jar | wc -l)
-            if [ "$cnt" -eq "1" ]; then
-                APP_FILE=$(cd $APP_ROOT/src/; ls *.jar)
-            else
-                echo "Error, no APP_FILE set and $cnt JAR file(s) found"
-                app_exit
-            fi
-        else
-            cnt=$(cd $APP_ROOT/src/; ls -1 *.py | wc -l)
-            if [ "$cnt" -eq "1" ]; then
-                APP_FILE=$(cd $APP_ROOT/src/; ls *.py)
-            else
-                echo "Error, no APP_FILE set and $cnt py file(s) found"
-                app_exit
-            fi
-        fi
+    if [ -z "$APP_FILE"]; then
+      if [ -n "$APP_MAIN_CLASS" ]; then
+              cnt=$(cd $APP_ROOT/src/; ls -1 *.jar | wc -l)
+              if [ "$cnt" -eq "1" ]; then
+                  APP_FILE=$(cd $APP_ROOT/src/; ls *.jar)
+              else
+                  echo "Error, no APP_FILE set and $cnt JAR file(s) found"
+                  app_exit
+              fi
+      elif [ -n "$APP_LANG" ]; then
+                  case "$APP_LANG" in
+                    java | scala)
+                        file_count *.jar
+                        echo "its a jar"
+                        ;;
+                    python)
+                        file_count *.py
+                        "echo its a .py"
+                        ;;
+                  esac
+      fi
     fi
+}
+
+function file_count {
+  cnt=$(cd $APP_ROOT/src/; ls -1 $1 | wc -l)
+  if [ "$cnt" -eq "1" ]; then
+      APP_FILE=$(cd $APP_ROOT/src/; ls $1)
+      echo "$APP_FILE"
+  else
+      echo "Error $cnt $1 file(s) found"
+      app_exit
+  fi
 }
 
 function get_cluster_name {
