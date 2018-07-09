@@ -26,7 +26,7 @@ ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-pyspark" \
     SPARK_HOME="/opt/spark" \
     PYTHONPATH="/opt/spark/python" \
     APP_ROOT="/opt/app-root" \
-    APP_FILE="app.py" 
+    APP_LANG="python"
 
 # Labels
 LABEL name="$JBOSS_IMAGE_NAME" \

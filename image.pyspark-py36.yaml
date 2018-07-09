@@ -28,8 +28,8 @@ envs:
     value: /opt/spark/python
   - name: APP_ROOT
     value: /opt/app-root
-  - name: APP_FILE
-    value: app.py
+  - name: APP_LANG
+    value: python
 modules:
     install:
       - name: common
