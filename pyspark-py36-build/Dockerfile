@@ -20,12 +20,12 @@ FROM centos/python-36-centos7:latest
 
 # Environment variables
 ENV \
-    APP_FILE="app.py" \
+    APP_LANG="python" \
     APP_ROOT="/opt/app-root" \
     PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     PYTHONPATH="/opt/spark/python" \
     RADANALYTICS_PYSPARK="1.0" \
-    SPARK_HOME="/opt/spark" 
+    SPARK_HOME="/opt/spark"
 
 # Labels
 LABEL \
@@ -36,7 +36,7 @@ LABEL \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"  \
       io.openshift.tags="builder,radanalytics,pyspark"  \
       io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"  \
-      org.concrt.version="2.0.0rc6" 
+      org.concrt.version="2.0.0rc6"
 
 
 USER root
