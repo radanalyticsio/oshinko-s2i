@@ -25,7 +25,8 @@ ENV \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     RADANALYTICS_JAVA_SPARK="1.0" \
     SPARK_HOME="/opt/spark" \
-    STI_SCRIPTS_PATH="/usr/local/s2i" 
+    STI_SCRIPTS_PATH="/usr/local/s2i"
+    APP_LANG="java"
 
 # Labels
 LABEL \
@@ -36,7 +37,7 @@ LABEL \
       io.openshift.s2i.scripts-url="image:///usr/local/s2i"  \
       io.openshift.tags="builder,radanalytics,java_spark"  \
       io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"  \
-      org.concrt.version="2.0.0rc6" 
+      org.concrt.version="2.0.0rc6"
 
 
 USER root

@@ -25,6 +25,7 @@ ENV \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin:/opt/scala/bin:/opt/sbt/bin" \
     SBT_OPTS="-Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled" \
     SPARK_HOME="/opt/spark" 
+    APP_LANG="scala"
 
 # Labels
 LABEL \
@@ -35,7 +36,7 @@ LABEL \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"  \
       io.openshift.tags="builder,radanalytics,scala_spark"  \
       io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"  \
-      org.concrt.version="2.0.0rc6" 
+      org.concrt.version="2.0.0rc6"
 
 
 USER root
