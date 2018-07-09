@@ -13,6 +13,14 @@ if [ -z "$S2I_TEST_IMAGE_PYSPARK" ]; then
     fi
 fi
 
+if [ -z "$S2I_TEST_IMAGE_PYSPARK_PY36" ]; then
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+	S2I_TEST_IMAGE_PYSPARK_PY36=radanalytics-pyspark-py36
+    else
+	S2I_TEST_IMAGE_PYSPARK_PY36=docker.io/radanalyticsio/radanalytics-pyspark-py36
+    fi
+fi
+
 if [ -z "$S2I_TEST_IMAGE_JAVA" ]; then
     if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
 	S2I_TEST_IMAGE_JAVA=radanalytics-java-spark
@@ -66,6 +74,7 @@ function print_test_env {
         echo Not using external or integrated registry
     fi
     echo Using s2i pyspark image $S2I_TEST_IMAGE_PYSPARK
+    echo Using s2i pyspark-py36 image $S2I_TEST_IMAGE_PYSPARK_PY36
     echo Using s2i java image $S2I_TEST_IMAGE_JAVA
     echo Using s2i scala image $S2I_TEST_IMAGE_SCALA
     echo Using spark image $S2I_TEST_SPARK_IMAGE
