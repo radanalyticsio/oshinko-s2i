@@ -76,10 +76,8 @@ test-scala-dc:
 	test/e2e/run.sh "(templates/scala/build|templates/scala/dc)"
 
 test-sparklyr-dc:
-	# pick up build and builddc tests along with dc
-	# separate this from radio for travis sake (try to get time below 50 minutes)
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build
-	test/e2e/run.sh templates/sparklyr/dc
+	test/e2e/run.sh templates/sparklyr/
 
 test-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
