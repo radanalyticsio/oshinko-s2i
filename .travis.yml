@@ -14,6 +14,7 @@ matrix:
     - env: TO_TEST=scala-templates-radio OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=scala-templates-dc OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=sparklyr-templates-dc OPENSHIFT_VERSION=v3.9
+    - env: TO_TEST=sparklyr-templates-build OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=operations OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=incomplete OPENSHIFT_VERSION=v3.9
   fast_finish: true
@@ -34,6 +35,7 @@ script:
 - if [ "$TO_TEST" == "scala-templates-radio" ]; then make test-scala-radio ; fi
 - if [ "$TO_TEST" == "scala-templates-dc" ]; then make test-scala-dc ; fi
 - if [ "$TO_TEST" == "sparklyr-templates-dc" ]; then make test-sparklyr-dc ; fi
+- if [ "$TO_TEST" == "sparklyr-templates-build" ]; then make test-sparklyr-build ; fi
 - if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
 - if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
 notifications:
