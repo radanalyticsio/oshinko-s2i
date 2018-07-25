@@ -28,3 +28,7 @@ _testmain.go
 # Intellij IDEA
 .idea/*
 *.iml
+
+# Eclipse
+.settings/
+.classpath/
