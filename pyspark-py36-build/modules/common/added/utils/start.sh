@@ -89,23 +89,21 @@ function exit_flag {
 
 function get_app_file {
     if [ -z "$APP_FILE"]; then
-        if [ -n "$APP_LANG" ]; then
-            case "$APP_LANG" in
-                java | scala)
-                    file_count "*.jar"
-                    ;;
-                python)
-                    file_count "*.py"
-                    ;;
-                r)
-                    file_count "*.R"
-		    ;;
-                *)
-                    echo "Unrecognized value '$APP_LANG' for APP_LANG and APP_FILE not set"
-                    app_exit
-                    ;;
-            esac
-        fi
+        case "$APP_LANG" in
+            java | scala)
+                file_count "*.jar"
+                ;;
+            python)
+                file_count "*.py"
+                ;;
+            r)
+                file_count "*.R"
+                ;;
+            *)
+                echo "Unrecognized value '$APP_LANG' for APP_LANG and APP_FILE not set"
+                app_exit
+                ;;
+        esac
     fi
  }
 

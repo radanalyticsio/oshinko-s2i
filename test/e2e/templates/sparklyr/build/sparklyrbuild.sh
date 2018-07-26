@@ -12,7 +12,7 @@ source $SCRIPT_DIR/../../buildonly
 
 RESOURCE_DIR=$TEST_DIR/resources
 cp $SPARKLYR_TEMP_DIR/sparklyrbuild.json $RESOURCE_DIR/sparklyrbuild.json
-fix_template $RESOURCE_DIR/sparklyrbuild.json rimolive/radanalytics-sparklyr $S2I_TEST_IMAGE_SPARKLYR
+fix_template $RESOURCE_DIR/sparklyrbuild.json radanalyticsio/radanalytics-r-spark $S2I_TEST_IMAGE_SPARKLYR
 set_template $RESOURCE_DIR/sparklyrbuild.json
 set_git_uri https://github.com/tmckayus/r-openshift-ex.git
 set_fixed_app_name sparklyr-build
@@ -33,9 +33,8 @@ test_no_source_or_image
 echo "++ test_context_dir"
 test_context_dir
 
-# APP_FILE usage needs to be normalized with the other templates
-#echo "++ build_test_app_file app.R"
-#build_test_app_file app.R
+echo "++ build_test_app_file app.R"
+build_test_app_file app.R
 
 echo "++ test_git_ref"
 test_git_ref $GIT_URI 4acf0e83a8817ff4bc9922584d9cec689748305f
