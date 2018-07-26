@@ -77,11 +77,15 @@ test-scala-dc:
 
 test-sparklyr-dc:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build
-	test/e2e/run.sh templates/sparklyr/dc
+	test/e2e/run.sh templates/sparklyr/dc/
 
 test-sparklyr-build:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build
-	test/e2e/run.sh templates/sparklyr/build
+	test/e2e/run.sh templates/sparklyr/build/
+
+test-sparklyr-builddc:
+        LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build
+        test/e2e/run.sh templates/sparklyr/builddc/
 
 test-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
