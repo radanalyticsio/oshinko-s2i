@@ -11,7 +11,7 @@ SPARKLYR_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"` | grep -o '.*/oshinko-s
 RESOURCE_DIR=$TEST_DIR/resources
 
 cp  $SPARKLYR_DIR/sparklyrbuilddc.json $RESOURCE_DIR/sparklyrbuilddc.json
-fix_template $RESOURCE_DIR/sparklyrbuilddc.json rimolive/radanalytics-sparklyr $S2I_TEST_IMAGE_SPARKLYR
+fix_template $RESOURCE_DIR/sparklyrbuilddc.json radanalyticsio/radanalytics-r-spark $S2I_TEST_IMAGE_SPARKLYR
 set_template $RESOURCE_DIR/sparklyrbuilddc.json
 set_git_uri https://github.com/tmckayus/r-openshift-ex.git
 set_worker_count $S2I_TEST_WORKERS
@@ -58,8 +58,8 @@ test_driver_host
 echo "++ test_no_source_or_image"
 test_no_source_or_image
 
-#echo "++ test_app_file app.py"
-#test_app_file app.py
+echo "++ test_app_file app.R"
+test_app_file app.R
 
 echo "++ test_git_ref"
 test_git_ref $GIT_URI 4acf0e83a8817ff4bc9922584d9cec689748305f

@@ -16,27 +16,13 @@ set_fixed_app_name
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
-function test_no_app_name {
-    set_defaults
-    os::cmd::expect_success 'oc delete dc --all'
-    os::cmd::try_until_text 'oc get pod -l deploymentconfig' 'No resources found'
-    SPARK_MAIN_FILE=" -p MAIN_FILE=app.R"
-    run_app_without_application_name
-    os::cmd::try_until_not_text 'oc get pod -l deploymentconfig' 'No resources found' $((15*minute))
-    DRIVER=$(oc get pod -l deploymentconfig --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster'
-    os::cmd::expect_success 'oc delete dc --all'
-}
-
-set_app_file app.R
-
 # Make the S2I test image if it's not already in the project
 set_git_uri https://github.com/tmckayus/r-openshift-ex.git
 make_image $S2I_TEST_IMAGE_SPARKLYR $GIT_URI
 set_image $TEST_IMAGE
 
-echo "++ test_no_app_name"
-test_no_app_name
+echo "++ dc_test_no_app_name"
+dc_test_no_app_name
 
 echo "++ test_exit"
 test_exit

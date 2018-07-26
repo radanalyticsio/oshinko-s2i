@@ -23,23 +23,12 @@ function poll_build() {
     return
 }
 
-function test_no_app_name {
-    set_defaults
-    os::cmd::expect_success 'oc delete dc --all'
-    os::cmd::try_until_text 'oc get pod -l deploymentconfig' 'No resources found'
-    run_app_without_application_name
-    os::cmd::try_until_not_text 'oc get pod -l deploymentconfig' 'No resources found' $((10*minute))
-    DRIVER=$(oc get pod -l deploymentconfig --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster'
-    os::cmd::expect_success 'oc delete dc --all'
-}
-
 # Make the S2I test image if it's not already in the project
 make_image
 set_image $TEST_IMAGE
 
-echo "++ test_no_app_name"
-test_no_app_name
+echo "++ dc_test_no_app_name"
+dc_test_no_app_name
 
 echo "++ test_exit"
 test_exit

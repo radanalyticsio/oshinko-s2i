@@ -97,7 +97,7 @@
                "sourceStrategy": {
                   "from": {
                      "kind": "DockerImage",
-                     "name": "radanalyticsio/radanalytics-sparklyr"
+                     "name": "radanalyticsio/radanalytics-r-spark"
                   },
                   "forcePull": true,
                   "env": [
