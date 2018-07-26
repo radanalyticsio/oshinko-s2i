@@ -2,14 +2,14 @@
    "kind": "Template",
    "apiVersion": "v1",
    "metadata": {
-      "name": "oshinko-sparklyr-build-dc",
+      "name": "oshinko-r-spark-build-dc",
       "annotations": {
          "openshift.io/display-name": "Apache Spark R",
          "description": "Create a buildconfig, imagestream and deploymentconfig using source-to-image and R Spark source files hosted in git"
       }
    },
    "labels": {
-      "application": "oshinko-sparklyr-spark",
+      "application": "oshinko-r-spark",
       "createdBy": "template-oshinko-r-spark-build-dc"
    },
    "parameters": [
@@ -17,7 +17,7 @@
          "description": "The name to use for the buildconfig, imagestream and deployment components",
          "name": "APPLICATION_NAME",
          "generate": "expression",
-         "from": "python-spark-[a-z0-9]{4}",
+         "from": "r-spark-[a-z0-9]{4}",
          "required": true
       },
       {
@@ -35,9 +35,8 @@
          "name": "CONTEXT_DIR"
       },
       {
-         "description": "The name of the main R file to run.",
-         "name": "MAIN_FILE",
-         "value": "app.R"
+         "description": "The name of the main R file to run. If this is not specified and there is a single R file at top level of the git respository, that file will be chosen.",
+         "name": "APP_FILE"
       },
       {
          "description": "Command line arguments to pass to the Spark application",
@@ -46,6 +45,12 @@
       {
           "description": "List of additional Spark options to pass to spark-submit (for exmaple --conf property=value --conf property=value). Note, --master and --class are set by the launcher and should not be set here",
          "name": "SPARK_OPTIONS"
+      },
+      {
+         "description": "Choose whether to use native k8s Scheduler or Spark Standalone",
+         "name": "OSHINKO_KUBE_SCHEDULER",
+         "required": true,
+         "value": "false"
       },
       {
          "description": "The name of the Spark cluster to run against. The cluster will be created if it does not exist, and a random cluster name will be chosen if this value is left blank.",
@@ -81,6 +86,9 @@
          },
          "spec": {
             "dockerImageRepository": "${APPLICATION_NAME}",
+            "lookupPolicy": {
+                "local": true
+            },
             "tags": [
                {
                   "name": "latest"
@@ -129,7 +137,7 @@
                "sourceStrategy": {
                   "from": {
                      "kind": "DockerImage",
-                     "name": "rimolive/radanalytics-sparklyr"
+                     "name": "radanalyticsio/radanalytics-r-spark"
                   },
                   "forcePull": true,
                   "env": [
@@ -178,12 +186,12 @@
             ],
             "replicas": 1,
             "selector": {
-               "deploymentconfig": "${APPLICATION_NAME}"
+               "deploymentConfig": "${APPLICATION_NAME}"
             },
             "template": {
                "metadata": {
                   "labels": {
-                     "deploymentconfig": "${APPLICATION_NAME}"
+                     "deploymentConfig": "${APPLICATION_NAME}"
                   }
                },
                "spec": {
@@ -192,6 +200,10 @@
                         "name": "${APPLICATION_NAME}",
                         "image": "${APPLICATION_NAME}",
                         "env": [
+                           {
+                              "name": "APPLICATION_NAME",
+                              "value": "${APPLICATION_NAME}"
+                           },
                            {
                               "name": "DRIVER_HOST",
                               "value": "${APPLICATION_NAME}-headless"
@@ -203,10 +215,6 @@
                            {
                               "name": "APP_ARGS",
                               "value": "${APP_ARGS}"
-                           },
-                           {
-                              "name": "MAIN_FILE",
-                              "value": "${MAIN_FILE}"
                            },
                            {
                               "name": "SPARK_OPTIONS",
@@ -228,6 +236,10 @@
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
                            },
                            {
+                            "name": "OSHINKO_KUBE_SCHEDULER",
+                            "value": "${OSHINKO_KUBE_SCHEDULER}"
+                           },
+                           {
                               "name": "POD_NAME",
                               "valueFrom":
                                 {
@@ -240,7 +252,7 @@
                         ],
                         "resources": {},
                         "terminationMessagePath": "/dev/termination-log",
-                        "imagePullPolicy": "Always",
+                        "imagePullPolicy": "IfNotPresent",
                         "volumeMounts": [
                            {
                               "mountPath": "/etc/podinfo",
@@ -293,31 +305,31 @@
          }
       },
       {
-        "kind": "Service",
-        "apiVersion": "v1",
-        "metadata": {
-           "name": "${APPLICATION_NAME}-headless"
-        },
-        "spec": {
-            "clusterIP": "None",
-            "ports": [
-                {
-                    "name": "driver-rpc-port",
-                    "port": 7078,
-                    "protocol": "TCP",
-                    "targetPort": 7078
-                },
-                {
-                    "name": "blockmanager",
-                    "port": 7079,
-                    "protocol": "TCP",
-                    "targetPort": 7079
-                }
-            ],
-            "selector": {
-                "deploymentConfig": "${APPLICATION_NAME}"
-            }
-        }
-     }
+         "kind": "Service",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "${APPLICATION_NAME}-headless"
+         },
+         "spec": {
+             "clusterIP": "None",
+             "ports": [
+                 {
+                     "name": "driver-rpc-port",
+                     "port": 7078,
+                     "protocol": "TCP",
+                     "targetPort": 7078
+                 },
+                 {
+                     "name": "blockmanager",
+                     "port": 7079,
+                     "protocol": "TCP",
+                     "targetPort": 7079
+                 }
+             ],
+             "selector": {
+                 "deploymentConfig": "${APPLICATION_NAME}"
+             }
+         }
+      }
    ]
 }

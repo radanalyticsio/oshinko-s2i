@@ -427,6 +427,14 @@ function test_context_dir {
     os::cmd::expect_success 'oc delete is "$APP_NAME"'
 }
 
+function test_app_lang {
+    local applang=$1
+    set_defaults
+    run_app
+    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_LANG="$applang"'  $((5*minute))
+    cleanup_app $DRIVER
+}
+
 function fix_template() {
     local file=$1
     local original_image=$2

@@ -25,7 +25,8 @@ ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-java-spark" \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     SPARK_HOME="/opt/spark" \
     APP_ROOT="/opt/app-root" \
-    STI_SCRIPTS_PATH="/usr/local/s2i" 
+    STI_SCRIPTS_PATH="/usr/local/s2i" \
+    APP_LANG="java" 
 
 # Labels
 LABEL name="$JBOSS_IMAGE_NAME" \

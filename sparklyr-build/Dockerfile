@@ -23,7 +23,8 @@ ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-sparklyr" \
     JBOSS_IMAGE_VERSION="1.0" \
     PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     SPARK_HOME="/opt/spark" \
-    APP_ROOT="/opt/app-root" 
+    APP_ROOT="/opt/app-root" \
+    APP_LANG="r" 
 
 # Labels
 LABEL name="$JBOSS_IMAGE_NAME" \
@@ -35,7 +36,7 @@ LABEL name="$JBOSS_IMAGE_NAME" \
       io.openshift.expose-services="8080:http" \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
       io.openshift.tags="builder,radanalytics,sparklyr" \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz" \
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz" \
       org.concrt.version="1.4.1"
 
 
