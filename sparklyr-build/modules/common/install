@@ -9,7 +9,7 @@ ARTIFACTS_DIR=/tmp/artifacts
 mkdir -p $APP_ROOT/src && mkdir -p $APP_ROOT/etc
 chown -R 185:0 $APP_ROOT && chmod a+rwX -R $APP_ROOT
 cp $ADDED_DIR/utils/* $APP_ROOT/src
-cp $SCRIPT_DIR/generate_container_user $APP_ROOT/etc
+cp $ADDED_DIR/etc/* $APP_ROOT/etc
 
 # In some cases where nss_wrapper has to follow installation
 # epel, we may not have been able to include it yet
@@ -35,3 +35,10 @@ cd /tmp
 gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 0527A9B7 && gpg --verify /tmp/tini.asc
 mv /tmp/tini /sbin/tini
 chmod +x /sbin/tini
+
+
+# Since the s2i generated images can be run as the driver/executor images
+# in the kubernetes native scheduling case, /etc/passwd needs group permission
+# to support the spark entry point user handling (radanalytics.io scripts
+# use a shadow password file instead)
+chgrp root /etc/passwd && chmod ug+rw /etc/passwd

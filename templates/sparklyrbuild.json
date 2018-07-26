@@ -16,13 +16,12 @@
          "description": "The name to to use for the buildconfig and imagestream",
          "name": "APPLICATION_NAME",
          "generate": "expression",
-         "from": "python-spark-[a-z0-9]{4}",
+         "from": "r-spark-[a-z0-9]{4}",
          "required": true
       },
       {
-         "description": "The name of the main R file to run. If this is not specified and there is a single py file at top level of the git respository, that file will be chosen.",
-          "name": "MAIN_FILE",
-          "value": "app.R"
+         "description": "The name of the main R file to run. If this is not specified and there is a single R file at top level of the git respository, that file will be chosen.",
+         "name": "APP_FILE"
       },
       {
          "description": "Git source URI for application",
@@ -98,13 +97,13 @@
                "sourceStrategy": {
                   "from": {
                      "kind": "DockerImage",
-                     "name": "rimolive/radanalytics-sparklyr"
+                     "name": "radanalyticsio/radanalytics-sparklyr"
                   },
                   "forcePull": true,
                   "env": [
                      {
-                        "name": "MAIN_FILE",
-                        "value": "${MAIN_FILE}"
+                        "name": "APP_FILE",
+                        "value": "${APP_FILE}"
                      }
                   ]
                }

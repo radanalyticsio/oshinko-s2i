@@ -1,4 +1,4 @@
-allimgs =  Makefile.pyspark Makefile.pyspark-py36 Makefile.java Makefile.scala
+allimgs =  Makefile.pyspark Makefile.pyspark-py36 Makefile.java Makefile.scala Makefile.sparklyr
 
 # Set the S2I_TEST_IMAGE_XXX env vars so that the
 # build of the local images and the tests use the

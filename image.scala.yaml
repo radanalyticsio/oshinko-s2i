@@ -26,6 +26,8 @@ envs:
     value: /opt/app-root
   - name: SBT_OPTS
     value: -Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
+  - name: APP_LANG
+    value: scala
 modules:
   install:
     - name: common

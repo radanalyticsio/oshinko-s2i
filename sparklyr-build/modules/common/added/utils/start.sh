@@ -88,33 +88,35 @@ function exit_flag {
 }
 
 function get_app_file {
-    # For JAR based applications (APP_MAIN_CLASS set), look for a single JAR file if APP_FILE
-    # is not set and use that. If there is not exactly 1 jar APP_FILE will remain unset.
-    # For Python applications, look for a single .py file
-    set -x
-    local cnt
-    if [ -z "$APP_FILE" ]; then
-        if [ -n "$APP_MAIN_CLASS" ]; then
-            cnt=$(cd $APP_ROOT/src/; ls -1 *.jar | wc -l)
-            if [ "$cnt" -eq "1" ]; then
-                APP_FILE=$(cd $APP_ROOT/src/; ls *.jar)
-            else
-                echo "Error, no APP_FILE set and $cnt JAR file(s) found"
-                app_exit
-            fi
-        elif [ -n "$MAIN_FILE" ]; then
-            APP_FILE=$APP_ROOT/src/$MAIN_FILE
-        else
-            cnt=$(cd $APP_ROOT/src/; ls -1 *.py | wc -l)
-            if [ "$cnt" -eq "1" ]; then
-                APP_FILE=$(cd $APP_ROOT/src/; ls *.py)
-            else
-                echo "Error, no APP_FILE set and $cnt py file(s) found"
-                app_exit
-            fi
+    if [ -z "$APP_FILE"]; then
+        if [ -n "$APP_LANG" ]; then
+            case "$APP_LANG" in
+                java | scala)
+                    file_count "*.jar"
+                    ;;
+                python)
+                    file_count "*.py"
+                    ;;
+                r)
+                    file_count "*.R"
+		    ;;
+                *)
+                    echo "Unrecognized value '$APP_LANG' for APP_LANG and APP_FILE not set"
+                    app_exit
+                    ;;
+            esac
         fi
     fi
-    set +x
+ }
+
+function file_count {
+    cnt=$(cd $APP_ROOT/src/; ls -1 $1 | wc -l)
+    if [ "$cnt" -eq "1" ]; then
+        APP_FILE=$(cd $APP_ROOT/src/; ls $1)
+    else
+        echo "Error $cnt $1 file(s) found and APP_FILE not set"
+        app_exit
+    fi
 }
 
 function get_cluster_name {
@@ -211,6 +213,18 @@ function wait_for_workers_alive {
     echo "All spark workers alive"
 }
 
+function set_class_option {
+
+    if [ "$APP_LANG" == "java" ] || [ "$APP_LANG" == "scala" ]; then
+        if [ -n "$APP_MAIN_CLASS" ]; then
+            CLASS_OPTION="--class $APP_MAIN_CLASS"
+        elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
+            APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
+            CLASS_OPTION="--class $APP_MAIN_CLASS"
+        fi
+    fi
+}
+
 function use_spark_standalone {
     # Use the spark standalone scheduler and rely on oshinko to
     # create the spark master pod and spark worker pods to host executors
@@ -223,7 +237,7 @@ function use_spark_standalone {
 
     if [ "$CLI_RES" -ne 0 ]; then
         if [ ${OSHINKO_DEL_CLUSTER:-true} == true ]; then
-            echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster" 
+            echo "Didn't find cluster $OSHINKO_CLUSTER_NAME, creating ephemeral cluster"
             APP_FLAG="--app=$POD_NAME --ephemeral"
             CREATED_EPHEMERAL=true
         else
@@ -308,12 +322,7 @@ function use_spark_standalone {
             PY_FILES="--py-files worker-gen-dependencies.zip"
         fi
 
-        if [ -n "$APP_MAIN_CLASS" ]; then
-            CLASS_OPTION="--class $APP_MAIN_CLASS"
-        elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
-            APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
-            CLASS_OPTION="--class $APP_MAIN_CLASS"
-        fi
+        set_class_option
 
         if [ -n "$DRIVER_HOST" ]; then
             driver_host="--conf spark.driver.host=${DRIVER_HOST}"
@@ -362,12 +371,7 @@ function use_spark_on_kube {
         PY_FILES="--py-files worker-gen-dependencies.zip"
     fi
 
-    if [ -n "$APP_MAIN_CLASS" ]; then
-        CLASS_OPTION="--class $APP_MAIN_CLASS"
-    elif [ "$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class)" ]; then
-        APP_MAIN_CLASS=$(unzip -p $APP_ROOT/src/$APP_FILE META-INF/MANIFEST.MF | grep -i main-class | cut -d ':' -f 2 | sed 's/\r//')
-        CLASS_OPTION="--class $APP_MAIN_CLASS"
-    fi
+    set_class_option
 
     echo spark-submit \
             --master k8s://$KUBE \
