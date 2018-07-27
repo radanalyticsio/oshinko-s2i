@@ -25,6 +25,9 @@ check_image $S2I_TEST_IMAGE_PYSPARK_PY36
 echo "++ test_app_lang"
 test_app_lang python
 
+echo "++ run_complete"
+test_run_complete
+
 echo "++ test_no_app_name"
 test_no_app_name
 
