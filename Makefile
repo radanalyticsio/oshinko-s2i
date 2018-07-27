@@ -39,7 +39,7 @@ $(allimgs):
 # with 'oc cluster up'
 test-ephemeral:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
-	test/e2e/run.sh "(ephemeral|incomplete)"
+	test/e2e/run.sh ephemeral/
 
 test-java-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build

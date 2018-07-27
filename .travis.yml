@@ -17,6 +17,7 @@ matrix:
     - env: TO_TEST=sparklyr-templates-build OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=operations OPENSHIFT_VERSION=v3.9
     - env: TO_TEST=incomplete OPENSHIFT_VERSION=v3.9
+    - env: TO_TEST=ephemeral OPENSHIFT_VERSION=v3.9
   fast_finish: true
 
 before_install:
@@ -38,6 +39,7 @@ script:
 - if [ "$TO_TEST" == "sparklyr-templates-build" ]; then make test-sparklyr-build ; fi
 - if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
 - if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
+- if [ "$TO_TEST" == "ephemeral" ]; then make test-ephemeral ; fi
 notifications:
  email:
    on_success: never
