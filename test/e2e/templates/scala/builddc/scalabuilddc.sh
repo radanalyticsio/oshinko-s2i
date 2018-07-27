@@ -26,6 +26,9 @@ check_image $S2I_TEST_IMAGE_SCALA
 echo "++ test_app_lang"
 test_app_lang scala
 
+echo "++ run_complete"
+test_run_complete
+
 echo "++ test_no_app_name"
 test_no_app_name
 

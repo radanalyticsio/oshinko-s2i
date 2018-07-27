@@ -32,6 +32,9 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 echo "++ check_image"
 check_image $S2I_TEST_IMAGE_PYSPARK
 
+echo "++ run_complete"
+test_run_complete
+
 echo "++ test_no_app_name"
 test_no_app_name
 

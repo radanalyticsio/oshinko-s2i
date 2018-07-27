@@ -259,6 +259,13 @@ function test_podinfo {
     cleanup_app $DRIVER
 }
 
+function test_run_complete {
+    set_defaults
+    run_app
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'test app completed'
+    cleanup_app $DRIVER
+}
+
 function test_del_cluster {
     set_defaults
     run_app
