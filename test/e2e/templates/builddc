@@ -160,30 +160,6 @@ function run_app_without_application_name() {
     oc new-app --file=$TEMPLATE $SOURCE_INFO $APP_MAIN_CLASS
 }
 
-function run_app_without_app_main_class() {
-    app_preamble
-    set +e
-    # If is a build is necessary, it can take a long time and this can cause tests in
-    # environments like travis to time out from lack of output.  So if the imagestream
-    # associated with APP_NAME doesn't already exist, watch the build log to produce log
-    # output and prevent timeout.
-    oc get is $APP_NAME &> /dev/null
-    local stream_exists=$?
-    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p APP_ARGS="$APPARGS" -p OSHINKO_DEL_CLUSTER=$DEL_CLUSTER -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG -p OSHINKO_SPARK_DRIVER_CONFIG=$DRIVER_CONFIG -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p SPARK_OPTIONS="$SPARK_OPTIONS" $APP_FILE $EXIT_FLAG $EXTRA_PARAMS
-    set -e
-    # Allow some tests to skip the wait for the running app, because they don't care
-    if [ "$#" -eq 0 ]; then
-	if [ "$stream_exists" -ne 0 ]; then
-            poll_build
-	    local res=$?
-	    if [ "$res" -ne 0 ]; then
-	        return $res
-	    fi
-	fi
-	get_driver_pod
-    fi
-}
-
 function get_driver_pod() {
     # os::cmd::try_until_success 'oc get pod -l deploymentconfig="$APP_NAME" --template="{{index .items 0 \"metadata\" \"name\"}}"'
     local count
@@ -358,10 +334,11 @@ function test_app_file {
 
 function test_manifest_file {
     set_defaults
-    set_app_file $1
-    run_app_without_app_main_class
-    os::cmd::try_until_success 'oc exec "$DRIVER" -- env | grep APP_MAIN_CLASS="org.apache.spark.examples.JavaSparkPi"$' $((10*minute))
-
+    local main_class=$APP_MAIN_CLASS
+    set_app_main_class
+    run_app
+    set_app_main_class=$main_class
+    os::cmd::try_until_text 'oc logs "$DRIVER"' '\-\-class com.mycompany.app.JavaSparkPi' $((10*minute))
     cleanup_app $DRIVER
     oc delete buildconfig $APP_NAME &> /dev/null
     oc delete is $APP_NAME &> /dev/null
