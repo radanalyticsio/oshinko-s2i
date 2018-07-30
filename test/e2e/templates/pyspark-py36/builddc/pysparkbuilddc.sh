@@ -14,7 +14,7 @@ cp  $PYSPARK_DIR/python36builddc.json $RESOURCE_DIR/python36builddc.json
 fix_template $RESOURCE_DIR/python36builddc.json radanalyticsio/radanalytics-pyspark-py36 $S2I_TEST_IMAGE_PYSPARK_PY36
 set_template $RESOURCE_DIR/python36builddc.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
-set_worker_count $S2I_TEST_WORKERS
+set_cluster_config $S2I_TEST_WORKERS $S2I_TEST_SPARK_IMAGE_PY3
 set_fixed_app_name pyspark-py36-build
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"

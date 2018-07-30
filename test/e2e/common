@@ -38,6 +38,7 @@ if [ -z "$S2I_TEST_IMAGE_SCALA" ]; then
 fi
 
 S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark}
+S2I_TEST_SPARK_IMAGE_PY3=${S2I_TEST_SPARK_IMAGE_PY3:-docker.io/radanalyticsio/openshift-spark-py36}
 
 S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-1}
 
@@ -140,7 +141,7 @@ function init_config_map() {
     oc create configmap masterconfig --from-file=$RESOURCE_DIR/masterconfig &>/dev/null
     oc create configmap workerconfig --from-file=$RESOURCE_DIR/workerconfig &>/dev/null
     oc create configmap clusterconfig --from-literal=workercount=$WORKER_COUNT \
-                                      --from-literal=sparkimage=$S2I_TEST_SPARK_IMAGE \
+                                      --from-literal=sparkimage=$CLUSTER_IMAGE \
                                       --from-literal=sparkmasterconfig=masterconfig \
                                       --from-literal=sparkworkerconfig=workerconfig &>/dev/null
 }
@@ -152,11 +153,29 @@ function init_driver_config() {
     oc create configmap driverconfig  --from-file=$RESOURCE_DIR/driverconfig
 }
 
-function set_worker_count() {
+function set_cluster_config() {
+    local changed=false
+    local clusterimage
+    if [ "$#" -eq 2 ]; then
+	clusterimage=$2
+    else
+	clusterimage=$S2I_TEST_SPARK_IMAGE
+    fi
     if [ "${WORKER_COUNT:-0}" -ne "$1" ]; then
         WORKER_COUNT=$1
-        init_config_map
+	changed=true
     fi
+    if [ "${CLUSTER_IMAGE:-''}" != "${clusterimage}" ]; then
+	CLUSTER_IMAGE=$clusterimage
+	changed=true
+    fi
+    if [ "${changed}" == true ]; then
+	init_config_map
+    fi
+}
+
+function set_worker_count() {
+    set_cluster_config $1 
 }
 
 function set_defaults() {
