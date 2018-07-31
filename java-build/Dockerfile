@@ -16,7 +16,7 @@
 #
 # This is a Dockerfile for the radanalyticsio/radanalytics-java-spark:1.0 image.
 
-FROM fabric8/s2i-java:latest
+FROM fabric8/s2i-java:2.2.0
 
 # Environment variables
 ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-java-spark" \

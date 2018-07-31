@@ -3,7 +3,7 @@ schema_version: 1
 name: "radanalyticsio/radanalytics-java-spark"
 version: 1.0
 release: dev
-from: "fabric8/s2i-java:latest"
+from: "fabric8/s2i-java:2.2.0"
 labels:
   - name: "io.k8s.description"
     value: "Platform for building a radanalytics java spark app"
