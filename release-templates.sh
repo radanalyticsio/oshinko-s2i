@@ -21,7 +21,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
         cp $TOP_DIR/templates/*.json $TOP_DIR/release_templates
 
-        gsed -r -i "s@(radanalyticsio/radanalytics-.*spark)\"@\1:$1\"@" $TOP_DIR/release_templates/*
+        gsed -r -i "s@(radanalyticsio/radanalytics-.*)\"@\1:$1\"@" $TOP_DIR/release_templates/*
 else
         TOP_DIR=$(readlink -f `dirname "$0"` | grep -o '.*/oshinko-s2i')
         mkdir -p $TOP_DIR/release_templates
@@ -29,7 +29,7 @@ else
 
         cp $TOP_DIR/templates/*.json $TOP_DIR/release_templates
 
-        sed -r -i "s@(radanalyticsio/radanalytics-.*spark)\"@\1:$1\"@" $TOP_DIR/release_templates/*
+        sed -r -i "s@(radanalyticsio/radanalytics-.*)\"@\1:$1\"@" $TOP_DIR/release_templates/*
 fi
 echo "Successfully wrote templates to release_templates/ with version tag $1"
 echo
