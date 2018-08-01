@@ -33,9 +33,9 @@ else
 fi
 echo "Successfully wrote templates to release_templates/ with version tag $1"
 echo
-echo "grep radanalyticsio/radanalytics-.*spark:$1 *"
+echo "grep radanalyticsio/radanalytics-.*:$1 *"
 echo
-cd $TOP_DIR/; grep radanalyticsio/radanalytics-.*spark:$1 release_templates/*
+cd $TOP_DIR/; grep radanalyticsio/radanalytics-.*:$1 release_templates/*
 
 echo
 echo tar -czf oshinko_s2i_$1.tar.gz release_templates
