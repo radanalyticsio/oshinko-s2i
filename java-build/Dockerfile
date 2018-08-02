@@ -46,9 +46,9 @@ USER root
 
 
 # Install required RPMs and ensure that the packages were installed
-RUN yum install -y  epel-release tar wget \
+RUN yum install -y  tar wget \
     && yum clean all && \
-    rpm -q  epel-release tar wget
+    rpm -q  tar wget
 
 # Add all artifacts to the /tmp/artifacts
 # directory
