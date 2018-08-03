@@ -354,8 +354,10 @@ function make_image() {
     fi
     if [ "$#" -gt 1 ]; then
 	git_repo=$2
+	git_hash=master
     else
 	git_repo=https://github.com/radanalyticsio/s2i-integration-test-apps
+	git_hash=nosleep
     fi
     TEST_IMAGE=play
     set +e
@@ -405,7 +407,7 @@ function make_image() {
 	fi
 
         if [ -z "$registry" ]; then
-            os::cmd::expect_success 'oc new-build --name=play --docker-image="$s2i_image" "$git_repo"'
+            os::cmd::expect_success 'oc new-build --name=play --docker-image="$s2i_image" "$git_repo"#"$git_hash"'
         else
             set +e
             docker login --help | grep email &> /dev/null
@@ -419,9 +421,9 @@ function make_image() {
             docker tag ${s2i_image} ${registry}/${pushproj}/${pushimage}
             docker push ${registry}/${pushproj}/${pushimage}
 	    if [ "$imagestream" == true ]; then
-		os::cmd::expect_success 'oc new-build --name=play --image-stream="$pushimage" "$git_repo"'
+		os::cmd::expect_success 'oc new-build --name=play --image-stream="$pushimage" "$git_repo"#"$git_hash"'
 	    else
-		os::cmd::expect_success 'oc new-build --name=play --docker-image="$registry"/"$pushproj"/"$pushimage":latest "$git_repo"'
+		os::cmd::expect_success 'oc new-build --name=play --docker-image="$registry"/"$pushproj"/"$pushimage":latest "$git_repo"#"$git_hash"'
 	    fi
         fi
 	poll_build play

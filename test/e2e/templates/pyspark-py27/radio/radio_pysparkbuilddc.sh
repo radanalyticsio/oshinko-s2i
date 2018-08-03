@@ -9,7 +9,7 @@ source $SCRIPT_DIR/../../builddc
 
 RESOURCE_DIR=$TEST_DIR/resources
 set_template $RESOURCE_DIR/oshinko-python-spark-build-dc.json
-set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
+set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps nosleep
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name pyspark-build
 

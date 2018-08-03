@@ -13,7 +13,7 @@ RESOURCE_DIR=$TEST_DIR/resources
 cp  $SCALATEMP_DIR/scalabuilddc.json $RESOURCE_DIR/scalabuilddc.json
 fix_template $RESOURCE_DIR/scalabuilddc.json radanalyticsio/radanalytics-scala-spark $S2I_TEST_IMAGE_SCALA
 set_template $RESOURCE_DIR/scalabuilddc.json
-set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
+set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps nosleep
 set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name scala-build
 set_app_main_class org.apache.spark.examples.SparkPi

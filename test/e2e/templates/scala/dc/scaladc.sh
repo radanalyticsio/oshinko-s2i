@@ -23,7 +23,7 @@ function poll_build() {
     return
 }
 
-set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
+set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps nosleep
 set_app_main_class org.apache.spark.examples.SparkPi
 
 # Make the S2I test image if it's not already in the project

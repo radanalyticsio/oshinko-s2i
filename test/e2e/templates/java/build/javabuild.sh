@@ -14,7 +14,7 @@ RESOURCE_DIR=$TEST_DIR/resources
 cp $JAVATEMP_DIR/javabuild.json $RESOURCE_DIR/javabuild.json
 fix_template $RESOURCE_DIR/javabuild.json radanalyticsio/radanalytics-java-spark $S2I_TEST_IMAGE_JAVA
 set_template $RESOURCE_DIR/javabuild.json
-set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
+set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps nosleep
 set_fixed_app_name java-build
 
 set_worker_count $S2I_TEST_WORKERS

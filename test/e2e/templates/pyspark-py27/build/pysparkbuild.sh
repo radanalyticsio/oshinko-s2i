@@ -14,7 +14,7 @@ RESOURCE_DIR=$TEST_DIR/resources
 cp $PYSPARK_DIR/pythonbuild.json $RESOURCE_DIR/pythonbuild.json
 fix_template $RESOURCE_DIR/pythonbuild.json radanalyticsio/radanalytics-pyspark $S2I_TEST_IMAGE_PYSPARK
 set_template $RESOURCE_DIR/pythonbuild.json
-set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
+set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps nosleep
 set_fixed_app_name pyspark-build
 
 set_worker_count $S2I_TEST_WORKERS
