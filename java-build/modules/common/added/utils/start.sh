@@ -88,7 +88,7 @@ function exit_flag {
 }
 
 function get_app_file {
-    if [ -z "$APP_FILE"]; then
+    if [ -z "$APP_FILE" ]; then
         case "$APP_LANG" in
             java | scala)
                 file_count "*.jar"
