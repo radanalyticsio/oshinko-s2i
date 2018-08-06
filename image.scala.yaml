@@ -31,6 +31,7 @@ envs:
 modules:
   install:
     - name: common
+    - name: spark
     - name: scala
 packages:
   install:

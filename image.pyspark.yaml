@@ -33,6 +33,7 @@ envs:
 modules:
     install:
       - name: common
+      - name: spark
       - name: pyspark
 packages:
     install:

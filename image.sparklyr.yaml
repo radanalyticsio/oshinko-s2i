@@ -29,6 +29,7 @@ envs:
 modules:
   install:
     - name: common
+    - name: spark
     - name: sparklyr
 packages:
   install:
