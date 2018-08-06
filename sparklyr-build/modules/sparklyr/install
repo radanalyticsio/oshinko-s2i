@@ -6,17 +6,6 @@ echo 'install.packages("sparklyr")' | R --vanilla
 
 SCRIPT_DIR=$(dirname $0)
 ADDED_DIR=${SCRIPT_DIR}/added
-ARTIFACTS_DIR=/tmp/artifacts
-
-fullname=$(find $ARTIFACTS_DIR -name spark-[0-9.]*-bin-hadoop[0-9.]*\.tgz)
-bash -x $SCRIPT_DIR/check_for_download $fullname
-cp $fullname /opt
-
-pushd /opt
-tar -zxf $(basename $fullname)
-ln -s $(basename $fullname .tgz) spark
-rm $(basename $fullname)
-popd
 
 # Requires access to this directory to install new packages
 chown 185:0 -R /usr/lib64/R/library
