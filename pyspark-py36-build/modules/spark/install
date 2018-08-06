@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+SCRIPT_DIR=$(dirname $0)
+ADDED_DIR=${SCRIPT_DIR}/added
+ARTIFACTS_DIR=/tmp/artifacts
+
+cp $ADDED_DIR/etc/* $APP_ROOT/etc
+
+fullname=$(find $ARTIFACTS_DIR -name spark-[0-9.]*-bin-hadoop[0-9.]*\.tgz)
+if ! [ -s "$fullname" ]; then
+    spark=$(basename $fullname)
+    version=$(echo $spark | cut -d '-' -f2)
+    wget https://archive.apache.org/dist/spark/spark-$version/$spark -O $fullname
+fi
+cp $fullname /opt
+pushd /opt
+tar -zxf $(basename $fullname)
+ln -s $(basename $fullname .tgz) spark
+rm $(basename $fullname)
+popd
+cp $ADDED_DIR/spark-conf/* /opt/spark/conf/
+chown -R 185:0 /opt/spark/conf && chmod g+rw -R /opt/spark/conf

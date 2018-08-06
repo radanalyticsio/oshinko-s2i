@@ -11,9 +11,10 @@ chown -R 185:0 $APP_ROOT && chmod a+rwX -R $APP_ROOT
 cp $ADDED_DIR/utils/* $APP_ROOT/src
 cp $ADDED_DIR/etc/* $APP_ROOT/etc
 
-# Change the permissions on /etc/passwd so that anonymous user
-# can be added to satisfy Spark
-chgrp root /etc/passwd && chmod ug+rw /etc/passwd
+# In some cases where nss_wrapper has to follow installation
+# of epel, we may not have been able to include it yet
+yum install -y nss_wrapper && yum clean all
+rpm -q nss_wrapper
 
 # If there is a zero-length oshinko-cli tarball, find the verison in the
 # name and download from github
@@ -30,20 +31,6 @@ mv oshinko_linux_amd64/oshinko oshinko
 rm -rf oshinko_linux_amd64 $(basename $fullname)
 popd
 
-fullname=$(find $ARTIFACTS_DIR -name spark-[0-9.]*-bin-hadoop[0-9.]*\.tgz)
-if ! [ -s "$fullname" ]; then
-    spark=$(basename $fullname)
-    version=$(echo $spark | cut -d '-' -f2)
-    wget https://archive.apache.org/dist/spark/spark-$version/$spark -O $fullname
-fi
-cp $fullname /opt
-pushd /opt
-tar -zxf $(basename $fullname)
-ln -s $(basename $fullname .tgz) spark
-rm $(basename $fullname)
-popd
-cp $ADDED_DIR/spark-conf/* /opt/spark/conf/
-
 TINI_VERSION=v0.16.1
 wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini -P /tmp
 wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc -P /tmp
@@ -52,9 +39,5 @@ gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 0527A9B7 && gpg --verify 
 mv /tmp/tini /sbin/tini
 chmod +x /sbin/tini
 
-# Since the s2i generated images can be run as the driver/executor images
-# in the kubernetes native scheduling case, /etc/passwd needs group permission
-# to support the spark entry point user handling (radanalytics.io scripts
-# use a shadow password file instead)
 chgrp root /etc/passwd && chmod ug+rw /etc/passwd
-chown -R 185:0 /opt/spark/conf && chmod g+rw -R /opt/spark/conf
+
