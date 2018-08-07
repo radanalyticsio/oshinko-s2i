@@ -186,7 +186,7 @@ function get_driver_pod() {
 function wait_for_app_started() {
     # Since it seems we miss log output sometimes, and/or prints to the console,
     # look for an INFO SparkContext message since these show up multiple times
-    os::cmd::try_until_text 'oc log "$DRIVER"' 'INFO SparkContext'
+    os::cmd::try_until_text 'oc log "$DRIVER"' 'INFO[ \t]*SparkContext'
     os::cmd::expect_success_and_not_text 'oc log "$DRIVER"' 'start.sh'
 }
 
