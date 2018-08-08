@@ -36,7 +36,6 @@ modules:
     - name: java
 packages:
   install:
-    - epel-release
     - tar
     - wget
 artifacts:

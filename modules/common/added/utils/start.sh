@@ -394,8 +394,19 @@ function use_spark_on_kube {
     wait $PID
 }
 
-# This script is supplied by the python s2i base
-source $APP_ROOT/etc/generate_container_user
+# Check whether there is a passwd entry for the container UID
+myuid=$(id -u)
+mygid=$(id -g)
+uidentry=$(getent passwd $myuid)
+
+# If there is no passwd entry for the container UID, attempt to create one
+if [ -z "$uidentry" ] ; then
+    if [ -w /etc/passwd ] ; then
+        echo "$myuid:x:$myuid:$mygid:anonymous uid:$SPARK_HOME:/bin/false" >> /etc/passwd
+    else
+        echo "Container ENTRYPOINT failed to add passwd entry for anonymous UID"
+    fi
+fi
 
 CLI=$APP_ROOT/src/oshinko
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
