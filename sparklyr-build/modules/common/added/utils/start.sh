@@ -1,6 +1,17 @@
 #!/bin/bash
 trap handle_term TERM INT
 
+function get_cluster_value {
+    # echo with newlines preserved
+    # remove leading spaces
+    # search for a key and get a key / value line
+    # get the value
+    echo "$1" \
+	| sed -e 's/^[ \t]*//' \
+	| grep ^$2 \
+	| cut -d\  -f2
+}
+
 function app_exit {
     # Sleep forever so the process does not complete
     while [ ${APP_EXIT:-false} == false ]
@@ -119,12 +130,10 @@ function file_count {
 
 function get_cluster_name {
     local lookup
-    local output
     if [ -z "${OSHINKO_CLUSTER_NAME}" ]; then
-        lookup=$($CLI get_eph --app=$DEPLOYMENT $CLI_ARGS 2>&1)
+        lookup=$($CLI get_eph --app=$DEPLOYMENT $GET_FLAGS $CLI_ARGS 2>&1)
         if [ "$?" -eq 0 -a "$DEPLOYMENT" != "" ]; then
-            output=($(echo $lookup))
-            OSHINKO_CLUSTER_NAME=${output[0]}
+            OSHINKO_CLUSTER_NAME=$(get_cluster_value "$lookup" name)
             echo using stored cluster name $OSHINKO_CLUSTER_NAME
         else
             OSHINKO_CLUSTER_NAME=cluster-`date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 6 | head -n 1`
@@ -150,14 +159,12 @@ function wait_if_cluster_incomplete {
     # See if the cluster already exists. If it does and it's marked "Incomplete",
     # loop waiting for it to be deleted complete or got to "Running"
     local cnt
-    local output
     local status
     for cnt in {1..12}; do
-        CLI_LINE=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
+        CLI_LINE=$($CLI get $OSHINKO_CLUSTER_NAME $GET_FLAGS $CLI_ARGS 2>&1)
         CLI_RES=$?
         if [ "$CLI_RES" -eq 0 ]; then
-            output=($(echo $CLI_LINE))
-            status=${output[5]}
+            status=$(get_cluster_value "$CLI_LINE" status)
             if [ "$status" == "Incomplete" ]; then
                 if [ "$cnt" -eq 12 ]; then
                     echo Cluster is still incomplete, exiting
@@ -166,7 +173,7 @@ function wait_if_cluster_incomplete {
                 echo Found incomplete cluster $OSHINKO_CLUSTER_NAME, waiting ...
                 sleep 5
             else
-                break    
+                break
             fi
         else
             break
@@ -191,7 +198,6 @@ function wait_for_workers_alive {
     local workers
     local cnt
     local line
-    local output
     while true; do
         # Scrape the master web UI for the number of alive workers
         # This may be replaced with something based on metrics ...
@@ -204,9 +210,8 @@ function wait_for_workers_alive {
         sleep 5
         # If someone scales down the cluster while we're still waiting
         # then we need to know what the real target is so check again
-        line=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS)
-        output=($(echo $line))
-        desired=${output[1]}
+        line=$($CLI get $OSHINKO_CLUSTER_NAME $GET_FLAGS $CLI_ARGS)
+        desired=$(get_cluster_value "$line" workerCount)
     done
     echo "All spark workers alive"
 }
@@ -224,6 +229,8 @@ function set_class_option {
 }
 
 function use_spark_standalone {
+    local status
+
     # Use the spark standalone scheduler and rely on oshinko to
     # create the spark master pod and spark worker pods to host executors
     get_cluster_name
@@ -246,15 +253,14 @@ function use_spark_standalone {
         CLI_RES=$?
         if [ "$CLI_RES" -eq 0 ]; then
             for i in {1..60}; do # wait up to 30 seconds
-                CLI_LINE=$($CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS 2>&1)
+                CLI_LINE=$($CLI get $OSHINKO_CLUSTER_NAME $GET_FLAGS $CLI_ARGS 2>&1)
                 CLI_RES=$?
                 # If for some reason the get failed, keep trying
                 # Since create reported success, it's extremely unlikely
                 # that the get will ever fail but just in case ...
                 if [ "$CLI_RES" -eq 0 ]; then
                     if [ -n "$CLI_LINE" ]; then
-                        output=($(echo $CLI_LINE))
-                        status=${output[5]}
+                        status=$(get_cluster_value "$CLI_LINE" status)
                         if [ "$status" == "Running" ]; then
                             break
                         fi
@@ -281,12 +287,10 @@ function use_spark_standalone {
 
     else
         # Build the spark-submit command and execute
-        output=($(echo $CLI_LINE))
-        desired=${output[1]}
-        master=${output[2]}
-        masterweb=${output[3]}
-        status=${output[5]}
-        ephemeral=${output[6]}
+        desired=$(get_cluster_value "$CLI_LINE" workerCount)
+        master=$(get_cluster_value "$CLI_LINE" masterUrl)
+        masterweb=$(get_cluster_value "$CLI_LINE" masterWebUrl)
+        ephemeral=$(get_cluster_value "$CLI_LINE" ephemeral)
 
         if [ "$ephemeral" != "$DEPLOYMENT" -a "$ephemeral" != "<shared>" ]; then
             if [ "$DEPLOYMENT" == "" ]; then
@@ -295,7 +299,7 @@ function use_spark_standalone {
                 echo "error, ephemeral cluster belongs to deployment "$ephemeral" and this is "$DEPLOYMENT", exiting"
             fi
             echo output from CLI on get was:
-            echo $CLI_LINE
+            echo "$CLI_LINE"
             app_exit
         fi
         if [ "$ephemeral" == "<shared>" ]; then
@@ -309,8 +313,7 @@ function use_spark_standalone {
         wait_for_master_ui $masterweb
         wait_for_workers_alive $desired $masterweb
 
-        echo Cluster configuration is
-        $CLI get $OSHINKO_CLUSTER_NAME $CLI_ARGS -o json --nopods
+        echo Cluster configuration is "$CLI_LINE"
 
         # Now that we know what the master url is, export it so that the
         # app can use it if it likes.
@@ -400,16 +403,17 @@ source $APP_ROOT/etc/generate_container_user
 CLI=$APP_ROOT/src/oshinko
 CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
-if [ "$KUBERNETES_SERVICE_PORT" -eq 443 ]; then                                                                                                           
-    KUBE_SCHEME="https"                                                                                                                                   
-else                                                                                                                                                      
-    KUBE_SCHEME="http"                                                                                                                                    
-fi                                                                                                                                                        
+if [ "$KUBERNETES_SERVICE_PORT" -eq 443 ]; then
+    KUBE_SCHEME="https"
+else
+    KUBE_SCHEME="http"
+fi
 KUBE="$KUBE_SCHEME://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
 
 SA=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
 NS=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
 CLI_ARGS="--certificate-authority=$CA --server=$KUBE --token=$SA --namespace=$NS"
+GET_FLAGS="--nopods -o yaml"
 CREATED_EPHEMERAL=false
 
 $CLI version
