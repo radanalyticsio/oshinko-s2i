@@ -70,11 +70,17 @@
               "name": "${APPLICATION_NAME}"
           },
           "spec": {
+              "selector": {
+                  "radanalytics.io/Job": "${APPLICATION_NAME}"
+              },
               "completions": "${COMPLETIONS}",
               "parallelism": 1,
               "template": {
                   "metadata": {
-                      "name": "${APPLICATION_NAME}"
+                      "name": "${APPLICATION_NAME}",
+                      "labels": {
+                         "radanalytics.io/Job": "${APPLICATION_NAME}"
+                      }
                   },
                   "spec": {
                       "containers": [
@@ -182,7 +188,7 @@
                  }
              ],
              "selector": {
-                 "deploymentConfig": "${APPLICATION_NAME}"
+                 "radanalytics.io/Job": "${APPLICATION_NAME}"
              }
          }
       }
