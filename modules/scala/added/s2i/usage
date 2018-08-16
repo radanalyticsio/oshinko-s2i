@@ -22,7 +22,6 @@ The resulting application image contains a startup script that expects the follo
 optional environment variables which can be set when the application is launched:
 
     OSHINKO_CLUSTER_NAME -- name of the spark cluster to use or create, required
-    OSHINKO_REST         -- ip of the oshinko-rest controller, required
     SPARK_OPTIONS        -- options to spark-submit, e.g.  "--conf spark.executor.memory=2G --conf spark.driver.memory=2G"
     APP_MAIN_CLASS       -- name of the main class, required
     APP_ARGS             -- arguments to the python application (if the app takes arguments)
