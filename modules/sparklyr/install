@@ -11,4 +11,4 @@ ADDED_DIR=${SCRIPT_DIR}/added
 chown 185:0 -R /usr/lib64/R/library
 chmod 770 -R /usr/lib64/R/library
 
-cp -r $ADDED_DIR/s2i/* /usr/libexec/s2i
+cp -r $ADDED_DIR/s2i/* $STI_SCRIPTS_PATH
