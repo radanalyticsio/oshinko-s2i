@@ -10,8 +10,7 @@ ARTIFACTS_DIR=/tmp/artifacts
 
 cp -r $ADDED_DIR/s2i/* $STI_SCRIPTS_PATH
 cp -R $SCRIPT_DIR/s2i/sbt/plugins /tmp/.sbt/0.13
-chmod a+x $STI_SCRIPTS_PATH/*
-chown -R 185:0 $APP_ROOT && chmod a+rwX -R $APP_ROOT
+
 chown -R 185:0 /opt/sbt/conf && chmod g+rw -R /opt/sbt/conf
 chown -R 185:0 /tmp/.ivy2 && chmod g+rw -R /tmp/.ivy2
 chown -R 185:0 /tmp/.sbt && chmod g+rw -R /tmp/.sbt

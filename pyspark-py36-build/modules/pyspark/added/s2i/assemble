@@ -2,9 +2,6 @@
 set -e
 shopt -s dotglob
 
-# first run the original assemble script
-/usr/libexec/s2i/assemble.orig
-
 echo "---> Proceeding with customized assemble ..."
 
 # If the root of the repo contains file called worker-requirements.txt, install them and bundle

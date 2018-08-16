@@ -1,0 +1,100 @@
+#!/bin/bash
+
+source $STI_SCRIPTS_PATH/s2i-env-vars
+set -x
+
+function match_sum {
+    local sumfile=$1
+    local delim=$2
+    local md5=$3
+    echo delim is "$delim"
+    local initial=$(cat $sumfile | cut -d"$delim" -f1 | tr [:upper:] [:lower:] | tr -d [:space:])
+    local rest=$(cat $sumfile | cut -d"$delim" --complement -f1 | tr [:upper:] [:lower:] | tr -d [:space:])
+    if [ "$md5" == "$initial" ] || [ "$md5" == "$rest" ]; then
+        return 0
+    fi
+    return 1 
+}
+
+if [ -f $SPARK_HOME/bin/spark-submit ]; then
+    echo "Spark is installed"
+else
+    echo "Attempting to install Spark"
+    
+    # If a url has been specfified for spark use it
+    env | grep SPARK
+    if [ -n "$SPARK_URL" ]; then
+        wget $SPARK_URL -P $S2I_SOURCE_DIR
+    fi
+    if [ -n "$SPARK_MD5_URL" ]; then
+	wget $SPARK_MD5_URL -P $S2I_SOURCE_DIR
+    fi
+    
+    for spark in $(ls "$S2I_SOURCE_DIR"/*.tar.gz "$S2I_SOURCE_DIR"/*.tgz 2>/dev/null); do
+
+        # Does the tarball contain a spark-submit?
+        name=$(tar -tzf $spark | grep "spark-submit$")
+        if [ "$?" -eq 0 ]; then
+
+	    # See if we have an md5 file to match against
+	    if [ -f "$spark".md5 ]; then
+		calcvalue=$(md5sum "$spark" | cut -d\  -f1)
+		# split the md5 file using a space
+                match_sum "$spark".md5 \  $calcvalue
+		matched="$?"
+                if [ "$matched" -ne 0 ]; then
+		    # split the md5 file using equals sign in case it's BSD
+                    match_sum "$spark".md5 \=  $calcvalue
+		    matched="$?"
+                fi
+		if [ "$matched" -ne 0 ]; then
+		    echo md5sum did not match
+		    continue
+		fi
+	    fi
+	    
+            # add /opt/spark-distro to s2i-env-vars so that it's knowable in 000-assemble?
+
+            # dname will be the intial directory from the path of spark-submit
+            # we found in the tarball, ie the dir created by tar
+            dname=$(dirname $name | cut -d/ -f 1)
+            tar -xzf $spark -C /opt/spark-distro
+            ln -s /opt/spark-distro/$dname /opt/spark-distro/distro
+            chmod g+rwx /opt/spark-distro/$dname/conf
+
+            # Search for the spark entrypoint file and copy it to $APP_ROOT/etc
+            entry=$(find /opt/spark-distro/$dname/kubernetes -name entrypoint.sh)
+            if [ -n "$entry" ]; then
+                cp $entry $APP_ROOT/etc
+
+                # We have to patch the entrypoint to toggle error checking
+                # around the uidentry check for 2.3 (fix on the way)
+                sed -i '/^uidentry/i set +e' $APP_ROOT/etc/$(basename $entry)
+                sed -i '/^uidentry/a set -e' $APP_ROOT/etc/$(basename $entry)
+            fi
+
+            # Can we run spark-submit?
+            $SPARK_HOME/bin/spark-submit --version
+            if [ "$?" -eq 0 ]; then
+                echo Spark installed successfully
+                exit 0
+            fi
+
+            # Just in case there is more than one tarball, clean up
+            rm -rf /opt/spark-distro/$dname
+        fi
+    done
+    echo no valid Spark distribution found
+    exit 1
+fi
+
+
+# Loop through whatever assembles we might have
+SCRIPT_DIR=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)
+for assemble in $(ls -1 $SCRIPT_DIR | grep -w "^[0-9]*-*"); do
+    fullname=$SCRIPT_DIR/$assemble
+    echo running $fullname
+    if ! ${fullname}; then
+        exit 1        
+    fi
+done

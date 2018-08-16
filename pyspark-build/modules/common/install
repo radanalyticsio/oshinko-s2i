@@ -6,15 +6,26 @@ SCRIPT_DIR=$(dirname $0)
 ADDED_DIR=${SCRIPT_DIR}/added
 ARTIFACTS_DIR=/tmp/artifacts
 
-mkdir -p $APP_ROOT/src && mkdir -p $APP_ROOT/etc
-chown -R 185:0 $APP_ROOT && chmod a+rwX -R $APP_ROOT
-cp $ADDED_DIR/utils/* $APP_ROOT/src
-cp $ADDED_DIR/etc/* $APP_ROOT/etc
-
 # Change the permissions on /etc/passwd so that anonymous user
 # can be added to satisfy Spark
 chgrp root /etc/passwd && chmod ug+rw /etc/passwd
 
+# Install tini
+TINI_VERSION=v0.16.1
+wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini -P /tmp
+wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc -P /tmp
+gpg --homedir=/tmp --keyserver ha.pool.sks-keyservers.net --recv-keys 0527A9B7 && gpg --homedir=/tmp --verify /tmp/tini.asc
+mv /tmp/tini /sbin/tini
+chmod +x /sbin/tini
+
+# Add start.sh and bootstrap files in $APP_ROOT/etc
+mkdir -p $APP_ROOT/etc
+cp $ADDED_DIR/utils/* $APP_ROOT/src
+cp $ADDED_DIR/etc/* $APP_ROOT/etc
+chown -R 185:0 $APP_ROOT/etc && chmod g+rwX -R $APP_ROOT/etc
+
+# Add oshinko CLI in $APP_ROOT/src
+mkdir -p $APP_ROOT/src
 # If there is a zero-length oshinko-cli tarball, find the verison in the
 # name and download from github
 fullname=$(find $ARTIFACTS_DIR -name oshinko_v[0-9.]*_linux_amd64\.tar\.gz)
@@ -29,11 +40,16 @@ tar -zxf $(basename $fullname)
 mv oshinko_linux_amd64/oshinko oshinko
 rm -rf oshinko_linux_amd64 $(basename $fullname)
 popd
+chown -R 185:0 $APP_ROOT/src && chmod g+rwX -R $APP_ROOT/src
 
-TINI_VERSION=v0.16.1
-wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini -P /tmp
-wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc -P /tmp
-cd /tmp
-gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 0527A9B7 && gpg --verify /tmp/tini.asc
-mv /tmp/tini /sbin/tini
-chmod +x /sbin/tini
+# Set up a place for spark to go
+mkdir -p /opt/spark-distro
+ln -sfn /opt/spark-distro/distro /opt/spark
+chown 185:0 /opt/spark-distro && chmod g+rwx /opt/spark-distro
+
+# Add the s2i script files.
+# Include a new assemble that loops over numbered assembles
+# after installing spark if necessary. Move the inherited
+# assemble to 000-assemble to run first.
+mv $STI_SCRIPTS_PATH/assemble $STI_SCRIPTS_PATH/000-assemble
+cp $ADDED_DIR/s2i/* $STI_SCRIPTS_PATH
