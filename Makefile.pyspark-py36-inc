@@ -1,11 +1,11 @@
-LOCAL_IMAGE ?= radanalytics-pyspark
+LOCAL_IMAGE ?= radanalytics-pyspark-py36-inc
 
 # If you are going to push the built image to a registry
 # using the "push" make target then you should replace
 # "project" with an appropriate path for your registry and/or project
-PUSH_IMAGE=project/radanalytics-pyspark
+PUSH_IMAGE=project/radanalytics-pyspark-py36-inc
 
-DOCKERFILE_CONTEXT=pyspark-build
+DOCKERFILE_CONTEXT=pyspark-py36-build-inc
 
 .PHONY: build push clean clean-context context zero-tarballs
 
@@ -20,15 +20,22 @@ clean: clean-context
 	-docker rmi $(LOCAL_IMAGE) $(PUSH_IMAGE)
 
 clean-context:
+	-rm image.pyspark-py36-inc.yaml
 	-rm -rf $(DOCKERFILE_CONTEXT)/*
 
 context: $(DOCKERFILE_CONTEXT)
 
-$(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
+$(DOCKERFILE_CONTEXT): image.pyspark-py36-inc.yaml $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
 
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
-	concreate generate --descriptor image.pyspark.yaml
+	- mkdir -p $(DOCKERFILE_CONTEXT)
+	./no-spark-yaml.sh image.pyspark-py36.yaml image.pyspark-py36-inc.yaml
+	concreate generate --descriptor image.pyspark-py36-inc.yaml
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
+	- rm $(DOCKERFILE_CONTEXT)/spark*.tgz
+
+image.pyspark-py36-inc.yaml:
+	./no-spark-yaml.sh image.pyspark-py36.yaml image.pyspark-py36-inc.yaml
 
 zero-tarballs:
 	find ./$(DOCKERFILE_CONTEXT) -name "*.tgz" -type f -exec truncate -s 0 {} \;

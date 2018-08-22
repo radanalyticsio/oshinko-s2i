@@ -1,11 +1,11 @@
-LOCAL_IMAGE ?= radanalytics-pyspark
+LOCAL_IMAGE ?= radanalytics-java-spark-inc
 
 # If you are going to push the built image to a registry
 # using the "push" make target then you should replace
 # "project" with an appropriate path for your registry and/or project
-PUSH_IMAGE=project/radanalytics-pyspark
+PUSH_IMAGE=project/radanalytics-java-spark-inc
 
-DOCKERFILE_CONTEXT=pyspark-build
+DOCKERFILE_CONTEXT=java-build-inc
 
 .PHONY: build push clean clean-context context zero-tarballs
 
@@ -20,16 +20,22 @@ clean: clean-context
 	-docker rmi $(LOCAL_IMAGE) $(PUSH_IMAGE)
 
 clean-context:
+	-rm image.java-inc.yaml
 	-rm -rf $(DOCKERFILE_CONTEXT)/*
 
 context: $(DOCKERFILE_CONTEXT)
 
-$(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
+$(DOCKERFILE_CONTEXT): image.java-inc.yaml $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
 
-$(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
-	concreate generate --descriptor image.pyspark.yaml
+$(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/scripts:
+	- mkdir -p $(DOCKERFILE_CONTEXT)
+	concreate generate --descriptor image.java-inc.yaml	
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
+	- rm $(DOCKERFILE_CONTEXT)/spark*.tgz
+
+image.java-inc.yaml:
+	./no-spark-yaml.sh image.java.yaml image.java-inc.yaml
 
 zero-tarballs:
-	find ./$(DOCKERFILE_CONTEXT) -name "*.tgz" -type f -exec truncate -s 0 {} \;
 	find ./$(DOCKERFILE_CONTEXT) -name "*.tar.gz" -type f -exec truncate -s 0 {} \;
+	find ./$(DOCKERFILE_CONTEXT) -name "*.tgz" -type f -exec truncate -s 0 {} \;

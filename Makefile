@@ -34,6 +34,9 @@ zero-tarballs: $(allimgs)
 $(allimgs):
 	${MAKE} -f $@ $(CMD)
 
+clean-target:
+	- rm -rf target
+
 # If you want to use the test targets to run tests against
 # a full OpenShift instance, make sure that you set the
 # S2I_TEST_INTEGRATED_REGISTRY env var before running.
@@ -116,4 +119,4 @@ test-e2e:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build
 	test/e2e/run.sh
 
-.PHONY: build clean push $(allimgs) test-e2e test-ephemeral test-java-templates test-pyspark-templates test-pyspark-py36-templates test-scala-templates test-templates test-pyspark-radio test-scala-radio test-java-radio
+.PHONY: build clean clean-target push $(allimgs) test-e2e test-ephemeral test-java-templates test-pyspark-templates test-pyspark-py36-templates test-scala-templates test-templates test-pyspark-radio test-scala-radio test-java-radio
