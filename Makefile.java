@@ -20,7 +20,6 @@ clean: clean-context
 	-docker rmi $(LOCAL_IMAGE) $(PUSH_IMAGE)
 
 clean-context:
-	-rm -rf target
 	-rm -rf $(DOCKERFILE_CONTEXT)/*
 
 context: $(DOCKERFILE_CONTEXT)

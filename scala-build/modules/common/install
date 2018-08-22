@@ -20,14 +20,14 @@ chmod +x /sbin/tini
 
 # Add start.sh and bootstrap files in $APP_ROOT/etc
 mkdir -p $APP_ROOT/etc
-cp $ADDED_DIR/utils/* $APP_ROOT/src
 cp $ADDED_DIR/etc/* $APP_ROOT/etc
 chown -R 185:0 $APP_ROOT/etc && chmod g+rwX -R $APP_ROOT/etc
 
 # Add oshinko CLI in $APP_ROOT/src
-mkdir -p $APP_ROOT/src
 # If there is a zero-length oshinko-cli tarball, find the verison in the
 # name and download from github
+mkdir -p $APP_ROOT/src
+cp $ADDED_DIR/utils/* $APP_ROOT/src
 fullname=$(find $ARTIFACTS_DIR -name oshinko_v[0-9.]*_linux_amd64\.tar\.gz)
 if ! [ -s "$fullname" ]; then
     oshinko=$(basename $fullname)
