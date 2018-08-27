@@ -1,5 +1,5 @@
-source $S2I_SCRIPTS_PATH/s2i-env-vars
+source $STI_SCRIPTS_PATH/s2i-env-vars
 
 if [ -f /opt/rh/rh-maven33/enable ]; then
-    . /opt/rh/rh-maven33/enable
+    source /opt/rh/rh-maven33/enable
 fi
