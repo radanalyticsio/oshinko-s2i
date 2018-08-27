@@ -10,14 +10,6 @@ ARTIFACTS_DIR=/tmp/artifacts
 # can be added to satisfy Spark
 chgrp root /etc/passwd && chmod ug+rw /etc/passwd
 
-# Install tini
-TINI_VERSION=v0.16.1
-wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini -P /tmp
-wget -q https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc -P /tmp
-gpg --homedir=/tmp --keyserver ha.pool.sks-keyservers.net --recv-keys 0527A9B7 && gpg --homedir=/tmp --verify /tmp/tini.asc
-mv /tmp/tini /sbin/tini
-chmod +x /sbin/tini
-
 # Add start.sh and bootstrap files in $APP_ROOT/etc
 mkdir -p $APP_ROOT/etc
 cp $ADDED_DIR/etc/* $APP_ROOT/etc
