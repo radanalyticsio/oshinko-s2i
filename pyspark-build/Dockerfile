@@ -62,6 +62,9 @@ USER root
 RUN [ "bash", "-x", "/tmp/scripts/common/install" ]
 
 USER root
+RUN [ "bash", "-x", "/tmp/scripts/spark/install" ]
+
+USER root
 RUN [ "bash", "-x", "/tmp/scripts/pyspark/install" ]
 
 USER root

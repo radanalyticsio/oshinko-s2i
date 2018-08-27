@@ -1,7 +1,6 @@
 #!/bin/bash
 
 source $STI_SCRIPTS_PATH/s2i-env-vars
-set -x
 
 function match_sum {
     local sumfile=$1
@@ -93,6 +92,9 @@ else
             # around the uidentry check for 2.3 (fix on the way)
             sed -i '/^uidentry/i set +e' $APP_ROOT/etc/$(basename $entry)
             sed -i '/^uidentry/a set -e' $APP_ROOT/etc/$(basename $entry)
+
+            # We also want to get rid of the tini invocation
+            sed -i "s@exec /sbin/tini -s --@exec@" $APP_ROOT/etc/$(basename $entry)
         fi
 
         # Can we run spark-submit?
@@ -105,7 +107,9 @@ else
         # Just in case there is more than one tarball, clean up
         rm -rf /opt/spark-distro/$dname
     done
+
     echo no valid Spark distribution found
+
     while true; do
         sleep 5
     done

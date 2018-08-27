@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -e
+
+SCRIPT_DIR=$(dirname $0)
+ADDED_DIR=${SCRIPT_DIR}/added
+ARTIFACTS_DIR=/tmp/artifacts
+
+fullname=$(find $ARTIFACTS_DIR -name spark-[0-9.]*-bin-hadoop[0-9.]*\.tgz)
+if ! [ -s "$fullname" ]; then
+    spark=$(basename $fullname)
+    version=$(echo $spark | cut -d '-' -f2)
+    wget https://archive.apache.org/dist/spark/spark-$version/$spark -O $fullname
+fi
+
+# Make a place for spark to go (dupe what's done in common in case we're standalone)
+mkdir -p /opt/spark-distro
+ln -sfn /opt/spark-distro/distro $SPARK_HOME
+
+pushd /opt/spark-distro
+cp $fullname .
+tar -zxf $(basename $fullname)
+ln -s $(basename $fullname .tgz) distro
+rm $(basename $fullname)
+popd
+
+# Search for the spark entrypoint file and copy it to $APP_ROOT/etc
+entry=$(find /opt/spark-distro/$(basename $fullname .tgz)/kubernetes -name entrypoint.sh)
+if [ -n "$entry" ]; then
+    mkdir -p $APP_ROOT/etc
+    cp $entry $APP_ROOT/etc
+
+    # We have to patch the entrypoint to toggle error checking
+    # around the uidentry check until for 2.3 (fix on the way)
+    sed -i '/^uidentry/i set +e' $APP_ROOT/etc/$(basename $entry)
+    sed -i '/^uidentry/a set -e' $APP_ROOT/etc/$(basename $entry)
+fi
+
+cp $ADDED_DIR/spark-conf/* $SPARK_HOME/conf/
+chown -R 185:0 $SPARK_HOME/conf && chmod g+rw -R $SPARK_HOME/conf
