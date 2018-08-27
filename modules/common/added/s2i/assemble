@@ -92,6 +92,9 @@ else
             # around the uidentry check for 2.3 (fix on the way)
             sed -i '/^uidentry/i set +e' $APP_ROOT/etc/$(basename $entry)
             sed -i '/^uidentry/a set -e' $APP_ROOT/etc/$(basename $entry)
+
+            # We also want to get rid of the tini invocation
+            sed -i "s@exec /sbin/tini -s --@exec@" $APP_ROOT/etc/$(basename $entry)
         fi
 
         # Can we run spark-submit?
