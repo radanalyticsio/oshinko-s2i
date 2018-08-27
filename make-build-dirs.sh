@@ -11,4 +11,9 @@ git add pyspark-py36-build
 git add java-build
 git add scala-build
 git add sparklyr-build
+git add pyspark-build-inc
+git add pyspark-py36-build-inc
+git add java-build-inc
+git add scala-build-inc
+git add sparklyr-build-inc
 
