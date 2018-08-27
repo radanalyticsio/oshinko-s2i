@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Regenerate all the build directories based on image.*.yaml
+make clean-target
 make clean-context
 make context
 make zero-tarballs
