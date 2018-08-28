@@ -14,10 +14,13 @@ if ! [ -s "$fullname" ]; then
 fi
 
 # Make a place for spark to go (dupe what's done in common in case we're standalone)
-mkdir -p /opt/spark-distro
-ln -sfn /opt/spark-distro/distro $SPARK_HOME
+if ! [ -d $SPARK_INSTALL ]; then
+    mkdir -p $SPARK_INSTALL
+    ln -sfn $SPARK_INSTALL/distro $SPARK_HOME
+    chown 185:0 $SPARK_INSTALL && chmod g+rwx $SPARK_INSTALL
+fi
 
-pushd /opt/spark-distro
+pushd $SPARK_INSTALL
 cp $fullname .
 tar -zxf $(basename $fullname)
 ln -s $(basename $fullname .tgz) distro
@@ -25,7 +28,7 @@ rm $(basename $fullname)
 popd
 
 # Search for the spark entrypoint file and copy it to $APP_ROOT/etc
-entry=$(find /opt/spark-distro/$(basename $fullname .tgz)/kubernetes -name entrypoint.sh)
+entry=$(find $SPARK_INSTALL/$(basename $fullname .tgz)/kubernetes -name entrypoint.sh)
 if [ -n "$entry" ]; then
     mkdir -p $APP_ROOT/etc
     cp $entry $APP_ROOT/etc
@@ -34,6 +37,10 @@ if [ -n "$entry" ]; then
     # around the uidentry check until for 2.3 (fix on the way)
     sed -i '/^uidentry/i set +e' $APP_ROOT/etc/$(basename $entry)
     sed -i '/^uidentry/a set -e' $APP_ROOT/etc/$(basename $entry)
+
+
+    # We also want to get rid of the tini invocation
+    sed -i "s@exec /sbin/tini -s --@exec@" $APP_ROOT/etc/$(basename $entry)
 fi
 
 cp $ADDED_DIR/spark-conf/* $SPARK_HOME/conf/

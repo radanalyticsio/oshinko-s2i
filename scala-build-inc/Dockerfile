@@ -23,6 +23,7 @@ ENV JBOSS_IMAGE_NAME="radanalytics-scala-spark" \
     JBOSS_IMAGE_VERSION="1.0" \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin:/opt/scala/bin:/opt/sbt/bin" \
     SPARK_HOME="/opt/spark" \
+    SPARK_INSTALL="/opt/spark-distro" \
     APP_ROOT="/opt/app-root" \
     SBT_OPTS="-Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled" \
     APP_LANG="scala" 

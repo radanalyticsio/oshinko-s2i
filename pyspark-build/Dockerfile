@@ -23,6 +23,7 @@ ENV \
     APP_LANG="python" \
     APP_ROOT="/opt/app-root" \
     PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
+    SPARK_INSTALL="/opt/spark-distro" \
     PYTHONPATH="/opt/spark/python" \
     RADANALYTICS_PYSPARK="1.0" \
     SPARK_HOME="/opt/spark" 

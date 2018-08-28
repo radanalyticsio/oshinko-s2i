@@ -26,7 +26,9 @@ ENV \
     RADANALYTICS_JAVA_SPARK="1.0" \
     SPARK_HOME="/opt/spark" \
     SPARK_VERSION="2.3.0" \
-    STI_SCRIPTS_PATH="/usr/local/s2i" 
+    SPARK_INSTALL="/opt/spark-distro" \
+    APP_ROOT="/opt/app-root" \
+    STI_SCRIPTS_PATH="/usr/local/s2i" \
 
 # Labels
 LABEL \
