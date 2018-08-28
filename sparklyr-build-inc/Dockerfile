@@ -23,6 +23,7 @@ ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-sparklyr" \
     JBOSS_IMAGE_VERSION="1.0" \
     PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     SPARK_HOME="/opt/spark" \
+    SPARK_INSTALL="/opt/spark-distro" \
     APP_ROOT="/opt/app-root" \
     APP_LANG="r" 
 

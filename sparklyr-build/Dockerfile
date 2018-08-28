@@ -21,6 +21,11 @@ FROM rimolive/r-34-centos7:latest
 # Environment variables
 ENV \
     APP_LANG="r" \
+    JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-sparklyr" \
+    JBOSS_IMAGE_VERSION="1.0" \
+    PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
+    SPARK_HOME="/opt/spark" \
+    SPARK_INSTALL="/opt/spark-distro" \
     APP_ROOT="/opt/app-root" \
     PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     SPARK_HOME="/opt/spark" 
@@ -75,4 +80,3 @@ USER 185
 
 
 CMD ["/usr/local/s2i/usage"]
-

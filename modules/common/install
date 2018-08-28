@@ -35,9 +35,11 @@ popd
 chown -R 185:0 $APP_ROOT/src && chmod g+rwX -R $APP_ROOT/src
 
 # Set up a place for spark to go
-mkdir -p /opt/spark-distro
-ln -sfn /opt/spark-distro/distro /opt/spark
-chown 185:0 /opt/spark-distro && chmod g+rwx /opt/spark-distro
+if ! [ -d $SPARK_INSTALL ]; then
+    mkdir -p $SPARK_INSTALL
+    ln -sfn $SPARK_INSTALL/distro /opt/spark
+    chown 185:0 $SPARK_INSTALL && chmod g+rwx $SPARK_INSTALL
+fi
 
 # Add the s2i script files.
 # Include a new assemble that loops over numbered assembles
