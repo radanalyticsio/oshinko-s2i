@@ -336,6 +336,20 @@ function test_manifest_file {
     set_defaults
     local main_class=$APP_MAIN_CLASS
     set_app_main_class
+
+    run_app
+    set_app_main_class $main_class
+    os::cmd::try_until_text 'oc logs "$DRIVER"' '\-\-class com.mycompany.app.JavaSparkPi' $((10*minute))
+    cleanup_app $DRIVER
+    oc delete buildconfig $APP_NAME &> /dev/null
+    oc delete is $APP_NAME &> /dev/null
+}
+
+function test_spark_on_k8s {
+    set_defaults
+    EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
+    local main_class=$APP_MAIN_CLASS
+    set_app_main_class
     run_app
     set_app_main_class $main_class
     os::cmd::try_until_text 'oc logs "$DRIVER"' '\-\-class com.mycompany.app.JavaSparkPi' $((10*minute))

@@ -65,6 +65,9 @@ test_no_source_or_image
 echo "++ test_manifest_file"
 test_manifest_file
 
+echo "++ test_spark_on_k8s"
+test_spark_on_k8s
+
 echo "++ test_app_file java-spark-pi-1.0-SNAPSHOT-jar-with-dependencies.jar"
 test_app_file java-spark-pi-1.0-SNAPSHOT-jar-with-dependencies.jar
 
