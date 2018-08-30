@@ -302,6 +302,20 @@ function test_k8s_complete {
     cleanup_k8s
 }
 
+function test_k8s_config {
+    set_defaults
+    local currworkers=$WORKER_COUNT
+    local setcnt=$1
+    set_worker_count $1
+    EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
+    run_app
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Found clusterconfig'
+    os::cmd::try_until_success 'oc logs "$DRIVER" | grep spark\.executor\.instances="$setcnt"'
+    set_worker_count $currworkers
+    cleanup_app $DRIVER
+    cleanup_k8s
+}
+
 function test_del_cluster {
     set_defaults
     run_app
