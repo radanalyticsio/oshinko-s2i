@@ -161,7 +161,6 @@ function run_app_without_application_name() {
 }
 
 function get_driver_pod() {
-    # os::cmd::try_until_success 'oc get pod -l deploymentconfig="$APP_NAME" --template="{{index .items 0 \"metadata\" \"name\"}}"'
     local count
     count=0
 
@@ -181,6 +180,33 @@ function get_driver_pod() {
         fi
     done
     set -e
+}
+
+function get_k8s_driver_pod() {
+    local count
+    count=0
+
+    set +e
+    while true; do
+        K8S_DRIVER=$(oc get pod -l spark-role=driver --template='{{index .items 0 "metadata" "name"}}')
+        if [ "$?" -eq 0 ]; then
+            break
+        fi
+        echo Getting k8s driver pod for $APP_NAME failed, trying again
+        oc get pods
+        sleep 0.5
+        count=$((count + 1))
+        echo $count
+        if [ "$count" -eq 120 ]; then
+            return 1
+        fi
+    done
+    set -e
+}
+
+function cleanup_k8s() {
+
+    oc delete pod -l spark-role
 }
 
 function scrape_for_env() {
@@ -266,6 +292,16 @@ function test_run_complete {
     cleanup_app $DRIVER
 }
 
+function test_k8s_complete {
+    set_defaults
+    EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
+    run_app
+    get_k8s_driver_pod
+    os::cmd::try_until_text 'oc logs "$K8S_DRIVER"' 'test app completed'
+    cleanup_app $DRIVER
+    cleanup_k8s
+}
+
 function test_del_cluster {
     set_defaults
     run_app
@@ -334,14 +370,19 @@ function test_app_file {
 
 function test_manifest_file {
     set_defaults
+    if [ "$#" -eq 1 ]; then
+        EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
+    fi
     local main_class=$APP_MAIN_CLASS
     set_app_main_class
+
     run_app
     set_app_main_class $main_class
     os::cmd::try_until_text 'oc logs "$DRIVER"' '\-\-class com.mycompany.app.JavaSparkPi' $((10*minute))
     cleanup_app $DRIVER
-    oc delete buildconfig $APP_NAME &> /dev/null
-    oc delete is $APP_NAME &> /dev/null
+    if  [ "$#" -eq 1 ]; then
+	cleanup_k8s
+    fi
 }
 
 function test_git_ref {
