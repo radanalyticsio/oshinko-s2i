@@ -296,6 +296,8 @@ function test_k8s_complete {
     set_defaults
     EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
     run_app
+    local id=$(docker images | grep $APP_NAME | head -n1 | awk '{print $3}')
+    docker tag $id $APP_NAME
     get_k8s_driver_pod
     os::cmd::try_until_text 'oc logs "$K8S_DRIVER"' 'test app completed'
     cleanup_app $DRIVER
@@ -309,6 +311,8 @@ function test_k8s_config {
     set_worker_count $1
     EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
     run_app
+    local id=$(docker images | grep $APP_NAME | head -n1 | awk '{print $3}')
+    docker tag $id $APP_NAME
     os::cmd::try_until_text 'oc logs "$DRIVER"' 'Found clusterconfig'
     os::cmd::try_until_success 'oc logs "$DRIVER" | grep spark\.executor\.instances="$setcnt"'
     set_worker_count $currworkers

@@ -15,7 +15,7 @@ fix_template $RESOURCE_DIR/javabuilddc.json radanalyticsio/radanalytics-java-spa
 set_template $RESOURCE_DIR/javabuilddc.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count 1
-set_fixed_app_name java-build
+set_fixed_app_name java-k8s-test
 set_app_main_class com.mycompany.app.JavaSparkPi
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
