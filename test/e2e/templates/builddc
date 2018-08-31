@@ -299,7 +299,7 @@ function test_k8s_complete {
     local id=$(docker images | grep $APP_NAME | head -n1 | awk '{print $3}')
     docker tag $id $APP_NAME
     get_k8s_driver_pod
-    os::cmd::try_until_text 'oc logs "$K8S_DRIVER"' 'test app completed'
+    os::cmd::try_until_text 'oc logs "$K8S_DRIVER"' 'test app completed' $((10*minute))
     cleanup_app $DRIVER
     cleanup_k8s
 }
@@ -388,19 +388,20 @@ function test_app_file {
 
 function test_manifest_file {
     set_defaults
-    if [ "$#" -eq 1 ]; then
+    if [ "$#" -eq 2 ]; then
         EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
     fi
     local main_class=$APP_MAIN_CLASS
+    local class_name=$1
     set_app_main_class
 
     run_app
-    set_app_main_class $main_class
-    os::cmd::try_until_text 'oc logs "$DRIVER"' '\-\-class com.mycompany.app.JavaSparkPi' $((10*minute))
+    os::cmd::try_until_success 'oc logs "$DRIVER" | grep class\ "$class_name"' $((10*minute))
     cleanup_app $DRIVER
     if  [ "$#" -eq 1 ]; then
 	cleanup_k8s
     fi
+    set_app_main_class $main_class
 }
 
 function test_git_ref {

@@ -16,7 +16,7 @@ set_template $RESOURCE_DIR/scalabuilddc.json
 set_git_uri https://github.com/radanalyticsio/s2i-integration-test-apps
 set_worker_count 1
 set_fixed_app_name scala-k8s-test
-set_app_main_class com.mycompany.app.SparkPi
+set_app_main_class org.apache.spark.examples.SparkPi
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
@@ -24,7 +24,7 @@ echo "++ check_image"
 check_image $S2I_TEST_IMAGE_SCALA
 
 echo "++ test_manifest_file"
-test_manifest_file true
+test_manifest_file org.apache.spark.examples.SparkPi true
 
 echo "++ test_k8s_complete"
 test_k8s_complete

@@ -24,7 +24,7 @@ echo "++ check_image"
 check_image $S2I_TEST_IMAGE_JAVA
 
 echo "++ test_manifest_file"
-test_manifest_file true
+test_manifest_file com.mycompany.app.JavaSparkPi true
 
 echo "++ test_k8s_complete"
 test_k8s_complete
