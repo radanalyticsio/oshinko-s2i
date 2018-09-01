@@ -296,8 +296,10 @@ function test_k8s_complete {
     set_defaults
     EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
     run_app
+    docker images
     local id=$(docker images | grep $APP_NAME | head -n1 | awk '{print $3}')
-    docker tag $id $APP_NAME
+    os::cmd::expect_success 'docker tag "$id" "$APP_NAME"'
+    docker images
     get_k8s_driver_pod
     os::cmd::try_until_text 'oc logs "$K8S_DRIVER"' 'test app completed' $((10*minute))
     cleanup_app $DRIVER
