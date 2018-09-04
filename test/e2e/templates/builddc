@@ -293,6 +293,33 @@ function test_run_complete {
     cleanup_app $DRIVER
 }
 
+function k8s_complete_loop() {
+    local count
+    count=0
+
+    set +e
+    while true; do
+        oc logs "$K8S_DRIVER" | grep "test app completed"
+        if [ "$?" -eq 0 ]; then
+            break
+        fi
+        echo app not completed yet
+        K8S_EXEC=$(oc get pod -l spark-role=executor --template='{{index .items 0 "metadata" "name"}}')
+        if [ "$?" -eq 0 ]; then
+            echo found executor
+	    oc get pods
+	    oc logs $K8S_EXEC
+        fi	
+        sleep 2
+        count=$((count + 1))
+        echo $count
+        if [ "$count" -eq 120 ]; then
+            return 1
+        fi
+    done
+    set -e
+}
+
 function test_k8s_complete {
     set_defaults
     EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
@@ -302,7 +329,8 @@ function test_k8s_complete {
     os::cmd::expect_success 'docker tag "$id" "$APP_NAME"'
     docker images
     get_k8s_driver_pod
-    os::cmd::try_until_text 'oc logs "$K8S_DRIVER"' 'test app completed' $((10*minute))
+#    os::cmd::try_until_text 'oc logs "$K8S_DRIVER"' 'test app completed' $((10*minute))
+    k8s_complete_loop
     cleanup_app $DRIVER
     cleanup_k8s
 }
