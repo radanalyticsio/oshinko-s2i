@@ -8,17 +8,17 @@ matrix:
   # no need to include the build target at present because the template
   # tests perform builds from the local source to do the tests
   include:
-    - env: TO_TEST=pyspark-templates OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=pyspark-py36-templates OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=java-templates OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=scala-templates-radio OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=scala-templates-dc OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=sparklyr-templates-dc OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=sparklyr-templates-build OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=sparklyr-templates-builddc OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=operations OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=incomplete OPENSHIFT_VERSION=v3.9
-    - env: TO_TEST=ephemeral OPENSHIFT_VERSION=v3.9
+    - env: TO_TEST=pyspark-templates OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=pyspark-py36-templates OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=java-templates OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=scala-templates-radio OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=scala-templates-dc OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=sparklyr-templates-dc OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=sparklyr-templates-build OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=sparklyr-templates-builddc OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=operations OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=incomplete OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=ephemeral OPENSHIFT_VERSION=v3.10
   fast_finish: true
 
 before_install:
