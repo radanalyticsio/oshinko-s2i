@@ -32,17 +32,17 @@ install:
 before_script:
 - test/travis-help/check-tarballs.sh
 script:
-- if [ "$TO_TEST" == "pyspark-templates" ]; then make test-pyspark-templates ; fi
-- if [ "$TO_TEST" == "pyspark-py36-templates" ]; then make test-pyspark-py36-templates ; fi
-- if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; fi
-- if [ "$TO_TEST" == "scala-templates-radio" ]; then make test-scala-radio ; fi
-- if [ "$TO_TEST" == "scala-templates-dc" ]; then make test-scala-dc ; fi
-- if [ "$TO_TEST" == "sparklyr-templates-dc" ]; then make test-sparklyr-dc ; fi
-- if [ "$TO_TEST" == "sparklyr-templates-build" ]; then make test-sparklyr-build ; fi
-- if [ "$TO_TEST" == "sparklyr-templates-builddc" ]; then make test-sparklyr-builddc ; fi
-- if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
-- if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
-- if [ "$TO_TEST" == "ephemeral" ]; then make test-ephemeral ; fi
+#- if [ "$TO_TEST" == "pyspark-templates" ]; then make test-pyspark-templates ; fi
+#- if [ "$TO_TEST" == "pyspark-py36-templates" ]; then make test-pyspark-py36-templates ; fi
+#- if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; fi
+#- if [ "$TO_TEST" == "scala-templates-radio" ]; then make test-scala-radio ; fi
+#- if [ "$TO_TEST" == "scala-templates-dc" ]; then make test-scala-dc ; fi
+#- if [ "$TO_TEST" == "sparklyr-templates-dc" ]; then make test-sparklyr-dc ; fi
+#- if [ "$TO_TEST" == "sparklyr-templates-build" ]; then make test-sparklyr-build ; fi
+#- if [ "$TO_TEST" == "sparklyr-templates-builddc" ]; then make test-sparklyr-builddc ; fi
+#- if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
+#- if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
+#- if [ "$TO_TEST" == "ephemeral" ]; then make test-ephemeral ; fi
 - if [ "$TO_TEST" == "sparkk8s" ]; then make test-sparkk8s ; fi
 notifications:
  email:

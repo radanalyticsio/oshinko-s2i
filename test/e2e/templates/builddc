@@ -207,6 +207,7 @@ function get_k8s_driver_pod() {
 function cleanup_k8s() {
 
     oc delete pod -l spark-role
+    os::cmd::try_until_text 'oc get pod -l spark-role' 'No resources found' $((10*minute))
 }
 
 function scrape_for_env() {
@@ -400,7 +401,7 @@ function test_manifest_file {
     run_app
     os::cmd::try_until_success 'oc logs "$DRIVER" | grep class\ "$class_name"' $((10*minute))
     cleanup_app $DRIVER
-    if  [ "$#" -eq 1 ]; then
+    if  [ "$#" -eq 2 ]; then
 	cleanup_k8s
     fi
     set_app_main_class $main_class
