@@ -71,6 +71,9 @@ test_sbt_args_append
 echo "++ test_context_dir"
 test_context_dir
 
+echo "++ test_manifest_file"
+test_manifest_file org.apache.spark.examples.SparkPi
+
 echo "++ test_app_file sparkpi_2.11-0.1.jar"
 test_app_file sparkpi_2.11-0.1.jar
 
