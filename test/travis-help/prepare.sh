@@ -47,3 +47,6 @@ function start_and_verify_openshift() {
 setup_insecure_registry
 download_openshift
 start_and_verify_openshift
+oc login -u system:admin
+oc describe node localhost
+oc login -u developer -p developer
