@@ -41,6 +41,11 @@ test-ephemeral:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	test/e2e/run.sh ephemeral/
 
+test-sparkk8s:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
+	test/e2e/run.sh templates/k8s
+
 test-java-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
 	test/e2e/run.sh templates/java

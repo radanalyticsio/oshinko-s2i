@@ -24,7 +24,7 @@ function start_and_verify_openshift() {
   set +e
   built=false
   while true; do
-      oc cluster up --host-config-dir=/home/travis/gopath/src/github.com/radanalyticsio/origin
+      oc cluster up --base-dir=/home/travis/gopath/src/github.com/radanalyticsio/origin
       if [ "$?" -eq 0 ]; then
           ./test/travis-help/travis-check-pods.sh
           if [ "$?" -eq 0 ]; then
@@ -47,3 +47,6 @@ function start_and_verify_openshift() {
 setup_insecure_registry
 download_openshift
 start_and_verify_openshift
+oc login -u system:admin
+oc describe node localhost
+oc login -u developer -p developer
