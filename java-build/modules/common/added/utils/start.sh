@@ -388,6 +388,7 @@ function use_spark_on_kube {
         --master k8s://$KUBE \
         --deploy-mode cluster \
         --name $APPLICATION_NAME \
+	--conf spark.kubernetes.executor.request.cores=100m \
         --conf spark.kubernetes.authenticate.driver.serviceAccountName=oshinko \
         --conf spark.kubernetes.container.image=$APPLICATION_NAME:latest \
         --conf spark.kubernetes.namespace=$NS \
