@@ -205,7 +205,6 @@ function get_k8s_driver_pod() {
 }
 
 function cleanup_k8s() {
-
     oc delete pod -l spark-role
     os::cmd::try_until_text 'oc get pod -l spark-role' 'No resources found' $((10*minute))
 }
@@ -309,6 +308,7 @@ function k8s_complete_loop() {
             echo found executor
 	    oc get pods
 	    oc logs $K8S_EXEC
+	    oc describe pod $K8S_EXEC
         fi	
         sleep 2
         count=$((count + 1))
