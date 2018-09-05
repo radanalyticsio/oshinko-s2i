@@ -161,7 +161,6 @@ function run_app_without_application_name() {
 }
 
 function get_driver_pod() {
-    # os::cmd::try_until_success 'oc get pod -l deploymentconfig="$APP_NAME" --template="{{index .items 0 \"metadata\" \"name\"}}"'
     local count
     count=0
 
@@ -181,6 +180,35 @@ function get_driver_pod() {
         fi
     done
     set -e
+}
+
+function get_k8s_pod() {
+    local count
+    count=0
+
+    set +e
+    while true; do
+        K8S_DRIVER=$(oc get pod -l spark-role=$1 --template='{{index .items 0 "metadata" "name"}}')
+        if [ "$?" -eq 0 ]; then
+	    echo Found executor
+            break
+        fi
+        echo Getting k8s $1 pod for $APP_NAME failed, trying again
+        oc get pods
+        sleep 1.0
+        count=$((count + 1))
+        echo $count
+        if [ "$count" -eq 120 ]; then
+	    # cause a failure
+	    os::cmd::expect_success_and_not_text 'oc get pod -l spark-role=$1' 'No resources found'
+        fi
+    done
+    set -e
+}
+
+function cleanup_k8s() {
+    oc delete pod -l spark-role
+    os::cmd::try_until_text 'oc get pod -l spark-role' 'No resources found' $((10*minute))
 }
 
 function scrape_for_env() {
@@ -266,6 +294,41 @@ function test_run_complete {
     cleanup_app $DRIVER
 }
 
+function test_k8s_complete {
+    set_defaults
+    EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
+    run_app
+    local id=$(docker images | grep $APP_NAME | head -n1 | awk '{print $3}')
+    os::cmd::expect_success 'docker tag "$id" "$APP_NAME"'
+    get_k8s_pod driver
+    if [ -n "$S2I_K8S_LIMITED" ]; then
+	# In this case we are running in travis with a 2 CPU VM and the
+	# k8s pod specs call out cpu requests, so we can't actually run a complete app
+	# (app + k8s driver + k8s executor > 2)
+	get_k8s_pod executor
+    else
+        os::cmd::try_until_text 'oc logs "$K8S_DRIVER"' 'test app completed' $((10*minute))
+    fi
+    cleanup_app $DRIVER
+    cleanup_k8s
+}
+
+function test_k8s_config {
+    set_defaults
+    local currworkers=$WORKER_COUNT
+    local setcnt=$1
+    set_worker_count $1
+    EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
+    run_app
+    local id=$(docker images | grep $APP_NAME | head -n1 | awk '{print $3}')
+    docker tag $id $APP_NAME
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Found clusterconfig'
+    os::cmd::try_until_success 'oc logs "$DRIVER" | grep spark\.executor\.instances="$setcnt"'
+    set_worker_count $currworkers
+    cleanup_app $DRIVER
+    cleanup_k8s
+}
+
 function test_del_cluster {
     set_defaults
     run_app
@@ -334,14 +397,20 @@ function test_app_file {
 
 function test_manifest_file {
     set_defaults
+    if [ "$#" -eq 2 ]; then
+        EXTRA_PARAMS="-p OSHINKO_KUBE_SCHEDULER=true"
+    fi
     local main_class=$APP_MAIN_CLASS
+    local class_name=$1
     set_app_main_class
+
     run_app
-    set_app_main_class $main_class
-    os::cmd::try_until_text 'oc logs "$DRIVER"' '\-\-class com.mycompany.app.JavaSparkPi' $((10*minute))
+    os::cmd::try_until_success 'oc logs "$DRIVER" | grep class\ "$class_name"' $((10*minute))
     cleanup_app $DRIVER
-    oc delete buildconfig $APP_NAME &> /dev/null
-    oc delete is $APP_NAME &> /dev/null
+    if  [ "$#" -eq 2 ]; then
+	cleanup_k8s
+    fi
+    set_app_main_class $main_class
 }
 
 function test_git_ref {
