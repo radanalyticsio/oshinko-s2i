@@ -301,7 +301,7 @@ function test_k8s_complete {
     local id=$(docker images | grep $APP_NAME | head -n1 | awk '{print $3}')
     os::cmd::expect_success 'docker tag "$id" "$APP_NAME"'
     get_k8s_pod driver
-    if [ -n "$S2I_K8S_LIMITED" ]; then
+    if [ "$S2I_K8S_LIMITED" == "true" ]; then
 	# In this case we are running in travis with a 2 CPU VM and the
 	# k8s pod specs call out cpu requests, so we can't actually run a complete app
 	# (app + k8s driver + k8s executor > 2)

@@ -19,6 +19,7 @@ matrix:
     - env: TO_TEST=operations OPENSHIFT_VERSION=v3.10
     - env: TO_TEST=incomplete OPENSHIFT_VERSION=v3.10
     - env: TO_TEST=ephemeral OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=sparkk8s OPENSHIFT_VERSION=v3.10
   fast_finish: true
 
 before_install:
@@ -42,6 +43,7 @@ script:
 - if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
 - if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
 - if [ "$TO_TEST" == "ephemeral" ]; then make test-ephemeral ; fi
+- if [ "$TO_TEST" == "sparkk8s" ]; then S2I_K8S_LIMITED=true make test-sparkk8s ; fi
 notifications:
  email:
    on_success: never
