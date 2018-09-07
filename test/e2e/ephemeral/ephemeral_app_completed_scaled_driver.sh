@@ -15,7 +15,7 @@ function ephemeral_app_completed_scaled_driver() {
     os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
-    os::cmd::try_until_text 'oc logs "$DRIVER"' 'Running Spark' $((5*minute))
+    os::cmd::try_until_text 'oc logs "$DRIVER"' 'test app completed' $((5*minute))
     os::cmd::expect_success 'oc scale dc/"$APP_NAME" --replicas=2'
 
     os::cmd::try_until_text 'oc logs "$DRIVER"' 'Deleting cluster' $((5*minute))
