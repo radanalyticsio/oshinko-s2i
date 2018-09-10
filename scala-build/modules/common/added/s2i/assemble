@@ -80,19 +80,31 @@ else
         ln -s $sparkdir $SPARK_INSTALL/distro
         chmod g+rwx $sparkdir/conf
 
-        # Search for the spark entrypoint file and copy it to $APP_ROOT/etc
-        entry=$(find $sparkdir/kubernetes -name entrypoint.sh)
+        # Search for the spark entrypoint file and copy it to $SPARK_INSTALL
+        entry=$(find $SPARK_HOME/kubernetes -name entrypoint.sh)
         if [ -n "$entry" ]; then
-            cp $entry $APP_ROOT/etc
+            cp $entry $SPARK_INSTALL
 
             # We have to patch the entrypoint to toggle error checking
             # around the uidentry check for 2.3 (fix on the way)
-            sed -i '/^uidentry/i set +e' $APP_ROOT/etc/$(basename $entry)
-            sed -i '/^uidentry/a set -e' $APP_ROOT/etc/$(basename $entry)
+            sed -i '/^uidentry/i set +e' $SPARK_INSTALL/entrypoint.sh
+            sed -i '/^uidentry/a set -e' $SPARK_INSTALL/entrypoint.sh
 
             # We also want to get rid of the tini invocation
-            sed -i "s@exec /sbin/tini -s --@exec@" $APP_ROOT/etc/$(basename $entry)
+            sed -i "s@exec /sbin/tini -s --@exec@" $SPARK_INSTALL/entrypoint.sh
         fi
+
+       # Include the default spark configuration files
+        pushd $SPARK_INSTALL/conf
+        for conf_file in *; do
+            if ! [ -f "$SPARK_HOME"/conf/$conf_file ]; then
+                echo Moving $conf_file to $SPARK_HOME/conf
+                mv $conf_file $SPARK_HOME/conf
+            else
+                echo Not moving $conf_file, $SPARK_HOME/conf/$conf_file already exists
+            fi
+        done
+        popd
 
         # Can we run spark-submit?
         $SPARK_HOME/bin/spark-submit --version

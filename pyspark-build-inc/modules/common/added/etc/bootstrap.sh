@@ -34,7 +34,7 @@ if [[ $@ == *"$STI_SCRIPTS_PATH"* ]]; then
    exec "$@"
 else
    trap handle_term TERM INT
-   $APP_ROOT/etc/entrypoint.sh "$@" &
+   $SPARK_INSTALL/entrypoint.sh "$@" &
    PID=$!
    wait $PID
 fi
