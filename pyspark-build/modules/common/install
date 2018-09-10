@@ -10,9 +10,9 @@ ARTIFACTS_DIR=/tmp/artifacts
 # can be added to satisfy Spark
 chgrp root /etc/passwd && chmod ug+rw /etc/passwd
 
-# Add start.sh and bootstrap files in $APP_ROOT/etc
+# Add bootstrap entrypoint to $APP_ROOT/etc
 mkdir -p $APP_ROOT/etc
-cp $ADDED_DIR/etc/* $APP_ROOT/etc
+cp $ADDED_DIR/etc/bootstrap.sh $APP_ROOT/etc
 chown -R 185:0 $APP_ROOT/etc && chmod g+rwX -R $APP_ROOT/etc
 
 # Add oshinko CLI in $APP_ROOT/src
@@ -35,10 +35,15 @@ popd
 chown -R 185:0 $APP_ROOT/src && chmod g+rwX -R $APP_ROOT/src
 
 # Set up a place for spark to go
+# We'll also stage our default spark config files here
+# so that when spark is installed they can be copied over
+# if the spark tarball itself does not include files of the same name
+# (ie, "copy if not overwrite")
 if ! [ -d $SPARK_INSTALL ]; then
     mkdir -p $SPARK_INSTALL
+    mv $ADDED_DIR/conf $SPARK_INSTALL
+    chown -R 185:0 $SPARK_INSTALL && chmod -R g+rwX $SPARK_INSTALL
     ln -sfn $SPARK_INSTALL/distro /opt/spark
-    chown 185:0 $SPARK_INSTALL && chmod g+rwx $SPARK_INSTALL
 fi
 
 # Add the s2i script files.
