@@ -90,6 +90,8 @@ if [ ! -z ${SPARK+x} ]; then
         echo "Failed to get the md5 sum for the specified spark version, the version $SPARK may not be a real version"
         exit 1
     fi
+    #change the spark version in the env var
+    sed "s/SPARK_VERSION=\"*.*.*\"/SPARK_VERSION=\"${SPARK}\"/g" java-build/Dockerfile
 fi
 
 # Add any changes for commit
