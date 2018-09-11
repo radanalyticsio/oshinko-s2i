@@ -9,11 +9,13 @@ S2I_TEST_IMAGE_PYSPARK_PY36 ?= $(S2I_TEST_IMAGE_PREFIX)-pyspark-py36
 S2I_TEST_IMAGE_JAVA ?= $(S2I_TEST_IMAGE_PREFIX)-java
 S2I_TEST_IMAGE_SCALA ?= $(S2I_TEST_IMAGE_PREFIX)-scala
 S2I_TEST_IMAGE_SPARKLYR ?= $(S2I_TEST_IMAGE_PREFIX)-sparklyr
+S2I_K8S_LIMITED ?= false
 export S2I_TEST_IMAGE_PYSPARK
 export S2I_TEST_IMAGE_PYSPARK_PY36
 export S2I_TEST_IMAGE_JAVA
 export S2I_TEST_IMAGE_SCALA
 export S2I_TEST_IMAGE_SPARKLYR
+export S2I_K8S_LIMITED
 
 build: CMD=build
 push: CMD=push
@@ -40,6 +42,11 @@ $(allimgs):
 test-ephemeral:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	test/e2e/run.sh ephemeral/
+
+test-sparkk8s:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
+	test/e2e/run.sh templates/k8s
 
 test-java-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
