@@ -11,7 +11,7 @@ function match_sum {
     if [ "$md5" == "$initial" ] || [ "$md5" == "$rest" ]; then
         return 0
     fi
-    return 1 
+    return 1
 }
 
 if [ -f $SPARK_HOME/bin/spark-submit ]; then
@@ -28,7 +28,7 @@ else
         echo Downloading $SPARK_MD5_URL
         wget $SPARK_MD5_URL -P $S2I_SOURCE_DIR
     fi
-    
+
     for spark in $(ls "$S2I_SOURCE_DIR"); do
 
         spark=$S2I_SOURCE_DIR/$spark
@@ -36,20 +36,24 @@ else
         # Is the file a directory? If it contains spark-submit, move it
         if [ -d "$spark" ]; then
             if ! [ -f $spark/bin/spark-submit ]; then
+                echo Ignoring directory $spark, no spark-submit
                 continue
             fi
+            echo Installing from directory $spark
             sparkdir=$SPARK_INSTALL/$(basename $spark)
             mv $spark $SPARK_INSTALL
         else
             # If we can get the table of contents, it's a tar archive, otherwise ignore
             tar -tf $spark &> /dev/null
             if [ "$?" -ne 0 ]; then
+                echo Ignoring $spark, not a tar archive
                 continue
             fi
 
             # Does the tarball contain a spark-submit?
             name=$(tar -tzf $spark | grep "spark-submit$")
             if [ "$?" -ne 0 ]; then
+                echo Ignoring tarball $spark, no spark-submit
                 continue
             else
                 # See if we have an md5 file to match against
@@ -64,13 +68,14 @@ else
                         matched="$?"
                     fi
                     if [ "$matched" -ne 0 ]; then
-                        echo md5sum did not match
+                        echo Ignoring tarball $spark, md5sum did not match
                         continue
                     fi
                 fi
 
                 # dname will be the intial directory from the path of spark-submit
                 # we found in the tarball, ie the dir created by tar
+                echo Installing from tarball $spark
                 dname=$(dirname $name | cut -d/ -f 1)
                 sparkdir=$SPARK_INSTALL/$dname
                 tar -xzf $spark -C $SPARK_INSTALL
@@ -83,6 +88,7 @@ else
         # Search for the spark entrypoint file and copy it to $SPARK_INSTALL
         entry=$(find $SPARK_HOME/kubernetes -name entrypoint.sh)
         if [ -n "$entry" ]; then
+            echo Copying spark entrypoint
             cp $entry $SPARK_INSTALL
 
             # We have to patch the entrypoint to toggle error checking
@@ -94,14 +100,14 @@ else
             sed -i "s@exec /sbin/tini -s --@exec@" $SPARK_INSTALL/entrypoint.sh
         fi
 
-       # Include the default spark configuration files
+	# Include the default spark configuration files
         pushd $SPARK_INSTALL/conf
         for conf_file in *; do
             if ! [ -f "$SPARK_HOME"/conf/$conf_file ]; then
-                echo Moving $conf_file to $SPARK_HOME/conf
+	        echo Moving $conf_file to $SPARK_HOME/conf
                 mv $conf_file $SPARK_HOME/conf
             else
-                echo Not moving $conf_file, $SPARK_HOME/conf/$conf_file already exists
+	        echo Not moving $conf_file, $SPARK_HOME/conf/$conf_file already exists
             fi
         done
         popd
@@ -111,6 +117,8 @@ else
         if [ "$?" -eq 0 ]; then
             echo Spark installed successfully
             exit 0
+	else
+            echo Cannot run spark-submit, Spark install failed
         fi
 
         # Just in case there is more than one tarball, clean up

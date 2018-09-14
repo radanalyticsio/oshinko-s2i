@@ -1,0 +1,207 @@
+#!/bin/bash
+
+function build_md5 {
+    local myname=$1
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Attempting to install Spark'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from tarball'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Copying spark entrypoint'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function already_installed {
+    local myname=$1
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Attempting to install Spark'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from tarball'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
+
+    # Now we should have an imagestream named spark
+    local SPARK_PULL=$(oc get is $myname --template='{{index .status "dockerImageRepository"}}')
+    os::cmd::expect_success 'oc new-build --name=already --docker-image="$SPARK_PULL" --binary'
+    poll_binary_build already "$RESOURCE_DIR"/spark-inputs true
+    os::cmd::expect_success_and_text 'oc log buildconfig/already' 'Spark is installed'
+
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+    os::cmd::expect_success 'oc delete buildconfig already'
+}
+
+function build_env_var {
+    local myname=$1
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary -e SPARK_URL=https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz -e SPARK_MD5_URL=https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz.md5'
+
+    poll_binary_build $myname
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Attempting to install Spark'
+    os::cmd::try_until_success 'oc log buildconfig/"$myname" | grep "Downloading.*spark-2.3.0-bin-hadoop2.7.tgz$"'
+    os::cmd::try_until_success 'oc log buildconfig/"$myname" | grep "Downloading.*spark-2.3.0-bin-hadoop2.7.tgz.md5$"'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from tarball'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function build_bad_md5 {
+    local myname=$1    
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs true
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'md5sum did not match'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'no valid Spark distribution found'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function build_from_directory {
+    local myname=$1
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs/*.tgz
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Attempting to install Spark'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from directory'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function tarball_no_submit {
+    local myname=$1
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs-no-submit true
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Ignoring tarball.*no spark-submit'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'no valid Spark distribution found'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function directory_no_submit {
+    local myname=$1
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs-no-submit/*.tgz true
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Ignoring directory.*no spark-submit'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'no valid Spark distribution found'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function build_bad_tarball {
+    local myname=$1
+    local image=$2
+    local THIS=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)    
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+
+    poll_binary_build $myname "$THIS" true
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Ignoring.*not a tar archive'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'no valid Spark distribution found'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function bad_submit {
+    local myname=$1
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs-bad-submit true
+
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Cannot run spark-submit, Spark install failed'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'no valid Spark distribution found'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function copy_nocopy {
+    local myname=$1
+    local image=$2
+    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
+    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs-with-conf
+
+    os::cmd::try_until_success 'oc log buildconfig/"$myname" | grep "^Moving.*to /opt/spark/conf"'
+    os::cmd::try_until_success 'oc log buildconfig/"$myname" | grep "^Not moving.*/opt/spark/conf.*already exists"'
+    os::cmd::expect_success 'oc delete buildconfig "$myname"'
+}
+
+function app_fail {
+    set_defaults
+    run_app
+    # s2i app is going to fail here because there is no spark installed
+}
+
+function poll_binary_build() {
+    local myname=$1
+    local source
+    local expect_fail
+    local from_flag=""
+    if [ "$#" -ge 2 ]; then
+        source=$2
+        # We'll pass a tarball directory to test from-archive and the ability
+        # of the image to detect an unpacked directory. We'll use from-file
+        # with a directory to test the ability of the image to handle a tarball
+        if [[ "$source" == *".tgz" ]]; then
+	    from_flag="--from-archive=$source"
+        else
+	    from_flag="--from-file=$source"
+        fi
+    fi
+    if [ "$#" -eq 3 ]; then
+	expect_fail=$3
+    else
+	expect_fail=false
+    fi
+    local tries=0
+    local status
+    local BUILDNUM
+
+    echo "oc start-build $myname $from_flag"
+    oc start-build $myname $from_flag
+
+
+    while true; do
+        BUILDNUM=$(oc get buildconfig $myname --template='{{index .status "lastVersion"}}')
+	if [ "$BUILDNUM" == "0" ]; then
+	    # Buildconfig is brand new, lastVersion hasn't been updated yet
+	    status="starting"
+	else
+            status=$(oc get build "$myname"-$BUILDNUM --template="{{index .status \"phase\"}}")
+	fi
+	if [ "$status" == "starting" ]; then
+	    echo Build for $myname is spinning up, waiting ...
+	    sleep 5
+	elif [ "$status" != "Complete" -a "$status" != "Failed" -a "$status" != "Error" ]; then
+	    echo Build for $myname-$BUILDNUM status is $status, waiting ...
+	    sleep 10
+	elif [ "$status" == "Failed" -o "$status" == "Error" ]; then
+	    if [ "$expect_fail" == "true" ]; then
+		return
+	    fi
+	    set +e
+	    oc log buildconfig/$myname | grep "Pushing image"
+	    if [ "$?" -eq 0 ]; then
+		tries=$((tries+1))
+		if [ "$tries" -lt 5 ]; then
+		    echo Build failed on push, retrying
+		    sleep 5
+		    oc start-build $myname $from_flag
+		    continue
+		fi
+	    fi
+	    oc log buildconfig/$myname | tail -100
+	    set -e
+	    return 1
+	else
+	    echo Build for $myname-$BUILDNUM status is $status, returning
+	    break
+	fi
+    done
+}
