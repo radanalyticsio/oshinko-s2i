@@ -37,6 +37,15 @@ if [ -z "$S2I_TEST_IMAGE_SCALA" ]; then
     fi
 fi
 
+if [ -z "$S2I_TEST_IMAGE_SPARKLYR" ]; then
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        S2I_TEST_IMAGE_SPARKLYR=radanalytics-sparklyr
+    else
+        S2I_TEST_IMAGE_SCALA=docker.io/radanalyticsio/radanalytics-r-spark
+    fi
+fi
+
+
 S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark}
 S2I_TEST_SPARK_IMAGE_PY3=${S2I_TEST_SPARK_IMAGE_PY3:-docker.io/radanalyticsio/openshift-spark-py36}
 
