@@ -110,7 +110,7 @@ test-operations:
 
 test-incomplete:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
-	test/e2e/run.sh incomplete
+	test/e2e/run.sh incomplete/
 
 test-e2e:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
