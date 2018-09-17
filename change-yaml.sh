@@ -50,8 +50,8 @@ if [ ! -z ${OVER+x} ]; then
     wget https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz -O /tmp/oshinko_${OVER}_linux_amd64.tar.gz
     if [ "$?" -eq 0 ]; then
         sum=$(md5sum /tmp/oshinko_${OVER}_linux_amd64.tar.gz | cut -d ' ' -f 1)
-        # Mac OSX
         if [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
           # Fix the url references
           gsed -i "s@https://github.com/radanalyticsio/oshinko-cli/releases/download/.*@https://github.com/radanalyticsio/oshinko-cli/releases/download/${OVER}/oshinko_${OVER}_linux_amd64.tar.gz@" image.*.yaml
           # Fix the md5sum on the line following the url
@@ -69,26 +69,28 @@ fi
 
 # Change spark distro
 if [ ! -z ${SPARK+x} ]; then
+
     # Change the md5sum for pyspark and java, update base image for scala
     wget https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-hadoop${HVER}.tgz.md5 -O /tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz.md5
     if [ "$?" -eq 0 ]; then
        sum=$(cat /tmp/spark-${SPARK}-bin-hadoop2.7.tgz.md5 | cut -d':' -f 2 | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
-       # Mac OSX
        if [[ "$OSTYPE" == "darwin"* ]]; then
-	      # Fix the url references
-	      gsed -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-@" image.*.yaml
-	      # Fix the md5 sum references on the line following the url
+          # Mac OSX
+	        # Fix the url references
+	        gsed -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-@" image.*.yaml
+	        # Fix the md5 sum references on the line following the url
           gsed -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
        else
-          # Fix the url references
-          sed -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-@" image.*.yaml
-          # Fix the md5 sum references on the line following the url
-          sed -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
+         # Fix the url references
+         sed -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-@" image.*.yaml
+         # Fix the md5 sum references on the line following the url
+         sed -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
        fi
     else
         echo "Failed to get the md5 sum for the specified spark version, the version $SPARK may not be a real version"
         exit 1
     fi
 fi
+
 # Add any changes for commit
 git add image.*.yaml

@@ -16,6 +16,7 @@ The easiest way to build the s2i images is to use the makefiles provided:
     $ make -f Makefile.pyspark
     $ make -f Makefile.java
     $ make -f Makefile.scala
+    $ make -f Makefile.sparklyr
 
 The default repository for the image can be overridden with the `LOCAL_IMAGE` var:
 
@@ -40,6 +41,7 @@ the artifacts needed to build the images. They are:
     * pyspark-build
     * java-build
     * scala-build
+    * sparklyr-build
 
 If the yaml files used by concreate change (ie image.*.yaml) or the content
 included in an image changes (essentially anything under modules/), the
@@ -104,6 +106,7 @@ For example:
     release_templates/pysparkbuild.json:           "name": "radanalyticsio/radanalytics-pyspark:v0.2.5"
     release_templates/scalabuilddc.json:           "name": "radanalyticsio/radanalytics-scala-spark:v0.2.5"
     release_templates/scalabuild.json:             "name": "radanalyticsio/radanalytics-scala-spark:v0.2.5"
+    release_templates/sparklyrbuild.json           "name": "radanalyticsio/radanalytics-sparklyr-spark:v0.25"
 
     $ oc create -f release_templates/pysparkbuilddc.json
 
