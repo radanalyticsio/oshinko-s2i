@@ -20,6 +20,11 @@ matrix:
     - env: TO_TEST=incomplete OPENSHIFT_VERSION=v3.10
     - env: TO_TEST=ephemeral OPENSHIFT_VERSION=v3.10
     - env: TO_TEST=sparkk8s OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=pyspark-inc OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=pyspark-py36-inc OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=scala-inc OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=java-inc OPENSHIFT_VERSION=v3.10
+    - env: TO_TEST=sparklyr-inc OPENSHIFT_VERSION=v3.10
   fast_finish: true
 
 before_install:
@@ -44,6 +49,12 @@ script:
 - if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
 - if [ "$TO_TEST" == "ephemeral" ]; then make test-ephemeral ; fi
 - if [ "$TO_TEST" == "sparkk8s" ]; then S2I_K8S_LIMITED=true make test-sparkk8s ; fi
+- if [ "$TO_TEST" == "pyspark-inc" ]; then make test-pyspark-inc ; fi
+- if [ "$TO_TEST" == "pyspark-py36-inc" ]; then make test-pyspark-py36-inc ; fi
+- if [ "$TO_TEST" == "scala-inc" ]; then make test-scala-inc ; fi
+- if [ "$TO_TEST" == "java-inc" ]; then make test-java-inc ; fi
+- if [ "$TO_TEST" == "sparklyr-inc" ]; then make test-sparklyr-inc ; fi
+>>>>>>> Add app tests for incomplete s2i images
 notifications:
  email:
    on_success: never

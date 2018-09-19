@@ -62,6 +62,9 @@ USER root
 RUN [ "bash", "-x", "/tmp/scripts/common/install" ]
 
 USER root
+RUN [ "bash", "-x", "/tmp/scripts/sparklyr/install" ]
+
+USER root
 RUN rm -rf /tmp/scripts
 USER root
 RUN rm -rf /tmp/artifacts

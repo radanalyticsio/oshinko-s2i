@@ -9,12 +9,23 @@ S2I_TEST_IMAGE_PYSPARK_PY36 ?= $(S2I_TEST_IMAGE_PREFIX)-pyspark-py36
 S2I_TEST_IMAGE_JAVA ?= $(S2I_TEST_IMAGE_PREFIX)-java
 S2I_TEST_IMAGE_SCALA ?= $(S2I_TEST_IMAGE_PREFIX)-scala
 S2I_TEST_IMAGE_SPARKLYR ?= $(S2I_TEST_IMAGE_PREFIX)-sparklyr
+S2I_TEST_IMAGE_PYSPARK_INC ?= $(S2I_TEST_IMAGE_PREFIX)-pyspark-inc
+S2I_TEST_IMAGE_PYSPARK_PY36_INC ?= $(S2I_TEST_IMAGE_PREFIX)-pyspark-py36-inc
+S2I_TEST_IMAGE_JAVA_INC ?= $(S2I_TEST_IMAGE_PREFIX)-java-inc
+S2I_TEST_IMAGE_SCALA_INC ?= $(S2I_TEST_IMAGE_PREFIX)-scala-inc
+S2I_TEST_IMAGE_SPARKLYR_INC ?= $(S2I_TEST_IMAGE_PREFIX)-sparklyr-inc
 S2I_K8S_LIMITED ?= false
+
 export S2I_TEST_IMAGE_PYSPARK
 export S2I_TEST_IMAGE_PYSPARK_PY36
 export S2I_TEST_IMAGE_JAVA
 export S2I_TEST_IMAGE_SCALA
 export S2I_TEST_IMAGE_SPARKLYR
+export S2I_TEST_IMAGE_PYSPARK_INC
+export S2I_TEST_IMAGE_PYSPARK_PY36_INC
+export S2I_TEST_IMAGE_JAVA_INC
+export S2I_TEST_IMAGE_SCALA_INC
+export S2I_TEST_IMAGE_SPARKLYR_INC
 export S2I_K8S_LIMITED
 
 build: CMD=build
@@ -111,6 +122,26 @@ test-operations:
 test-incomplete:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	test/e2e/run.sh incomplete/
+
+test-pyspark-inc:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK_INC) make -f Makefile.pyspark-inc build
+	test/e2e/run.sh incomplete_image/pyspark-py27/
+
+test-pyspark-py36-inc:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK_PY36_INC) make -f Makefile.pyspark-py36-inc build
+	test/e2e/run.sh incomplete_image/pyspark-py36/
+
+test-java-inc:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA_INC) make -f Makefile.java-inc build
+	test/e2e/run.sh incomplete_image/java/
+
+test-scala-inc:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA_INC) make -f Makefile.scala-inc build
+	test/e2e/run.sh incomplete_image/scala/
+
+test-sparklyr-inc:
+	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR_INC) make -f Makefile.sparklyr-inc build
+	test/e2e/run.sh incomplete_image/sparklyr/
 
 test-e2e:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build

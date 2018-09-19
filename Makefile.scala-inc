@@ -1,9 +1,9 @@
-LOCAL_IMAGE ?= radanalytics-scala-inc
+LOCAL_IMAGE ?= radanalytics-scala-spark-inc
 
 # If you are going to push the built image to a registry
 # using the "push" make target then you should replace
 # "project" with an appropriate path for your registry and/or project
-PUSH_IMAGE=project/radanalytics-scala-inc
+PUSH_IMAGE=project/radanalytics-scala-spark-inc
 
 DOCKERFILE_CONTEXT=scala-build-inc
 

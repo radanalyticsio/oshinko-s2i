@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+echo 'install.packages("sparklyr")' | R --vanilla
+
+SCRIPT_DIR=$(dirname $0)
+ADDED_DIR=${SCRIPT_DIR}/added
+
+# Requires access to this directory to install new packages
+chown 185:0 -R /usr/lib64/R/library
+chmod 770 -R /usr/lib64/R/library
+
+cp -r $ADDED_DIR/s2i/* $STI_SCRIPTS_PATH

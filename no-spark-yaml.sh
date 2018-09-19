@@ -7,4 +7,4 @@ sed '\@url:.*https://archive.apache.org/@,+1d' $1 > $2
 sed -i '\@name:.*"io.radanalytics.sparkdistro"@,+1d' $2
 
 # Get rid of spark module install
-sed -i '\@- name: spark@d' $2
+sed -i '\@- name: spark$@d' $2
