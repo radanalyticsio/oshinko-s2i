@@ -8,7 +8,7 @@ function build_md5 {
 
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Attempting to install Spark'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from tarball'
-    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Copying spark entrypoint'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing spark native entrypoint'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
     os::cmd::expect_success 'oc delete buildconfig "$myname"'
@@ -132,12 +132,6 @@ function copy_nocopy {
     os::cmd::expect_success 'oc delete buildconfig "$myname"'
 }
 
-function app_fail {
-    set_defaults
-    run_app
-    # s2i app is going to fail here because there is no spark installed
-}
-
 function poll_binary_build() {
     local myname=$1
     local source
@@ -204,4 +198,44 @@ function poll_binary_build() {
 	    break
 	fi
     done
+}
+
+function run_incomplete_app() {
+    local template=$1
+    local source_info=$2
+    set +e
+    local SUFFIX=$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+    set -e
+    local APP_NAME=app-$SUFFIX
+    oc new-app --file=$template -p GIT_URI=$source_info -p APPLICATION_NAME=$APP_NAME
+    os::cmd::expect_success_and_text 'oc log buildconfig/$APP_NAME' 'no valid Spark distribution found'
+    oc delete buildconfig/$APP_NAME
+    oc delete dc/$APP_NAME
+    oc delete service $APP_NAME
+    oc delete service $APP_NAME-headless
+}
+
+# if we successfully build an image, we should be able to run a new-app using that image.
+# just run a single startup, no need to run all the images
+
+function run_completed_app() {
+    # going to need template, source, app_name, and main class
+    # template needs to an imagestream -- do we just copy the templates?
+    #  like, copy in the resources dir and do a different sed operation?
+    local template=$1
+    local source_info=$2
+    local config=
+    if [ "$#" -eq 3 ]; then
+	config="-p OSHINKO_NAMED_CONFIG=$3"
+    fi
+    set +e
+    local SUFFIX=$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+    set -e
+    local APP_NAME=app-$SUFFIX
+    oc new-app --file=$template -p GIT_URI=$source_info -p APPLICATION_NAME=$APP_NAME $config
+    os::cmd::try_until_text 'oc log dc/$APP_NAME' 'test app completed' $((10*minute))
+    oc delete buildconfig/$APP_NAME
+    oc delete dc/$APP_NAME
+    oc delete service $APP_NAME
+    oc delete service $APP_NAME-headless
 }
