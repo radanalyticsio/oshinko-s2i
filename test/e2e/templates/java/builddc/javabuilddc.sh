@@ -23,14 +23,15 @@ os::test::junit::declare_suite_start "$MY_SCRIPT"
 echo "++ check_image"
 check_image $S2I_TEST_IMAGE_JAVA
 
+# Do this first after check_image becaue it involves deleting all the existing buildconfigs
+echo "++ test_no_app_name"
+test_no_app_name
+
 echo "++ test_app_lang"
 test_app_lang java
 
 echo "++ run_complete"
 test_run_complete
-
-echo "++ test_no_app_name"
-test_no_app_name
 
 echo "++ test_exit"
 test_exit
