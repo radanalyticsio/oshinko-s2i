@@ -172,7 +172,7 @@ function get_driver_pod() {
         fi
         echo Getting driver pod for $APP_NAME failed, trying again
         oc get pods
-        sleep 0.5
+        sleep 1.0
         count=$((count + 1))
         echo $count
         if [ "$count" -eq 120 ]; then
