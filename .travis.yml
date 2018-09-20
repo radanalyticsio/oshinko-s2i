@@ -54,7 +54,6 @@ script:
 - if [ "$TO_TEST" == "scala-inc" ]; then make test-scala-inc ; fi
 - if [ "$TO_TEST" == "java-inc" ]; then make test-java-inc ; fi
 - if [ "$TO_TEST" == "sparklyr-inc" ]; then make test-sparklyr-inc ; fi
->>>>>>> Add app tests for incomplete s2i images
 notifications:
  email:
    on_success: never
