@@ -11,7 +11,8 @@ Usage: s2i build [-e APP_FILE=filename] <github repo> radanalytics-pyspark <appl
 
 ** Important! ** The APP_FILE environment variable specifies the name of the python file that
 contains the main routine for your pyspark application. The default value is
-"app.py". If your main routine is in a different file, you must use the APP_FILE
+"app.py" or the first .py file it finds in the directory.
+If your main routine is in a different file, you must use the APP_FILE
 option to s2i build to specify it.
 
 Example:
@@ -22,7 +23,6 @@ The resulting application image contains a startup script that expects the follo
 optional environment variables which can be set when the application is launched:
 
     OSHINKO_CLUSTER_NAME -- name of the spark cluster to use or create, required
-    OSHINKO_REST         -- ip of the oshinko-rest controller, required
     SPARK_OPTIONS        -- options to spark-submit, e.g.  "--conf spark.executor.memory=2G --conf spark.driver.memory=2G"
     APP_ARGS             -- arguments to the python application (if the app takes arguments)
     OSHINKO_DEL_CLUSTER  -- if a new cluster is created and this flag is set to "true" then the
