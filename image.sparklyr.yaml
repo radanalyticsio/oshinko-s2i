@@ -37,8 +37,8 @@ packages:
 artifacts:
   - url: https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz
     md5: af45eeb06dc1beee6d4c70b92c0e0237
-  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.5.4/oshinko_v0.5.4_linux_amd64.tar.gz
-    md5: e4b6b46f86bef72cc0b99a2d96273472
+  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.5.5/oshinko_v0.5.5_linux_amd64.tar.gz
+    md5: ee61fce9f7ce383e08bd5208cfc3085f
 run:
   user: 185
   cmd:
