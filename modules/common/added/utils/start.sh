@@ -8,7 +8,7 @@ function get_cluster_value {
     # get the value
     echo "$1" \
 	| sed -e 's/^[ \t]*//' \
-	| grep ^$2 \
+	| grep -i ^$2 \
 	| cut -d\  -f2
 }
 
@@ -211,7 +211,7 @@ function wait_for_workers_alive {
         # If someone scales down the cluster while we're still waiting
         # then we need to know what the real target is so check again
         line=$($CLI get $OSHINKO_CLUSTER_NAME $GET_FLAGS $CLI_ARGS)
-        desired=$(get_cluster_value "$line" workerCount)
+        desired=$(get_cluster_value "$line" workersCount)
     done
     echo "All spark workers alive"
 }
@@ -287,7 +287,7 @@ function use_spark_standalone {
 
     else
         # Build the spark-submit command and execute
-        desired=$(get_cluster_value "$CLI_LINE" workerCount)
+        desired=$(get_cluster_value "$CLI_LINE" workersCount)
         master=$(get_cluster_value "$CLI_LINE" masterUrl)
         masterweb=$(get_cluster_value "$CLI_LINE" masterWebUrl)
         ephemeral=$(get_cluster_value "$CLI_LINE" ephemeral)
