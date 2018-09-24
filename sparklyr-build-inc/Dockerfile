@@ -73,4 +73,4 @@ USER 185
 
 
 
-CMD ["/usr/local/s2i/usage"]
+CMD ["/usr/libexec/s2i/usage"]
