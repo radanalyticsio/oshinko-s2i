@@ -30,6 +30,8 @@ envs:
     value: /usr/local/s2i
   - name: APP_LANG
     value: java
+  - name: SPARK_VERSION
+    value: 2.3.0
 modules:
   install:
     - name: common

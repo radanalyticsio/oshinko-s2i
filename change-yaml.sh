@@ -91,7 +91,11 @@ if [ ! -z ${SPARK+x} ]; then
         exit 1
     fi
     #change the spark version in the env var
-    sed "s/SPARK_VERSION=\"*.*.*\"/SPARK_VERSION=\"${SPARK}\"/g" java-build/Dockerfile
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+       gsed -i "s/value: [0-9].[0-9].[0-9]/value: ${SPARK}/g" image.java.yaml
+    else
+       sed -i "s/value: [0-9].[0-9].[0-9]/value: ${SPARK}/g" image.java.yaml
+    fi
 fi
 
 # Add any changes for commit
