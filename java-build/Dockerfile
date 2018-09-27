@@ -81,4 +81,4 @@ USER 185
 
 ENTRYPOINT ["/opt/app-root/etc/bootstrap.sh"]
 
-CMD ["/usr/local/s2i/usage"]
+CMD java -XX:+PrintFlagsFinal -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -jar java-container.jar ["/usr/local/s2i/usage"]
