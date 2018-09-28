@@ -24,7 +24,7 @@ The default repository for the image can be overridden with the `LOCAL_IMAGE` va
 
 ## Modifying dependencies in the image yaml files
 
-The concreate tool generates the image context directories
+The cekit tool generates the image context directories
 based on the content of the image.*.yaml files.
 
 A script has been provided to make altering the image.*.yaml files
@@ -35,7 +35,7 @@ scala, and sbt. Run this for more details
 
 ## Remaking image context directories when things change
 
-The image context directories are generated with the concreate tool and contain
+The image context directories are generated with the cekit tool and contain
 the artifacts needed to build the images. They are:
 
     * pyspark-build
@@ -43,7 +43,7 @@ the artifacts needed to build the images. They are:
     * scala-build
     * sparklyr-build
 
-If the yaml files used by concreate change (ie image.*.yaml) or the content
+If the yaml files used by cekit change (ie image.*.yaml) or the content
 included in an image changes (essentially anything under modules/), the
 image context directories need to be rebuilt.
 

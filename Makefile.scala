@@ -28,7 +28,7 @@ context: $(DOCKERFILE_CONTEXT)
 $(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
 
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
-	concreate generate --descriptor image.scala.yaml
+	cekit generate --descriptor image.scala.yaml
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
 
 zero-tarballs:
