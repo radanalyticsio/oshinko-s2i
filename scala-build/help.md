@@ -26,6 +26,9 @@ __SBT_OPTS__
 __SPARK_HOME__
 >"/opt/spark"
 
+__SPARK_INSTALL__
+>"/opt/spark-distro"
+
 
 ### Configuration
 

@@ -1,6 +1,4 @@
 #!/bin/bash
-set -x
-
 
 function handle_term {
     echo Received a termination signal

@@ -1,4 +1,4 @@
-# radanalyticsio/radanalytics-java-spark
+# radanalytics-scala-spark
 
 ## Description
 
@@ -12,28 +12,22 @@
 These environment variables are defined in the image.
 
 __APP_LANG__
->"java"
+>"scala"
 
 __APP_ROOT__
 >"/opt/app-root"
 
 __PATH__
->"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin"
+>"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin:/opt/scala/bin:/opt/sbt/bin"
 
-__RADANALYTICS_JAVA_SPARK__
->"1.0"
+__SBT_OPTS__
+>"-Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled"
 
 __SPARK_HOME__
 >"/opt/spark"
 
 __SPARK_INSTALL__
 >"/opt/spark-distro"
-
-__SPARK_VERSION__
->"2.3.0"
-
-__STI_SCRIPTS_PATH__
->"/usr/local/s2i"
 
 
 ### Configuration
@@ -49,22 +43,19 @@ __io.cekit.version__
 > 2.1.4
 
 __io.k8s.description__
-> Platform for building a radanalytics java spark app
+> Platform for building a radanalytics Scala Spark app
 
 __io.k8s.display-name__
-> radanalytics java_spark
+> radanalytics scala_spark
 
 __io.openshift.expose-services__
 > 8080:http
 
 __io.openshift.s2i.scripts-url__
-> image:///usr/local/s2i
+> image:///usr/libexec/s2i
 
 __io.openshift.tags__
-> builder,radanalytics,java_spark
-
-__io.radanalytics.sparkdistro__
-> https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz
+> builder,radanalytics,scala_spark
 
 __org.concrt.version__
 > 2.1.4

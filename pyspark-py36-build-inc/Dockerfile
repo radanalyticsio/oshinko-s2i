@@ -19,41 +19,38 @@
 FROM centos/python-36-centos7:latest
 
 # Environment variables
-ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-pyspark-py36" \
-    JBOSS_IMAGE_VERSION="1.0" \
-    RADANALYTICS_PYSPARK="1.0" \
-    PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
-    SPARK_HOME="/opt/spark" \
-    SPARK_INSTALL="/opt/spark-distro" \
-    PYTHONPATH="/opt/spark/python" \
+ENV \
+    APP_LANG="python" \
     APP_ROOT="/opt/app-root" \
-    APP_LANG="python" 
+    PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
+    PYTHONPATH="/opt/spark/python" \
+    RADANALYTICS_PYSPARK="1.0" \
+    SPARK_HOME="/opt/spark" \
+    SPARK_INSTALL="/opt/spark-distro" 
 
 # Labels
-LABEL name="$JBOSS_IMAGE_NAME" \
-      version="$JBOSS_IMAGE_VERSION" \
-      architecture="x86_64"  \
-      com.redhat.component="radanalyticsio-radanalytics-pyspark-py36-docker"  \
-      io.k8s.description="Platform for building a radanalytics Python 3.6 pyspark app" \
-      io.k8s.display-name="radanalytics pyspark-py36" \
-      io.openshift.expose-services="8080:http" \
-      io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" \
-      io.openshift.tags="builder,radanalytics,pyspark" \
-      org.concrt.version="1.4.1"
+LABEL \
+      io.cekit.version="2.1.4"  \
+      io.k8s.description="Platform for building a radanalytics Python 3.6 pyspark app"  \
+      io.k8s.display-name="radanalytics pyspark-py36"  \
+      io.openshift.expose-services="8080:http"  \
+      io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"  \
+      io.openshift.tags="builder,radanalytics,pyspark"  \
+      org.concrt.version="2.1.4" 
 
 
 USER root
 
 
 # Install required RPMs and ensure that the packages were installed
-RUN yum install -y  java-1.8.0-openjdk \
-    && yum clean all && \
+RUN yum install -y java-1.8.0-openjdk \
+    && yum clean all && rm -rf /var/cache/yum && \
     rpm -q  java-1.8.0-openjdk
 
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    oshinko_v0.5.4_linux_amd64.tar.gz \
+    oshinko_v0.5.6_linux_amd64.tar.gz \
     /tmp/artifacts/
 
 # Add scripts used to configure the image
@@ -77,3 +74,4 @@ USER 185
 ENTRYPOINT ["/opt/app-root/etc/bootstrap.sh"]
 
 CMD ["/usr/libexec/s2i/usage"]
+
