@@ -63,9 +63,6 @@ __io.openshift.s2i.scripts-url__
 __io.openshift.tags__
 > builder,radanalytics,java_spark
 
-__io.radanalytics.sparkdistro__
-> https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz
-
 __org.concrt.version__
 > 2.1.4
 

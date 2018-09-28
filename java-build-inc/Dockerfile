@@ -19,41 +19,39 @@
 FROM fabric8/s2i-java:2.2.0
 
 # Environment variables
-ENV JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-java-spark" \
-    JBOSS_IMAGE_VERSION="1.0" \
-    RADANALYTICS_JAVA_SPARK="1.0" \
+ENV \
+    APP_LANG="java" \
+    APP_ROOT="/opt/app-root" \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
+    RADANALYTICS_JAVA_SPARK="1.0" \
     SPARK_HOME="/opt/spark" \
     SPARK_INSTALL="/opt/spark-distro" \
-    APP_ROOT="/opt/app-root" \
-    STI_SCRIPTS_PATH="/usr/local/s2i" \
-    APP_LANG="java" 
+    SPARK_VERSION="2.3.0" \
+    STI_SCRIPTS_PATH="/usr/local/s2i" 
 
 # Labels
-LABEL name="$JBOSS_IMAGE_NAME" \
-      version="$JBOSS_IMAGE_VERSION" \
-      architecture="x86_64"  \
-      com.redhat.component="radanalyticsio-radanalytics-java-spark-docker"  \
-      io.k8s.description="Platform for building a radanalytics java spark app" \
-      io.k8s.display-name="radanalytics java_spark" \
-      io.openshift.expose-services="8080:http" \
-      io.openshift.s2i.scripts-url="image:///usr/local/s2i" \
-      io.openshift.tags="builder,radanalytics,java_spark" \
-      org.concrt.version="1.4.1"
+LABEL \
+      io.cekit.version="2.1.4"  \
+      io.k8s.description="Platform for building a radanalytics java spark app"  \
+      io.k8s.display-name="radanalytics java_spark"  \
+      io.openshift.expose-services="8080:http"  \
+      io.openshift.s2i.scripts-url="image:///usr/local/s2i"  \
+      io.openshift.tags="builder,radanalytics,java_spark"  \
+      org.concrt.version="2.1.4" 
 
 
 USER root
 
 
 # Install required RPMs and ensure that the packages were installed
-RUN yum install -y  tar wget \
-    && yum clean all && \
+RUN yum install -y tar wget \
+    && yum clean all && rm -rf /var/cache/yum && \
     rpm -q  tar wget
 
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    oshinko_v0.5.4_linux_amd64.tar.gz \
+    oshinko_v0.5.6_linux_amd64.tar.gz \
     /tmp/artifacts/
 
 # Add scripts used to configure the image
@@ -77,3 +75,4 @@ USER 185
 ENTRYPOINT ["/opt/app-root/etc/bootstrap.sh"]
 
 CMD ["/usr/local/s2i/usage"]
+

@@ -29,6 +29,9 @@ __RADANALYTICS_PYSPARK__
 __SPARK_HOME__
 >"/opt/spark"
 
+__SPARK_INSTALL__
+>"/opt/spark-distro"
+
 
 ### Configuration
 
