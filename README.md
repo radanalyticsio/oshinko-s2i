@@ -1,9 +1,28 @@
 [![Build Status](https://travis-ci.org/radanalyticsio/oshinko-s2i.svg?branch=master)](https://travis-ci.org/radanalyticsio/oshinko-s2i)
 [![Docker python build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-pyspark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-pyspark)
+[![Docker python 3.6 build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-pyspark-py36.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-pyspark-py36)
 [![Docker java build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-java-spark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-java-spark)
+[![Docker scala build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-scala-spark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-scala-spark)
+
+# todo
+
+* add badges for inc files?
+* need to add how to use get-rad-image, rad-image and resources-is.yaml, templates-is.sh
+    * refer to the landing site howdoi?
 
 # oshinko-s2i #
 This is a place to put s2i images and utilities for Apache Spark application builders for OpenShift.
+
+## Complete versus incomplete images ##
+
+There are two types of images that can be built from this repository, `complete` and `incomplete`
+
+Complete images include a pre-selected Apache Spark distribution that is installed when the
+image is built.
+
+Incomplete images contain radanalytics.io tooling but do not include a Spark distribution. With these
+images, users can perform s2i builds and produce images with Spark distributions of
+their choosing. This document includes information on how to use the incomplete images.
 
 ## Building the s2i images ##
 
@@ -14,9 +33,15 @@ The easiest way to build the s2i images is to use the makefiles provided:
 
     # To build images individually
     $ make -f Makefile.pyspark
+    $ make -f Makefile.pyspark-py36
     $ make -f Makefile.java
     $ make -f Makefile.scala
     $ make -f Makefile.sparklyr
+    $ make -f Makefile.pyspark-inc
+    $ make -f Makefile.pyspark-py36-inc
+    $ make -f Makefile.java-inc
+    $ make -f Makefile.scala-inc
+    $ make -f Makefile.sparklyr-inc
 
 The default repository for the image can be overridden with the `LOCAL_IMAGE` var:
 
@@ -28,8 +53,8 @@ The cekit tool generates the image context directories
 based on the content of the image.*.yaml files.
 
 A script has been provided to make altering the image.*.yaml files
-simpler. It handles modifying the specified versions of oshinko, spark,
-scala, and sbt. Run this for more details
+simpler. It handles modifying the specified versions of oshinko and Spark.
+Run this for more details
 
     $ change-yaml.sh -h
 
@@ -39,9 +64,15 @@ The image context directories are generated with the cekit tool and contain
 the artifacts needed to build the images. They are:
 
     * pyspark-build
+    * pyspark-py36-build
     * java-build
     * scala-build
     * sparklyr-build
+    * pyspark-build-inc
+    * pyspark-py36-build-inc
+    * java-build-inc
+    * scala-build-inc
+    * sparklyr-build-inc
 
 If the yaml files used by cekit change (ie image.*.yaml) or the content
 included in an image changes (essentially anything under modules/), the
@@ -61,6 +92,12 @@ to the commit.
 
 ### Rebuilding a particular context directory for testing/development
 
+If the actual components specified in an image.*.yaml file have changed
+as opposed to only the _contents_ of existing modules, then the `target`
+directory should be cleaned before generating the context directory
+
+    $ make clean-target
+
 To regenerate a particular context directory, like pyspark-build, do this
 
     $ make -f Makefile.pyspark clean-context context
@@ -68,6 +105,29 @@ To regenerate a particular context directory, like pyspark-build, do this
 To regenerate the context directory and also build the image, do this
 
     $ make -f Makefile.pyspark clean build
+
+## Using incomplete images to choose an Apache Spark distribution
+
+[This link](https://radanalytics.io/howdoi/choose-my-spark-distribution) explains how
+to use radanalytics.io with a specific Spark distribution. It's a must read if you
+are not familiar with the incomplete images and how to use them.
+
+### Getting `rad-image` with R support enabled
+
+The version of `rad-image` from radanalytics.io has generation of the R image
+disabled. Do this to download `rad-image` and enable R support
+
+    $ ./get-rad-image.sh
+
+### Modifying templates/* with `templates-is.sh`
+
+In addtion to `resources-is.yaml` from radanalytics.io, the templates in this repository
+can be used with the imagestreams created by `rad-image` with a few changes.
+Use the `templates-is.sh` script to generate modified templates in `templates-is/`
+
+    $ ./templates-is.sh
+
+Run `./templates-is.sh -h` for more information
 
 ## Git pre-commit hook
 
@@ -94,21 +154,26 @@ the templates that reference s2i images from a particular oshinko release.
 You may want to use this script to guarantee that you are using a stable image.
 For example:
 
-    $ ./release-templates.sh v0.2.5
+    $ ./release-templates.sh v0.5.6
 
-    Successfully wrote templates to release_templates/ with version tag v0.2.5
+    Successfully wrote templates to release_templates/ with version tag v0.5.6
 
-    grep radanalyticsio/radanalytics-.*spark:v0.2.5 *
+    grep radanalyticsio/radanalytics-.*:v0.5.6 *
 
-    release_templates/javabuilddc.json:            "name": "radanalyticsio/radanalytics-java-spark:v0.2.5"
-    release_templates/javabuild.json:              "name": "radanalyticsio/radanalytics-java-spark:v0.2.5"
-    release_templates/pysparkbuilddc.json:         "name": "radanalyticsio/radanalytics-pyspark:v0.2.5"
-    release_templates/pysparkbuild.json:           "name": "radanalyticsio/radanalytics-pyspark:v0.2.5"
-    release_templates/scalabuilddc.json:           "name": "radanalyticsio/radanalytics-scala-spark:v0.2.5"
-    release_templates/scalabuild.json:             "name": "radanalyticsio/radanalytics-scala-spark:v0.2.5"
-    release_templates/sparklyrbuild.json           "name": "radanalyticsio/radanalytics-sparklyr-spark:v0.25"
+    release_templates/javabuilddc.json:                     "name": "radanalyticsio/radanalytics-java-spark:v0.5.6"
+    release_templates/javabuild.json:                     "name": "radanalyticsio/radanalytics-java-spark:v0.5.6"
+    release_templates/python36builddc.json:                     "name": "radanalyticsio/radanalytics-pyspark-py36:v0.5.6"
+    release_templates/python36build.json:                     "name": "radanalyticsio/radanalytics-pyspark-py36:v0.5.6"
+    release_templates/pythonbuilddc.json:                     "name": "radanalyticsio/radanalytics-pyspark:v0.5.6"
+    release_templates/pythonbuild.json:                     "name": "radanalyticsio/radanalytics-pyspark:v0.5.6"
+    release_templates/scalabuilddc.json:                     "name": "radanalyticsio/radanalytics-scala-spark:v0.5.6"
+    release_templates/scalabuild.json:                     "name": "radanalyticsio/radanalytics-scala-spark:v0.5.6"
+    release_templates/sparklyrbuilddc.json:                     "name": "radanalyticsio/radanalytics-r-spark:v0.5.6"
+    release_templates/sparklyrbuild.json:                     "name": "radanalyticsio/radanalytics-r-spark:v0.5.6"
 
-    $ oc create -f release_templates/pysparkbuilddc.json
+    tar -czf oshinko_s2i_v0.5.6.tar.gz release_templates
+
+    $ oc create -f release_templates/pythonbuilddc.json
 
 ## MacOS Tips
 
