@@ -8,7 +8,7 @@ function usage() {
     echo "Options:"
     echo "  -h      Print this help message"
     echo "  -f      Force overwrite of ./templates-is"
-    echo "  TAG     Use TAG as the tag for imagestream references. Default is 'latest'"
+    echo "  TAG     Use TAG as the tag for imagestream references. Default is 'complete'"
 }
 
 FORCE=false
@@ -28,7 +28,7 @@ done
 shift $((OPTIND-1))
 
 if [ "$#" -ne 1 ]; then
-    tag=latest
+    tag=complete
 else
     tag=$1
 fi
