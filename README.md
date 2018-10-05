@@ -4,12 +4,6 @@
 [![Docker java build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-java-spark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-java-spark)
 [![Docker scala build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-scala-spark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-scala-spark)
 
-# todo
-
-* add badges for inc files?
-* need to add how to use get-rad-image, rad-image and resources-is.yaml, templates-is.sh
-    * refer to the landing site howdoi?
-
 # oshinko-s2i #
 This is a place to put s2i images and utilities for Apache Spark application builders for OpenShift.
 
@@ -22,7 +16,7 @@ image is built.
 
 Incomplete images contain radanalytics.io tooling but do not include a Spark distribution. With these
 images, users can perform s2i builds and produce images with Spark distributions of
-their choosing. This document includes information on how to use the incomplete images.
+their choosing. See below for information on how to use the incomplete images.
 
 ## Building the s2i images ##
 
