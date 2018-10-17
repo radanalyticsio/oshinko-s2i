@@ -25,8 +25,11 @@ else
     oc create -f https://radanalytics.io/resources.yaml &> /dev/null
 fi
 
-oc export template oshinko-scala-spark-build-dc -o json > $RESOURCE_DIR/oshinko-scala-spark-build-dc.json
-fix_template $RESOURCE_DIR/oshinko-scala-spark-build-dc.json radanalyticsio/radanalytics-scala-spark:stable $S2I_TEST_IMAGE_SCALA
+oc get template oshinko-scala-spark-build-dc -o json > $RESOURCE_DIR/oshinko-scala-spark-build-dc.json
+# If we're using non-local images, we can use the template as is
+if [ "$S2I_TEST_LOCAL_IMAGES" == "true" ]; then
+    fix_template $RESOURCE_DIR/oshinko-scala-spark-build-dc.json radanalyticsio/radanalytics-scala-spark:stable $S2I_TEST_IMAGE_SCALA
+fi
 set -e
 
 function test_ivy_perms {
