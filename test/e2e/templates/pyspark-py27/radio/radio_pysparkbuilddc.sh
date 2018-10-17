@@ -23,14 +23,22 @@ else
     echo Using https://radanalytics.io/resources.yaml
     oc create -f https://radanalytics.io/resources.yaml &> /dev/null
 fi
-oc export template oshinko-python-spark-build-dc -o json > $RESOURCE_DIR/oshinko-python-spark-build-dc.json
-fix_template $RESOURCE_DIR/oshinko-python-spark-build-dc.json radanalyticsio/radanalytics-pyspark:stable $S2I_TEST_IMAGE_PYSPARK
+oc get template oshinko-python-spark-build-dc -o json > $RESOURCE_DIR/oshinko-python-spark-build-dc.json
+
+# If we're using non-local images, we can use the template as is
+if [ "$S2I_TEST_LOCAL_IMAGES" == "true" ]; then
+    fix_template $RESOURCE_DIR/oshinko-python-spark-build-dc.json radanalyticsio/radanalytics-pyspark:stable $S2I_TEST_IMAGE_PYSPARK
+fi
 set -e
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
-echo "++ check_image"
-check_image $S2I_TEST_IMAGE_PYSPARK
+# The purpose of check_image is to make sure the templates reference
+# the image we expect. If we're using non-local images, then we don't need this check
+if [ "$S2I_TEST_LOCAL_IMAGES" == "true" ]; then
+    echo "++ check_image"
+    check_image $S2I_TEST_IMAGE_PYSPARK
+fi
 
 # Do this first after check_image becaue it involves deleting all the existing buildconfigs
 echo "++ test_no_app_name"
