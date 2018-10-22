@@ -14,31 +14,34 @@ set_worker_count $S2I_TEST_WORKERS
 set_fixed_app_name scala-build
 set_app_main_class org.apache.spark.examples.SparkPi
 
-# Need a little preamble here to read the resources.yaml, create the scala template, and save
-# it to the resources directory
 set +e
 if [ -f "$RESOURCE_DIR"/resources.yaml ]; then
-    echo Using local resources.yaml
-    oc create -f $RESOURCE_DIR/resources.yaml &> /dev/null
+    echo Using local resources.yaml and rad-image
+    oc create -f $RESOURCE_DIR/resources.yaml
 else
-    echo Using https://radanalytics.io/resources.yaml
+    echo Using https://radanalytics.io/resources.yaml and https://radanalytics.io/assets/tools/rad-image
     oc create -f https://radanalytics.io/resources.yaml &> /dev/null
-fi
-oc get template oshinko-scala-spark-build-dc -o json > $RESOURCE_DIR/oshinko-scala-spark-build-dc.json
-
-# If we're using non-local images, we can use the template as is
-if [ "$S2I_TEST_LOCAL_IMAGES" == "true" ]; then
-    fix_template $RESOURCE_DIR/oshinko-scala-spark-build-dc.json radanalyticsio/radanalytics-scala-spark:stable $S2I_TEST_IMAGE_SCALA
+    wget https://radanalytics.io/assets/tools/rad-image -O $RESOURCE_DIR/rad-image
+    chmod +x $RESOURCE_DIR/rad-image
 fi
 set -e
 
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
+if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+    tag_local_to_imagestream radanalytics-scala-spark
+    $RESOURCE_DIR/rad-image use local radanalytics-scala-spark
+fi
+
+# We download the template because the run_app routines reference template files locally
+# If we've modified it for a local imagestream, that's already happened at this point
+oc get template oshinko-scala-spark-build-dc -o json > $RESOURCE_DIR/oshinko-scala-spark-build-dc.json
+
 # The purpose of check_image is to make sure the templates reference
 # the image we expect. If we're using non-local images, then we don't need this check
 if [ "$S2I_TEST_LOCAL_IMAGES" == "true" ]; then
-    echo "++ check_image"
-    check_image $S2I_TEST_IMAGE_SCALA
+    echo "++ check_imagestream"
+    check_imagestream radanalytics-scala-spark:local
 fi
 
 # Do this first after check_image becaue it involves deleting all the existing buildconfigs

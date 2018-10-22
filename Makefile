@@ -64,7 +64,8 @@ test-sparkk8s:
 
 test-java-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
-	test/e2e/run.sh templates/java
+	# run dc, build, and builddc but skip radio because it requires a registry
+	test/e2e/run.sh "(templates/java/dc|templates/java/build)"
 
 test-java-radio:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
@@ -72,7 +73,8 @@ test-java-radio:
 
 test-pyspark-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
-	test/e2e/run.sh templates/pyspark-py27
+	# run dc, build, and builddc but skip radio because it requires a registry
+	test/e2e/run.sh "(templates/pyspark-py27/dc|templates/pyspark-py27/build)"
 
 test-pyspark-radio:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
@@ -84,17 +86,12 @@ test-pyspark-py36-templates:
 
 test-scala-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
-	test/e2e/run.sh templates/scala
+        # run dc, build, and builddc but skip radio because it requires a registry
+	test/e2e/run.sh "(templates/scala/build|templates/scala/dc)"
 
 test-scala-radio:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
 	test/e2e/run.sh templates/scala/radio
-
-test-scala-dc:
-	# pick up build and builddc tests along with dc
-	# separate this from radio for travis sake (try to get time below 50 minutes)
-	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
-	test/e2e/run.sh "(templates/scala/build|templates/scala/dc)"
 
 test-sparklyr-dc:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SPARKLYR) make -f Makefile.sparklyr build

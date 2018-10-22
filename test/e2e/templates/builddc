@@ -534,6 +534,67 @@ function test_app_lang {
     cleanup_app $DRIVER
 }
 
+function check_imagestream {
+    local testimage=$1
+    set_defaults
+    force_random_app_name
+    run_app skip_wait
+    os::cmd::try_until_success 'oc get buildconfig "$APP_NAME"' $((10*minute))
+
+    IMAGE=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "name"}}')
+    KIND=$(oc get buildconfig $APP_NAME --template='{{index .spec "strategy" "sourceStrategy" "from" "kind"}}')
+    echo $IMAGE
+    echo $testimage
+    os::cmd::expect_success '[ "$IMAGE" == "$testimage" ]'
+    os::cmd::expect_success '[ "$KIND" == "ImageStreamTag" ]'
+
+    oc delete buildconfig $APP_NAME &> /dev/null
+    oc delete is $APP_NAME &> /dev/null
+    set +e
+    oc delete dc $APP_NAME &> /dev/null
+    set -e
+}
+
+function tag_local_to_imagestream {
+
+    imagestream=$1
+    if [ "$#" -eq 2 ]; then
+        tag=$2
+    else
+	tag=local
+    fi
+
+    if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
+
+	user=$(oc whoami)
+	password=$(oc whoami -t)
+	pushproj=$PROJECT
+	registry=$S2I_TEST_INTEGRATED_REGISTRY
+
+	docker login -u $user -p $password $registry
+	docker tag $S2I_TEST_IMAGE_PYSPARK ${registry}/${pushproj}/$imagestream:$tag
+	docker push ${registry}/${pushproj}/$imagestream:$tag
+
+    elif [ -n "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+
+	user=$S2I_TEST_EXTERNAL_USER
+	password=$S2I_TEST_EXTERNAL_PASSWORD
+	pushproj=$user
+	pushimage=scratch-$S2I_TEST_IMAGE_PYSPARK
+	registry=$S2I_TEST_EXTERNAL_REGISTRY
+
+	docker login -u $user -p $password $registry
+	docker tag $S2I_TEST_IMAGE_PYSPARK ${registry}/${pushproj}/${pushimage}
+	docker push ${registry}/${pushproj}/${pushimage}
+
+	oc tag ${registry}/${pushproj}/${pushimage} $imagestream:$tag
+
+    else
+	echo You must use an integrated or external registry to represent local images in imagestreams
+	exit 1
+    fi
+}
+
 function check_image {
     local testimage=$1
     set_defaults
@@ -560,8 +621,7 @@ function check_image {
     fi
 
     if [ "$registry" == true ]; then
-        # strip the tags from both images in the case of the integrated registry
-        # because we're not sure what we'll have.
+        # strip the tags from both images in the case of the registry because we're not sure what we'll have.
         v1=$(echo "$IMAGE" | sed -r -e "s@([^:]*)(:.*)@\1@")
         v2=$(echo "$testimage" | sed -r -e "s@([^:]*)(:.*)@\1@")
         echo $v1
