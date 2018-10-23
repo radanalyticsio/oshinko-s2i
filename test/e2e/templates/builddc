@@ -557,11 +557,11 @@ function check_imagestream {
 
 function tag_local_to_imagestream {
 
-    imagestream=$1
-    if [ "$#" -eq 2 ]; then
-        tag=$2
-    else
-	tag=local
+    local image=$1
+    local imagestream=$2
+    local tag="local"
+    if [ "$#" -eq 3 ]; then
+        tag=$3
     fi
 
     if [ -n "$S2I_TEST_INTEGRATED_REGISTRY" ]; then
@@ -572,7 +572,7 @@ function tag_local_to_imagestream {
 	registry=$S2I_TEST_INTEGRATED_REGISTRY
 
 	docker login -u $user -p $password $registry
-	docker tag $S2I_TEST_IMAGE_PYSPARK ${registry}/${pushproj}/$imagestream:$tag
+	docker tag $image ${registry}/${pushproj}/$imagestream:$tag
 	docker push ${registry}/${pushproj}/$imagestream:$tag
 
     elif [ -n "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
@@ -580,11 +580,11 @@ function tag_local_to_imagestream {
 	user=$S2I_TEST_EXTERNAL_USER
 	password=$S2I_TEST_EXTERNAL_PASSWORD
 	pushproj=$user
-	pushimage=scratch-$S2I_TEST_IMAGE_PYSPARK
+	pushimage=scratch-$image
 	registry=$S2I_TEST_EXTERNAL_REGISTRY
 
 	docker login -u $user -p $password $registry
-	docker tag $S2I_TEST_IMAGE_PYSPARK ${registry}/${pushproj}/${pushimage}
+	docker tag $image ${registry}/${pushproj}/${pushimage}
 	docker push ${registry}/${pushproj}/${pushimage}
 
 	oc tag ${registry}/${pushproj}/${pushimage} $imagestream:$tag

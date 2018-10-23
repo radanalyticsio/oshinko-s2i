@@ -28,7 +28,7 @@ set -e
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
 if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
-    tag_local_to_imagestream radanalytics-pyspark
+    tag_local_to_imagestream $S2I_TEST_IMAGE_PYSPARK radanalytics-pyspark
     $RESOURCE_DIR/rad-image use local radanalytics-pyspark
 fi
 
