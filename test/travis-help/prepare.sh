@@ -40,7 +40,8 @@ function start_and_verify_openshift() {
   if [ "$built" == false ]; then
       exit 1
   fi
-  # travis-check-pods.sh left us in the default project
+  # travis-check-pods.sh left us in the default project as sysadmin
+  oc login -u developer -p developer
   oc project myproject
 }
 
