@@ -35,8 +35,7 @@ if [ -f rad-image ]; then
     fi
 fi
 
-#wget https://radanalytics.io/assets/tools/rad-image
-wget https://raw.githubusercontent.com/radanalyticsio/radanalyticsio.github.io/b6a661af7610d8f2bcb46f357e6eafc70a770d50/assets/tools/rad-image -O rad-image
+wget https://radanalytics.io/assets/tools/rad-image
 
 # Change the IMAGESTREAMS variable to include R
 IS=$(grep "IMAGESTREAMS=" rad-image)
