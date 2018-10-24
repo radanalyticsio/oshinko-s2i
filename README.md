@@ -115,7 +115,7 @@ disabled. Do this to download `rad-image` and enable R support
 
 ### Modifying templates/* with `templates-is.sh`
 
-In addtion to `resources-is.yaml` from radanalytics.io, the templates in this repository
+In addtion to `resources.yaml` from radanalytics.io, the templates in this repository
 can be used with the imagestreams created by `rad-image` with a few changes.
 Use the `templates-is.sh` script to generate modified templates in `templates-is/`
 
