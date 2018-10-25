@@ -32,8 +32,8 @@ set_worker_count $S2I_TEST_WORKERS
 os::test::junit::declare_suite_start "$MY_SCRIPT"
 
 # Make the S2I test image if it's not already in the project
-make_image
+# make_image
 
-redeploy_cluster_removed
+# redeploy_cluster_removed
 
 os::test::junit::declare_suite_end
