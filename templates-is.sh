@@ -8,7 +8,7 @@ function usage() {
     echo "Options:"
     echo "  -h      Print this help message"
     echo "  -f      Force overwrite of ./templates-is"
-    echo "  TAG     Use TAG as the tag for imagestream references. Default is 'complete'"
+    echo "  TAG     Use TAG as the tag for imagestream references. Default is 'stable'"
 }
 
 FORCE=false
@@ -28,7 +28,7 @@ done
 shift $((OPTIND-1))
 
 if [ "$#" -ne 1 ]; then
-    tag=complete
+    tag=stable
 else
     tag=$1
 fi
@@ -50,6 +50,6 @@ for t in $templates; do
     echo "    "templates-is/$(basename $t)
     cp $t templates-is
     sed -i 's@"kind": "DockerImage"@"kind": "ImageStreamTag"@g' templates-is/$(basename $t)
-    sed -i -r "s@\"name\": \"radanalyticsio/(.*)\"@\"name\": \"\1:"$tag"@g" templates-is/$(basename $t) 
+    sed -i -r "s@\"name\": \"radanalyticsio/(.*)\"@\"name\": \"\1:"$tag"\"@g" templates-is/$(basename $t)
 done	
 
