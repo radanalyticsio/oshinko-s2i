@@ -18,40 +18,45 @@
 
 FROM rimolive/r-34-centos7:latest
 
+USER root
+
+
+# Install required RPMs and ensure that the packages were installed
+RUN yum install -y java-1.8.0-openjdk \
+    && yum clean all && rm -rf /var/cache/yum \
+    && rpm -q java-1.8.0-openjdk
+
+
+# Add all artifacts to the /tmp/artifacts
+# directory
+COPY \
+    spark-2.4.0-bin-hadoop2.7.tgz \
+    oshinko_v0.6.1_linux_amd64.tar.gz \
+    /tmp/artifacts/
+
+
 # Environment variables
 ENV \
     APP_LANG="r" \
     APP_ROOT="/opt/app-root" \
+    JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-sparklyr" \
+    JBOSS_IMAGE_VERSION="1.0" \
     PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     SPARK_HOME="/opt/spark" \
     SPARK_INSTALL="/opt/spark-distro" 
 
 # Labels
 LABEL \
-      io.cekit.version="2.1.4"  \
+      io.cekit.version="2.2.7"  \
       io.k8s.description="Platform for building a radanalytics sparklyr app"  \
       io.k8s.display-name="radanalytics sparklyr"  \
       io.openshift.expose-services="8080:http"  \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"  \
       io.openshift.tags="builder,radanalytics,sparklyr"  \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"  \
-      org.concrt.version="2.1.4" 
-
-
-USER root
-
-
-# Install required RPMs and ensure that the packages were installed
-RUN yum install -y java-1.8.0-openjdk \
-    && yum clean all && rm -rf /var/cache/yum && \
-    rpm -q  java-1.8.0-openjdk
-
-# Add all artifacts to the /tmp/artifacts
-# directory
-COPY \
-    spark-2.3.0-bin-hadoop2.7.tgz \
-    oshinko_v0.5.6_linux_amd64.tar.gz \
-    /tmp/artifacts/
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz"  \
+      name="radanalyticsio/radanalytics-sparklyr"  \
+      org.concrt.version="2.2.7"  \
+      version="1.0" 
 
 # Add scripts used to configure the image
 COPY modules /tmp/scripts

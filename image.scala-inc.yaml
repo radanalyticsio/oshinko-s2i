@@ -1,47 +1,46 @@
 schema_version: 1
 
-name: "radanalyticsio/radanalytics-sparklyr"
+name: "radanalytics-scala-spark"
 version: 1.0
 release: dev
-from: "rimolive/r-34-centos7:latest"
+from: "radanalyticsio/s2i-scala-container:latest"
 labels:
   - name: "io.k8s.description"
-    value: "Platform for building a radanalytics sparklyr app"
+    value: "Platform for building a radanalytics Scala Spark app"
   - name: "io.k8s.display-name"
-    value: "radanalytics sparklyr"
+    value: "radanalytics scala_spark"
   - name: "io.openshift.expose-services"
     value: "8080:http"
   - name: "io.openshift.s2i.scripts-url"
     value: "image:///usr/libexec/s2i"
   - name: "io.openshift.tags"
-    value: "builder,radanalytics,sparklyr"
-  - name: "io.radanalytics.sparkdistro"
-    value: "https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz"
+    value: "builder,radanalytics,scala_spark"
 envs:
   - name: PATH
-    value: /opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin
+    value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin:/opt/scala/bin:/opt/sbt/bin
   - name: SPARK_HOME
     value: /opt/spark
   - name: SPARK_INSTALL
     value: /opt/spark-distro
   - name: APP_ROOT
     value: /opt/app-root
+  - name: SBT_OPTS
+    value: -Dsbt.global.base=/tmp/.sbt/0.13 -Dsbt.ivy.home=/tmp/.ivy2 -Xms512M -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled
   - name: APP_LANG
-    value: r
+    value: scala
 modules:
   install:
     - name: common
-    - name: spark
-    - name: sparklyr
+    - name: scala
 packages:
   install:
-    - java-1.8.0-openjdk
+    - git
 artifacts:
-  - url: https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
-    md5: c1a230474c21335c983f45e84dcf8fb9
   - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.6.1/oshinko_v0.6.1_linux_amd64.tar.gz
     md5: ce740893afa0801134151ff83e7f21e6
 run:
   user: 185
   cmd:
     - "/usr/libexec/s2i/usage"
+  entrypoint:
+    - "/opt/app-root/etc/bootstrap.sh"
