@@ -17,6 +17,12 @@ __APP_LANG__
 __APP_ROOT__
 >"/opt/app-root"
 
+__JBOSS_IMAGE_NAME__
+>"radanalyticsio/radanalytics-pyspark-py36"
+
+__JBOSS_IMAGE_VERSION__
+>"1.0"
+
 __PATH__
 >"/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin"
 
@@ -43,7 +49,7 @@ when starting a container:
 ## Labels
 
 __io.cekit.version__
-> 2.1.4
+> 2.2.7
 
 __io.k8s.description__
 > Platform for building a radanalytics Python 3.6 pyspark app
@@ -60,7 +66,13 @@ __io.openshift.s2i.scripts-url__
 __io.openshift.tags__
 > builder,radanalytics,pyspark
 
+__name__
+> radanalyticsio/radanalytics-pyspark-py36
+
 __org.concrt.version__
-> 2.1.4
+> 2.2.7
+
+__version__
+> 1.0
 
 

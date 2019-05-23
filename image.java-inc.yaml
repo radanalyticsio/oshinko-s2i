@@ -15,8 +15,6 @@ labels:
     value: "image:///usr/local/s2i"
   - name: "io.openshift.tags"
     value: "builder,radanalytics,java_spark"
-  - name: "io.radanalytics.sparkdistro"
-    value: "https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz"
 envs:
   - name: RADANALYTICS_JAVA_SPARK
     value: 1.0
@@ -37,15 +35,12 @@ envs:
 modules:
   install:
     - name: common
-    - name: spark
     - name: java
 packages:
   install:
     - tar
     - wget
 artifacts:
-  - url: https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
-    md5: c1a230474c21335c983f45e84dcf8fb9
   - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.6.1/oshinko_v0.6.1_linux_amd64.tar.gz
     md5: ce740893afa0801134151ff83e7f21e6
 run:

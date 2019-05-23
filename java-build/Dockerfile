@@ -18,43 +18,48 @@
 
 FROM fabric8/s2i-java:2.2.0
 
-# Environment variables
-ENV \
-    APP_LANG="java" \
-    APP_ROOT="/opt/app-root" \
-    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
-    RADANALYTICS_JAVA_SPARK="1.0" \
-    SPARK_HOME="/opt/spark" \
-    SPARK_INSTALL="/opt/spark-distro" \
-    SPARK_VERSION="2.3.0" \
-    STI_SCRIPTS_PATH="/usr/local/s2i" 
-
-# Labels
-LABEL \
-      io.cekit.version="2.1.4"  \
-      io.k8s.description="Platform for building a radanalytics java spark app"  \
-      io.k8s.display-name="radanalytics java_spark"  \
-      io.openshift.expose-services="8080:http"  \
-      io.openshift.s2i.scripts-url="image:///usr/local/s2i"  \
-      io.openshift.tags="builder,radanalytics,java_spark"  \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"  \
-      org.concrt.version="2.1.4" 
-
-
 USER root
 
 
 # Install required RPMs and ensure that the packages were installed
 RUN yum install -y tar wget \
-    && yum clean all && rm -rf /var/cache/yum && \
-    rpm -q  tar wget
+    && yum clean all && rm -rf /var/cache/yum \
+    && rpm -q tar wget
+
 
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    spark-2.3.0-bin-hadoop2.7.tgz \
-    oshinko_v0.5.6_linux_amd64.tar.gz \
+    spark-2.4.0-bin-hadoop2.7.tgz \
+    oshinko_v0.6.1_linux_amd64.tar.gz \
     /tmp/artifacts/
+
+
+# Environment variables
+ENV \
+    APP_LANG="java" \
+    APP_ROOT="/opt/app-root" \
+    JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-java-spark" \
+    JBOSS_IMAGE_VERSION="1.0" \
+    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
+    RADANALYTICS_JAVA_SPARK="1.0" \
+    SPARK_HOME="/opt/spark" \
+    SPARK_INSTALL="/opt/spark-distro" \
+    SPARK_VERSION="2.4.0" \
+    STI_SCRIPTS_PATH="/usr/local/s2i" 
+
+# Labels
+LABEL \
+      io.cekit.version="2.2.7"  \
+      io.k8s.description="Platform for building a radanalytics java spark app"  \
+      io.k8s.display-name="radanalytics java_spark"  \
+      io.openshift.expose-services="8080:http"  \
+      io.openshift.s2i.scripts-url="image:///usr/local/s2i"  \
+      io.openshift.tags="builder,radanalytics,java_spark"  \
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz"  \
+      name="radanalyticsio/radanalytics-java-spark"  \
+      org.concrt.version="2.2.7"  \
+      version="1.0" 
 
 # Add scripts used to configure the image
 COPY modules /tmp/scripts

@@ -16,7 +16,7 @@ labels:
   - name: "io.openshift.tags"
     value: "builder,radanalytics,pyspark"
   - name: "io.radanalytics.sparkdistro"
-    value: "https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"
+    value: "https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz"
 envs:
   - name: RADANALYTICS_PYSPARK
     value: 1.0
@@ -41,10 +41,10 @@ packages:
     install:
       - java-1.8.0-openjdk
 artifacts:
-  - url: https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz
-    md5: af45eeb06dc1beee6d4c70b92c0e0237
-  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.5.6/oshinko_v0.5.6_linux_amd64.tar.gz
-    md5: a839a8942ec08650c28f789570f5c85e
+  - url: https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
+    md5: c1a230474c21335c983f45e84dcf8fb9
+  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.6.1/oshinko_v0.6.1_linux_amd64.tar.gz
+    md5: ce740893afa0801134151ff83e7f21e6
 run:
     user: 185
     cmd:
