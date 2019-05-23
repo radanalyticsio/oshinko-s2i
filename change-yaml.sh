@@ -70,33 +70,52 @@ fi
 # Change spark distro
 if [ ! -z ${SPARK+x} ]; then
 
-    # Change the md5sum for pyspark and java, update base image for scala
-    wget https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-hadoop${HVER}.tgz.md5 -O /tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz.md5
-    if [ "$?" -eq 0 ]; then
-        sum=$(cat /tmp/spark-${SPARK}-bin-hadoop2.7.tgz.md5 | cut -d':' -f 2 | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # Mac OSX
-            # Fix the url references
-            gsed -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-@" image.*.yaml
-            # Fix the md5 sum references on the line following the url
-            gsed -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
-        else
-            # Fix the url references
-            sed -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-@" image.*.yaml
-            # Fix the md5 sum references on the line following the url
-            sed -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$sum'/' image.*.yaml
-        fi
+    # TODO remove this download when sha512 support lands in upstream cekit (tmckay)
+    # Since this is big let's see if it's already there
+    if [ -f "/tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz" ]; then
+        echo
+        echo Using existing "/tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz", if this is not what you want delete it and run again
+        echo
     else
-        echo "Failed to get the md5 sum for the specified spark version, the version $SPARK may not be a real version"
+        wget https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-hadoop${HVER}.tgz -O /tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz
+        if [ "$?" -ne 0 ]; then
+            echo "Failed to download the specified version Spark archive"
+            exit 1
+        fi
+    fi
+
+    wget https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-hadoop${HVER}.tgz.sha512 -O /tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz.sha512
+    if [ "$?" -ne 0 ]; then
+        echo "Failed to download the sha512 sum for the specified Spark version"
         exit 1
     fi
 
-    #change the spark version in the env var
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        gsed -i '\@name: SPARK_VERSION@!b;n;s/value:.*/value: '$SPARK'/' image.java.yaml
-    else
-        sed -i '\@name: SPARK_VERSION@!b;n;s/value:.*/value: '$SPARK'/' image.java.yaml
+    # TODO remove this checksum calculation when sha512 support lands in upstream cekit (tmckay)
+    calcsum=$(sha512sum /tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz | cut -d" "  -f1)
+    sum=$(cat  /tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz.sha512 | tr -d [:space:] | cut -d: -f2 | tr [:upper:] [:lower:])
+    if [ "$calcsum" != "$sum" ]; then
+        echo "Failed to confirm authenticity of Spark archive, checksum mismatch"
+        echo "sha512sum   : ${calcsum}"
+        echo ".sha512 file: ${sum}"
+        exit 1
     fi
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+	SED=gsed
+    else
+	SED=sed
+    fi
+
+    # Fix the url references
+    $SED -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-@" image.*.yaml
+
+    # Fix the md5 sum references on the line following the url
+    # TODO replace this with sha512 when it lands in upstream cekit (tmckay)
+    calcsum=$(md5sum /tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz | cut -d" " -f1)
+    $SED -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$calcsum'/' image.*.yaml
+
+    #change the spark version in the env var
+    $SED -i '\@name: SPARK_VERSION@!b;n;s/value:.*/value: '$SPARK'/' image.java.yaml
 fi
 
 # Add any changes for commit
