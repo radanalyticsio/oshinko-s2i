@@ -16,6 +16,10 @@ if ! [ -f "spark-$version-bin-hadoop2.7.tgz" ]; then
 fi
 if ! [ -f "spark-$version-bin-hadoop2.7.tgz.md5" ]; then
     wget https://archive.apache.org/dist/spark/spark-$version/spark-$version-bin-hadoop2.7.tgz.md5
+    if [ "$?" -ne 0 ]; then
+	echo "Failed to download md5, calculating from tarball for the test"
+	md5sum spark-$version-bin-hadoop2.7.tgz > spark-$version-bin-hadoop2.7.tgz.md5
+    fi
 fi
 echo "spark-$version-bin-hadoop2.7.tgz: FF FF FF FF FF FF CA FE  BE EF CA FE BE EF CA FE" > spark-$version-bin-hadoop2.7.tgz.bad
 popd
