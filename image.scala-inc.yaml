@@ -35,6 +35,7 @@ modules:
 packages:
   install:
     - git
+    - rsync
 artifacts:
   - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.6.1/oshinko_v0.6.1_linux_amd64.tar.gz
     md5: ce740893afa0801134151ff83e7f21e6

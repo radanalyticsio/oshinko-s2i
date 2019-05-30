@@ -22,9 +22,9 @@ USER root
 
 
 # Install required RPMs and ensure that the packages were installed
-RUN yum install -y git \
+RUN yum install -y git rsync \
     && yum clean all && rm -rf /var/cache/yum \
-    && rpm -q git
+    && rpm -q git rsync
 
 
 # Add all artifacts to the /tmp/artifacts

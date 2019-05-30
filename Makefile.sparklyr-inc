@@ -20,22 +20,18 @@ clean: clean-context
 	-docker rmi $(LOCAL_IMAGE) $(PUSH_IMAGE)
 
 clean-context:
-	-rm image.sparklyr-inc.yaml
 	-rm -rf $(DOCKERFILE_CONTEXT)/*
 
 context: $(DOCKERFILE_CONTEXT)
 
-$(DOCKERFILE_CONTEXT): image.sparklyr-inc.yaml $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
+$(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
 
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
 	- mkdir -p $(DOCKERFILE_CONTEXT)
-	concreate generate --descriptor image.sparklyr-inc.yaml
+	cekit generate --descriptor image.sparklyr-inc.yaml
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
 	- rm $(DOCKERFILE_CONTEXT)/spark*.tgz
 
-image.sparklyr-inc.yaml:
-	./no-spark-yaml.sh image.sparklyr.yaml image.sparklyr-inc.yaml
-	
 zero-tarballs:
 	find ./$(DOCKERFILE_CONTEXT) -name "*.tgz" -type f -exec truncate -s 0 {} \;
 	find ./$(DOCKERFILE_CONTEXT) -name "*.tar.gz" -type f -exec truncate -s 0 {} \;

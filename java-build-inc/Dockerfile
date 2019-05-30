@@ -22,9 +22,9 @@ USER root
 
 
 # Install required RPMs and ensure that the packages were installed
-RUN yum install -y tar wget \
+RUN yum install -y tar wget rsync \
     && yum clean all && rm -rf /var/cache/yum \
-    && rpm -q tar wget
+    && rpm -q tar wget rsync
 
 
 # Add all artifacts to the /tmp/artifacts

@@ -22,9 +22,9 @@ USER root
 
 
 # Install required RPMs and ensure that the packages were installed
-RUN yum install -y java-1.8.0-openjdk \
+RUN yum install -y java-1.8.0-openjdk rsync \
     && yum clean all && rm -rf /var/cache/yum \
-    && rpm -q java-1.8.0-openjdk
+    && rpm -q java-1.8.0-openjdk rsync
 
 
 # Add all artifacts to the /tmp/artifacts
