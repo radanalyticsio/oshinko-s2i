@@ -16,8 +16,10 @@ function del_pod_non_ephemeral() {
     DRIVER=$(oc get pod -l deploymentconfig=$APP_NAME --template='{{index .items 0 "metadata" "name"}}')
 
     os::cmd::expect_success 'oc delete pod "$DRIVER"'
-    os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster is not ephemeral'
     os::cmd::try_until_failure 'oc get pod "$DRIVER"'
+
+    os::cmd::try_until_success 'oc get dc "$MASTER_DC"'
+    os::cmd::try_until_success 'oc get dc "$WORKER_DC"'
 
     # There should have been a new pod spun up by the dc, and it should have found the cluster
     os::cmd::try_until_text 'oc logs dc/"$APP_NAME"' 'Found cluster'
