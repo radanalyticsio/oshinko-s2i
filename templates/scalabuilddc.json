@@ -74,6 +74,10 @@
          "required": true
       },
       {
+         "description": "The URL to a non-oshinko deployed Spark cluster to use for processing, example 'spark://mycluster:7077'",
+         "name": "NONOSHINKO_SPARK_URL"
+      },
+      {
          "description": "Arguments to use when calling sbt, replacing the default `package`",
          "name": "SBT_ARGS"
       },
@@ -260,6 +264,10 @@
                            {
                               "name": "OSHINKO_SPARK_DRIVER_CONFIG",
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
+                           },
+                           {
+                             "name": "NONOSHINKO_SPARK_URL",
+                             "value": "${NONOSHINKO_SPARK_URL}"
                            },
                            {
                                "name": "OSHINKO_KUBE_SCHEDULER",
