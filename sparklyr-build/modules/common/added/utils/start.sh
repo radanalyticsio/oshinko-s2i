@@ -397,6 +397,33 @@ function use_spark_on_kube {
     wait $PID
 }
 
+function use_nonoshinko_spark {
+    local status
+
+    master=${NONOSHINKO_SPARK_URI}
+
+    export OSHINKO_SPARK_MASTER=$master
+
+    if [ -f "$APP_ROOT/src/worker-gen-dependencies.zip" ]; then
+        PY_FILES="--py-files worker-gen-dependencies.zip"
+    fi
+
+    set_class_option
+
+    if [ -n "$DRIVER_HOST" ]; then
+        driver_host="--conf spark.driver.host=${DRIVER_HOST}"
+    else
+        driver_host=
+    fi
+
+    echo spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
+    spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
+    PID=$!
+    wait $PID
+
+    trap exit_flag TERM INT
+}
+
 # Check whether there is a passwd entry for the container UID
 myuid=$(id -u)
 mygid=$(id -g)
@@ -433,6 +460,8 @@ get_app_file
 get_deployment
 if [ "${OSHINKO_KUBE_SCHEDULER:-false}" == "true" ]; then
     use_spark_on_kube
+elif [ -n "${NONOSHINKO_SPARK_URI}" ]; then
+    use_nonoshinko_spark
 else
     use_spark_standalone
 fi
