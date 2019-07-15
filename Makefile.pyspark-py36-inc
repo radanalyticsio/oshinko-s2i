@@ -28,7 +28,6 @@ $(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/mo
 
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
 	- mkdir -p $(DOCKERFILE_CONTEXT)
-	./no-spark-yaml.sh image.pyspark-py36.yaml image.pyspark-py36-inc.yaml
 	cekit generate --descriptor image.pyspark-py36-inc.yaml
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
 	- rm $(DOCKERFILE_CONTEXT)/spark*.tgz
