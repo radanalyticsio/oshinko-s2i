@@ -18,43 +18,38 @@
 
 FROM rimolive/r-34-centos7:latest
 
-USER root
-
-
-# Install required RPMs and ensure that the packages were installed
-RUN yum install -y java-1.8.0-openjdk rsync \
-    && yum clean all && rm -rf /var/cache/yum \
-    && rpm -q java-1.8.0-openjdk rsync
-
-
-# Add all artifacts to the /tmp/artifacts
-# directory
-COPY \
-    oshinko_v0.6.1_linux_amd64.tar.gz \
-    /tmp/artifacts/
-
-
 # Environment variables
 ENV \
     APP_LANG="r" \
     APP_ROOT="/opt/app-root" \
-    JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-sparklyr" \
-    JBOSS_IMAGE_VERSION="1.0" \
     PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     SPARK_HOME="/opt/spark" \
     SPARK_INSTALL="/opt/spark-distro" 
 
 # Labels
 LABEL \
-      io.cekit.version="2.2.7"  \
+      io.cekit.version="2.0.0"  \
       io.k8s.description="Platform for building a radanalytics sparklyr app"  \
       io.k8s.display-name="radanalytics sparklyr"  \
       io.openshift.expose-services="8080:http"  \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"  \
       io.openshift.tags="builder,radanalytics,sparklyr"  \
-      name="radanalyticsio/radanalytics-sparklyr"  \
-      org.concrt.version="2.2.7"  \
-      version="1.0" 
+      org.concrt.version="2.0.0" 
+
+
+USER root
+
+
+# Install required RPMs and ensure that the packages were installed
+RUN yum install -y java-1.8.0-openjdk rsync \
+    && yum clean all && rm -rf /var/cache/yum && \
+    rpm -q  java-1.8.0-openjdk rsync
+
+# Add all artifacts to the /tmp/artifacts
+# directory
+COPY \
+    oshinko_v0.6.1_linux_amd64.tar.gz \
+    /tmp/artifacts/
 
 # Add scripts used to configure the image
 COPY modules /tmp/scripts
@@ -76,4 +71,3 @@ USER 185
 
 
 CMD ["/usr/libexec/s2i/usage"]
-
