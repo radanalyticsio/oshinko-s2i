@@ -51,6 +51,10 @@
          "required": true
       },
       {
+         "description": "The URL to a non-oshinko deployed Spark cluster to use for processing, example 'spark://mycluster:7077'",
+         "name": "NONOSHINKO_SPARK_URL"
+      },
+      {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
          "name": "APP_EXIT",
          "value": "false",
@@ -133,6 +137,10 @@
                            {
                               "name": "OSHINKO_NAMED_CONFIG",
                               "value": "${OSHINKO_NAMED_CONFIG}"
+                           },
+                           {
+                             "name": "NONOSHINKO_SPARK_URL",
+                             "value": "${NONOSHINKO_SPARK_URL}"
                            },
                            {
                               "name": "OSHINKO_SPARK_DRIVER_CONFIG",
