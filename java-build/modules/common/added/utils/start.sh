@@ -400,7 +400,7 @@ function use_spark_on_kube {
 function use_nonoshinko_spark {
     local status
 
-    master=${NONOSHINKO_SPARK_URI}
+    master=${NONOSHINKO_SPARK_URL}
 
     export OSHINKO_SPARK_MASTER=$master
 
@@ -460,7 +460,7 @@ get_app_file
 get_deployment
 if [ "${OSHINKO_KUBE_SCHEDULER:-false}" == "true" ]; then
     use_spark_on_kube
-elif [ -n "${NONOSHINKO_SPARK_URI}" ]; then
+elif [ -n "${NONOSHINKO_SPARK_URL}" ]; then
     use_nonoshinko_spark
 else
     use_spark_standalone
