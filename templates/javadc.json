@@ -61,8 +61,8 @@
          "required": true
       },
       {
-         "description": "The URL to a non-oshinko deployed Spark cluster to use for processing, example 'spark://mycluster:7077'",
-         "name": "NONOSHINKO_SPARK_URL"
+         "description": "The URL to a deployed Spark cluster to use for processing, example 'spark://mycluster:7077'. This will override the normal consistency checks.",
+         "name": "SPARK_URL_OVERRIDE"
       },
       {
          "description": "Setting this value to 'false' prevents the application from being re-deployed if/when it completes",
@@ -160,8 +160,8 @@
                               "value": "${OSHINKO_SPARK_DRIVER_CONFIG}"
                            },
                            {
-                             "name": "NONOSHINKO_SPARK_URL",
-                             "value": "${NONOSHINKO_SPARK_URL}"
+                             "name": "SPARK_URL_OVERRIDE",
+                             "value": "${SPARK_URL_OVERRIDE}"
                            },
                            {
                                "name": "OSHINKO_KUBE_SCHEDULER",
