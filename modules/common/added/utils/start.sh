@@ -418,11 +418,11 @@ function use_spark_url_override {
 
     # test url to ensure it is consumable
     echo $master | grep "^spark://.*:[0-9]\+$" >> /dev/null 2>&1
-    if [ "$1" -ne 0]; do
+    if [ "$1" -ne 0]; then
         echo "SPARK_URL_OVERRIDE contains a URL that is not processable."
         echo "URL should be in the form of \"spark://host:port\""
         app_exit
-    done
+    fi
 
     # convert url to a device file we can query
     master_tcp=$(echo $master | sed -e 's/spark:\/\//\/dev\/tcp\//' | sed -e 's/:/\//') >> /dev/null 2>&1
