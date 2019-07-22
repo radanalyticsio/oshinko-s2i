@@ -397,7 +397,7 @@ function use_spark_on_kube {
     wait $PID
 }
 
-function use_nonoshinko_spark {
+function use_spark_url_override {
     local status
 
     master=${SPARK_URL_OVERRIDE}
@@ -415,6 +415,31 @@ function use_nonoshinko_spark {
     else
         driver_host=
     fi
+
+    # test url to ensure it is consumable
+    echo $master | grep "^spark://.*:[0-9]\+$" >> /dev/null 2>&1
+    if [ "$1" -ne 0]; do
+        echo "SPARK_URL_OVERRIDE contains a URL that is not processable."
+        echo "URL should be in the form of \"spark://host:port\""
+        app_exit
+    done
+
+    # convert url to a device file we can query
+    master_tcp=$(echo $master | sed -e 's/spark:\/\//\/dev\/tcp\//' | sed -e 's/:/\//') >> /dev/null 2>&1
+
+    local r=1
+    local c=0
+    while [ "$r" -ne 0 ]; do
+        echo "Waiting for spark cluster at $master to be available ..."
+        (echo >> $master_tcp) >> /dev/null 2>&1
+        r=$?
+        let "c += 1"
+        if [ $c -eq 30 ]; then
+            echo "Cluster not available after 30 seconds, exiting."
+            app_exit
+        fi
+        sleep 1
+    done
 
     echo spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS
     spark-submit $CLASS_OPTION $PY_FILES --master $master $driver_host $SPARK_OPTIONS $APP_ROOT/src/$APP_FILE $APP_ARGS &
@@ -461,7 +486,7 @@ get_deployment
 if [ "${OSHINKO_KUBE_SCHEDULER:-false}" == "true" ]; then
     use_spark_on_kube
 elif [ -n "${SPARK_URL_OVERRIDE}" ]; then
-    use_nonoshinko_spark
+    use_spark_url_override
 else
     use_spark_standalone
 fi
