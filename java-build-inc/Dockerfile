@@ -18,10 +18,28 @@
 
 FROM fabric8/s2i-java:2.2.0
 
+USER root
+
+
+# Install required RPMs and ensure that the packages were installed
+RUN yum install -y tar wget rsync \
+    && yum clean all && rm -rf /var/cache/yum \
+    && rpm -q tar wget rsync
+
+
+# Add all artifacts to the /tmp/artifacts
+# directory
+COPY \
+    oshinko_v0.6.1_linux_amd64.tar.gz \
+    /tmp/artifacts/
+
+
 # Environment variables
 ENV \
     APP_LANG="java" \
     APP_ROOT="/opt/app-root" \
+    JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-java-spark" \
+    JBOSS_IMAGE_VERSION="1.0" \
     PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     RADANALYTICS_JAVA_SPARK="1.0" \
     SPARK_HOME="/opt/spark" \
@@ -31,28 +49,15 @@ ENV \
 
 # Labels
 LABEL \
-      io.cekit.version="2.0.0"  \
+      io.cekit.version="2.2.7"  \
       io.k8s.description="Platform for building a radanalytics java spark app"  \
       io.k8s.display-name="radanalytics java_spark"  \
       io.openshift.expose-services="8080:http"  \
       io.openshift.s2i.scripts-url="image:///usr/local/s2i"  \
       io.openshift.tags="builder,radanalytics,java_spark"  \
-      org.concrt.version="2.0.0" 
-
-
-USER root
-
-
-# Install required RPMs and ensure that the packages were installed
-RUN yum install -y tar wget rsync \
-    && yum clean all && rm -rf /var/cache/yum && \
-    rpm -q  tar wget rsync
-
-# Add all artifacts to the /tmp/artifacts
-# directory
-COPY \
-    oshinko_v0.6.1_linux_amd64.tar.gz \
-    /tmp/artifacts/
+      name="radanalyticsio/radanalytics-java-spark"  \
+      org.concrt.version="2.2.7"  \
+      version="1.0" 
 
 # Add scripts used to configure the image
 COPY modules /tmp/scripts
@@ -75,3 +80,4 @@ USER 185
 ENTRYPOINT ["/opt/app-root/etc/bootstrap.sh"]
 
 CMD ["/usr/local/s2i/usage"]
+

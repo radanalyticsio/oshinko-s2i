@@ -18,10 +18,28 @@
 
 FROM centos/python-36-centos7:latest
 
+USER root
+
+
+# Install required RPMs and ensure that the packages were installed
+RUN yum install -y java-1.8.0-openjdk \
+    && yum clean all && rm -rf /var/cache/yum \
+    && rpm -q java-1.8.0-openjdk
+
+
+# Add all artifacts to the /tmp/artifacts
+# directory
+COPY \
+    oshinko_v0.6.1_linux_amd64.tar.gz \
+    /tmp/artifacts/
+
+
 # Environment variables
 ENV \
     APP_LANG="python" \
     APP_ROOT="/opt/app-root" \
+    JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-pyspark-py36" \
+    JBOSS_IMAGE_VERSION="1.0" \
     PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
     PYTHONPATH="/opt/spark/python" \
     RADANALYTICS_PYSPARK="1.0" \
@@ -30,28 +48,15 @@ ENV \
 
 # Labels
 LABEL \
-      io.cekit.version="2.0.0"  \
+      io.cekit.version="2.2.7"  \
       io.k8s.description="Platform for building a radanalytics Python 3.6 pyspark app"  \
       io.k8s.display-name="radanalytics pyspark-py36"  \
       io.openshift.expose-services="8080:http"  \
       io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"  \
       io.openshift.tags="builder,radanalytics,pyspark"  \
-      org.concrt.version="2.0.0" 
-
-
-USER root
-
-
-# Install required RPMs and ensure that the packages were installed
-RUN yum install -y java-1.8.0-openjdk \
-    && yum clean all && rm -rf /var/cache/yum && \
-    rpm -q  java-1.8.0-openjdk
-
-# Add all artifacts to the /tmp/artifacts
-# directory
-COPY \
-    oshinko_v0.6.1_linux_amd64.tar.gz \
-    /tmp/artifacts/
+      name="radanalyticsio/radanalytics-pyspark-py36"  \
+      org.concrt.version="2.2.7"  \
+      version="1.0" 
 
 # Add scripts used to configure the image
 COPY modules /tmp/scripts
@@ -74,3 +79,4 @@ USER 185
 ENTRYPOINT ["/opt/app-root/etc/bootstrap.sh"]
 
 CMD ["/usr/libexec/s2i/usage"]
+
