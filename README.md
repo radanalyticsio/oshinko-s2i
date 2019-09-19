@@ -44,7 +44,9 @@ The default repository for the image can be overridden with the `LOCAL_IMAGE` va
 ## Modifying dependencies in the image yaml files
 
 The cekit tool generates the image context directories
-based on the content of the image.*.yaml files.
+based on the content of the image.*.yaml files. Please
+try to use the same version of cekit as noted in the
+current set of checked in Dockerfiles (currently 2.2.7)
 
 A script has been provided to make altering the image.*.yaml files
 simpler. It handles modifying the specified versions of oshinko and Spark.
