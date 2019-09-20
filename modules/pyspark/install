@@ -15,11 +15,16 @@ res=$?
 set -e
 if [ "$res" -ne 0 ]
 then
+   if [ "$PYTHON_VERSION" == "2.7" ]; then
+        numpy="numpy==1.16.5"
+    else
+        numpy="numpy"
+    fi
     if [ -f /opt/app-root/etc/scl_enable ]
     then
-        source /opt/app-root/etc/scl_enable && pip install numpy
+        source /opt/app-root/etc/scl_enable && pip install $numpy
     else
-        pip install numpy
+        pip install $numpy
     fi
 fi
 
