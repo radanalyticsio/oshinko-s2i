@@ -67,7 +67,7 @@ __io.openshift.tags__
 > builder,radanalytics,pyspark
 
 __io.radanalytics.sparkdistro__
-> https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
+> https://archive.apache.org/dist/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz
 
 __name__
 > radanalyticsio/radanalytics-pyspark
