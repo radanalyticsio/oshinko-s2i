@@ -165,10 +165,12 @@ fi
 
 
 # Loop through whatever assembles we might have
-for assemble in $(ls -1 $STI_SCRIPTS_PATH | grep -w "^[0-9]*-*"); do
-    fullname=$STI_SCRIPTS_PATH/$assemble
-    echo running $fullname
-    if ! ${fullname}; then
-        exit 1        
-    fi
-done
+#for assemble in $(ls -1 $STI_SCRIPTS_PATH | grep -w "^[0-9]*-*"); do
+#    fullname=$STI_SCRIPTS_PATH/$assemble
+#    echo running $fullname
+#    if ! ${fullname}; then
+#        exit 1
+#    fi
+#done
+echo 'running no loop: /usr/libexec/s2i/000-assemble'
+/usr/libexec/s2i/000-assemble

@@ -16,7 +16,6 @@
 #
 # This is a Dockerfile for the radanalytics-scala-spark:1.0 image.
 
-#FROM radanalyticsio/s2i-scala-container:latest
 FROM registry.origin.paas.eniro/manyana/s2i-scala-2.12:latest
 
 USER root
