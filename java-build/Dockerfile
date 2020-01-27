@@ -30,7 +30,7 @@ RUN yum install -y tar wget \
 # Add all artifacts to the /tmp/artifacts
 # directory
 COPY \
-    spark-2.4.0-bin-hadoop2.7.tgz \
+    spark-2.4.4-bin-hadoop2.7.tgz \
     oshinko_v0.6.1_linux_amd64.tar.gz \
     /tmp/artifacts/
 
@@ -45,7 +45,7 @@ ENV \
     RADANALYTICS_JAVA_SPARK="1.0" \
     SPARK_HOME="/opt/spark" \
     SPARK_INSTALL="/opt/spark-distro" \
-    SPARK_VERSION="2.4.0" \
+    SPARK_VERSION="2.4.4" \
     STI_SCRIPTS_PATH="/usr/local/s2i" 
 
 # Labels
@@ -56,7 +56,7 @@ LABEL \
       io.openshift.expose-services="8080:http"  \
       io.openshift.s2i.scripts-url="image:///usr/local/s2i"  \
       io.openshift.tags="builder,radanalytics,java_spark"  \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz"  \
+      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz"  \
       name="radanalyticsio/radanalytics-java-spark"  \
       org.concrt.version="2.2.7"  \
       version="1.0" 

@@ -36,7 +36,7 @@ __SPARK_INSTALL__
 >"/opt/spark-distro"
 
 __SPARK_VERSION__
->"2.4.0"
+>"2.4.4"
 
 __STI_SCRIPTS_PATH__
 >"/usr/local/s2i"
@@ -70,7 +70,7 @@ __io.openshift.tags__
 > builder,radanalytics,java_spark
 
 __io.radanalytics.sparkdistro__
-> https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
+> https://archive.apache.org/dist/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz
 
 __name__
 > radanalyticsio/radanalytics-java-spark
