@@ -16,7 +16,7 @@ labels:
   - name: "io.openshift.tags"
     value: "builder,radanalytics,scala_spark"
   - name: "io.radanalytics.sparkdistro"
-    value: "https://archive.apache.org/dist/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.7.tgz"
+    value: "https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz"
 envs:
   - name: PATH
     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin:/opt/scala/bin:/opt/sbt/bin
@@ -31,6 +31,8 @@ envs:
   - name: APP_LANG
     value: scala
 modules:
+  repositories:
+    - path: modules
   install:
     - name: common
     - name: spark
@@ -39,8 +41,8 @@ packages:
   install:
     - git
 artifacts:
-  - url: https://archive.apache.org/dist/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.7.tgz
-    md5: 4007fd48841fcc5be31a705f8223620a
+  - url: https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz
+    md5: c5c0af4b4b9cb21d214c7026439df236
   - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.6.1/oshinko_v0.6.1_linux_amd64.tar.gz
     md5: ce740893afa0801134151ff83e7f21e6
 run:

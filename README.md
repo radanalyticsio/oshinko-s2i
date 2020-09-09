@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/radanalyticsio/oshinko-s2i.svg?branch=master)](https://travis-ci.org/radanalyticsio/oshinko-s2i)
 [![Docker python build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-pyspark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-pyspark)
-[![Docker python 3.6 build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-pyspark-py36.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-pyspark-py36)
 [![Docker java build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-java-spark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-java-spark)
 [![Docker scala build](https://img.shields.io/docker/automated/radanalyticsio/radanalytics-scala-spark.svg)](https://hub.docker.com/r/radanalyticsio/radanalytics-scala-spark)
 
@@ -27,15 +26,11 @@ The easiest way to build the s2i images is to use the makefiles provided:
 
     # To build images individually
     $ make -f Makefile.pyspark
-    $ make -f Makefile.pyspark-py36
     $ make -f Makefile.java
     $ make -f Makefile.scala
-    $ make -f Makefile.sparklyr
     $ make -f Makefile.pyspark-inc
-    $ make -f Makefile.pyspark-py36-inc
     $ make -f Makefile.java-inc
     $ make -f Makefile.scala-inc
-    $ make -f Makefile.sparklyr-inc
 
 The default repository for the image can be overridden with the `LOCAL_IMAGE` var:
 
@@ -60,15 +55,11 @@ The image context directories are generated with the cekit tool and contain
 the artifacts needed to build the images. They are:
 
     * pyspark-build
-    * pyspark-py36-build
     * java-build
     * scala-build
-    * sparklyr-build
     * pyspark-build-inc
-    * pyspark-py36-build-inc
     * java-build-inc
     * scala-build-inc
-    * sparklyr-build-inc
 
 If the yaml files used by cekit change (ie image.*.yaml) or the content
 included in an image changes (essentially anything under modules/), the
@@ -158,14 +149,10 @@ For example:
 
     release_templates/javabuilddc.json:                     "name": "radanalyticsio/radanalytics-java-spark:v0.5.6"
     release_templates/javabuild.json:                     "name": "radanalyticsio/radanalytics-java-spark:v0.5.6"
-    release_templates/python36builddc.json:                     "name": "radanalyticsio/radanalytics-pyspark-py36:v0.5.6"
-    release_templates/python36build.json:                     "name": "radanalyticsio/radanalytics-pyspark-py36:v0.5.6"
     release_templates/pythonbuilddc.json:                     "name": "radanalyticsio/radanalytics-pyspark:v0.5.6"
     release_templates/pythonbuild.json:                     "name": "radanalyticsio/radanalytics-pyspark:v0.5.6"
     release_templates/scalabuilddc.json:                     "name": "radanalyticsio/radanalytics-scala-spark:v0.5.6"
     release_templates/scalabuild.json:                     "name": "radanalyticsio/radanalytics-scala-spark:v0.5.6"
-    release_templates/sparklyrbuilddc.json:                     "name": "radanalyticsio/radanalytics-r-spark:v0.5.6"
-    release_templates/sparklyrbuild.json:                     "name": "radanalyticsio/radanalytics-r-spark:v0.5.6"
 
     tar -czf oshinko_s2i_v0.5.6.tar.gz release_templates
 

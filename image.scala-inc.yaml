@@ -29,6 +29,8 @@ envs:
   - name: APP_LANG
     value: scala
 modules:
+  repositories:
+    - path: modules
   install:
     - name: common
     - name: scala

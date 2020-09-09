@@ -9,22 +9,16 @@ matrix:
   # tests perform builds from the local source to do the tests
   include:
     - env: TO_TEST=pyspark-templates OPENSHIFT_VERSION=v3.11
-    - env: TO_TEST=pyspark-py36-templates OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=java-templates OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=scala-templates-radio OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=scala-templates-dc OPENSHIFT_VERSION=v3.11
-    - env: TO_TEST=sparklyr-templates-dc OPENSHIFT_VERSION=v3.11
-    - env: TO_TEST=sparklyr-templates-build OPENSHIFT_VERSION=v3.11
-    - env: TO_TEST=sparklyr-templates-builddc OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=operations OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=incomplete OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=ephemeral OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=sparkk8s OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=pyspark-inc OPENSHIFT_VERSION=v3.11
-    - env: TO_TEST=pyspark-py36-inc OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=scala-inc OPENSHIFT_VERSION=v3.11
     - env: TO_TEST=java-inc OPENSHIFT_VERSION=v3.11
-    - env: TO_TEST=sparklyr-inc OPENSHIFT_VERSION=v3.11
   fast_finish: true
 
 before_install:
@@ -38,22 +32,16 @@ before_script:
 - test/travis-help/check-tarballs.sh
 script:
 - if [ "$TO_TEST" == "pyspark-templates" ]; then make test-pyspark-templates ; S2I_TEST_INTEGRATED_REGISTRY=172.30.1.1:5000 make test-pyspark-radio ; fi
-- if [ "$TO_TEST" == "pyspark-py36-templates" ]; then make test-pyspark-py36-templates ; fi
 - if [ "$TO_TEST" == "java-templates" ]; then make test-java-templates ; S2I_TEST_INTEGRATED_REGISTRY=172.30.1.1:5000 make test-java-radio ; fi
 - if [ "$TO_TEST" == "scala-templates-radio" ]; then S2I_TEST_INTEGRATED_REGISTRY=172.30.1.1:5000 make test-scala-radio ; fi
 - if [ "$TO_TEST" == "scala-templates-dc" ]; then make test-scala-templates ; fi
-- if [ "$TO_TEST" == "sparklyr-templates-dc" ]; then make test-sparklyr-dc ; fi
-- if [ "$TO_TEST" == "sparklyr-templates-build" ]; then make test-sparklyr-build ; fi
-- if [ "$TO_TEST" == "sparklyr-templates-builddc" ]; then make test-sparklyr-builddc ; fi
 - if [ "$TO_TEST" == "operations" ]; then make test-operations ; fi
 - if [ "$TO_TEST" == "incomplete" ]; then make test-incomplete ; fi
 - if [ "$TO_TEST" == "ephemeral" ]; then make test-ephemeral ; fi
 - if [ "$TO_TEST" == "sparkk8s" ]; then S2I_K8S_LIMITED=true make test-sparkk8s ; fi
 - if [ "$TO_TEST" == "pyspark-inc" ]; then make test-pyspark-inc ; fi
-- if [ "$TO_TEST" == "pyspark-py36-inc" ]; then make test-pyspark-py36-inc ; fi
 - if [ "$TO_TEST" == "scala-inc" ]; then make test-scala-inc ; fi
 - if [ "$TO_TEST" == "java-inc" ]; then make test-java-inc ; fi
-- if [ "$TO_TEST" == "sparklyr-inc" ]; then make test-sparklyr-inc ; fi
 notifications:
  email:
    on_success: never
