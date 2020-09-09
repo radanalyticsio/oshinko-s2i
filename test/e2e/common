@@ -279,9 +279,6 @@ function cleanup_app() {
             os::cmd::try_until_failure 'oc get pod/"$POD_NAME"' $((10*minute))
         fi
     fi
-    # In some cases we may have a deploy pod hanging around that is still terminating
-    # Wait for them to disappear
-    os::cmd::try_until_text 'oc get pods -l openshift.io/deployer-pod-for.name' 'No resources found'
     set -e
 }
 

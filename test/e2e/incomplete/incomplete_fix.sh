@@ -15,7 +15,7 @@ function wait_for_incomplete_fix {
     # intentionally break the cluster by deleting one of the services
     # we'll put it back for the "fix"
     file=$(mktemp)
-    os::cmd::expect_success 'oc export service "$GEN_CLUSTER_NAME"-ui > "$file"'
+    os::cmd::expect_success 'oc get service -o yaml "$GEN_CLUSTER_NAME"-ui > "$file"'
     os::cmd::expect_success 'oc delete service "$GEN_CLUSTER_NAME"-ui'
 
     run_app $1

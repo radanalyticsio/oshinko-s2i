@@ -61,7 +61,7 @@ test-sparkk8s:
 test-java-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
 	# run dc, build, and builddc but skip radio because it requires a registry
-	test/e2e/run.sh "(templates/java/dc|templates/java/build)"
+	test/e2e/run.sh "(templates/java/builddc)"
 
 test-java-radio:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_JAVA) make -f Makefile.java build
@@ -70,7 +70,7 @@ test-java-radio:
 test-pyspark-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
 	# run dc, build, and builddc but skip radio because it requires a registry
-	test/e2e/run.sh "(templates/pyspark/dc|templates/pyspark/build)"
+	test/e2e/run.sh "(templates/pyspark/builddc)"
 
 test-pyspark-radio:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_PYSPARK) make -f Makefile.pyspark build
@@ -79,7 +79,7 @@ test-pyspark-radio:
 test-scala-templates:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
         # run dc, build, and builddc but skip radio because it requires a registry
-	test/e2e/run.sh "(templates/scala/build|templates/scala/dc)"
+	test/e2e/run.sh "(templates/scala/builddc)"
 
 test-scala-radio:
 	LOCAL_IMAGE=$(S2I_TEST_IMAGE_SCALA) make -f Makefile.scala build
