@@ -29,7 +29,7 @@ build_md5 scala-inc $S2I_TEST_IMAGE_SCALA_INC
 # if our md5 build worked, we have a completed image stream so try
 # a basic app with it
 echo "++ run_completed_app"
-run_completed_app $RESOURCE_DIR/scalabuilddc-is.json https://github.com/radanalyticsio/s2i-integration-test-apps
+run_completed_app $RESOURCE_DIR/scalabuilddc-is.json https://github.com/radanalyticsio/s2i-integration-test-apps clusterconfig
 
 echo "++ build_md5 (md5 deleted)"
 md5=$(find $RESOURCE_DIR/spark-inputs -name "*.md5")
