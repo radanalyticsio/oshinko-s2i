@@ -24,7 +24,7 @@ if [ "$#" -eq 0 ]; then
 fi
 
 # Set the hadoop version
-HVER=2.7
+HVER=3.2
 
 while getopts o:s:h opt; do
     case $opt in
@@ -107,12 +107,12 @@ if [ ! -z ${SPARK+x} ]; then
     fi
 
     # Fix the url references
-    $SED -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-@" image.*.yaml
+    $SED -i "s@https://archive.apache.org/dist/spark/spark-.*/spark-.*-bin-hadoop.*\.tgz@https://archive.apache.org/dist/spark/spark-${SPARK}/spark-${SPARK}-bin-hadoop${HVER}.tgz@" modules/spark/module.yaml
 
     # Fix the md5 sum references on the line following the url
     # TODO replace this with sha512 when it lands in upstream cekit (tmckay)
     calcsum=$(md5sum /tmp/spark-${SPARK}-bin-hadoop${HVER}.tgz | cut -d" " -f1)
-    $SED -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$calcsum'/' image.*.yaml
+    $SED -i '\@url: https://archive.apache.org/dist/spark/@!b;n;s/md5.*/md5: '$calcsum'/' modules/spark/module.yaml
 
     #change the spark version in the env var
     $SED -i '\@name: SPARK_VERSION@!b;n;s/value:.*/value: '$SPARK'/' image.java.yaml

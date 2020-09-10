@@ -19,6 +19,8 @@ fix_template $RESOURCE_DIR/javabuilddc.json radanalyticsio/radanalytics-java-spa
 cp  $JAVATEMP_DIR/javabuilddc.json $RESOURCE_DIR/javabuilddc-is.json
 fix_template_for_imagestream $RESOURCE_DIR/javabuilddc-is.json radanalyticsio/radanalytics-java-spark java-inc:latest
 
+set_worker_count $S2I_TEST_WORKERS
+
 os::test::junit::declare_suite_start "install_spark"
 
 echo "++ build_md5"
@@ -27,7 +29,7 @@ build_md5 java-inc $S2I_TEST_IMAGE_JAVA_INC
 # if our md5 build worked, we have a completed image stream so try
 # a basic app with it
 echo "++ run_completed_app"
-run_completed_app $RESOURCE_DIR/javabuilddc-is.json https://github.com/radanalyticsio/s2i-integration-test-apps
+run_completed_app $RESOURCE_DIR/javabuilddc-is.json https://github.com/radanalyticsio/s2i-integration-test-apps clusterconfig
 
 echo "++ build_md5 (md5 deleted)"
 md5=$(find $RESOURCE_DIR/spark-inputs -name "*.md5")
@@ -60,9 +62,6 @@ already_installed java-inc $S2I_TEST_IMAGE_JAVA_INC
 
 echo "++ bad_submit"
 bad_submit java-inc $S2I_TEST_IMAGE_JAVA_INC
-
-echo "++ copy_nocopy"
-copy_nocopy java-inc $S2I_TEST_IMAGE_JAVA_INC
 
 echo "++ run_incomplete_app"
 run_incomplete_app $RESOURCE_DIR/javabuilddc.json https://github.com/radanalyticsio/s2i-integration-test-apps

@@ -28,7 +28,7 @@ $(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/mo
 
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
 	- mkdir -p $(DOCKERFILE_CONTEXT)
-	cekit generate --descriptor image.pyspark-inc.yaml
+	cekit --descriptor image.pyspark-inc.yaml build --dry-run docker
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
 	- rm $(DOCKERFILE_CONTEXT)/spark*.tgz
 

@@ -27,7 +27,7 @@ context: $(DOCKERFILE_CONTEXT)
 $(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
 
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/scripts:
-	cekit generate --descriptor image.java.yaml
+	cekit --descriptor image.java.yaml build --dry-run docker
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
 
 zero-tarballs:

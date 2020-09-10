@@ -1,5 +1,23 @@
-schema_version: 1
-
-name: java
+artifacts: []
+envs:
+- name: STI_SCRIPTS_PATH
+  value: /usr/local/s2i
 execute:
-    - script: install
+- directory: java
+  module_name: java
+  name: java/install
+  script: install
+labels: []
+modules:
+  install: []
+  repositories: []
+name: java
+osbs:
+  configuration: {}
+  repository: {}
+packages:
+  install: []
+  repositories: []
+ports: []
+version: 1.0
+volumes: []

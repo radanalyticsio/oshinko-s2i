@@ -27,7 +27,7 @@ context: $(DOCKERFILE_CONTEXT)
 $(DOCKERFILE_CONTEXT): $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules
 
 $(DOCKERFILE_CONTEXT)/Dockerfile $(DOCKERFILE_CONTEXT)/modules:
-	cekit generate --descriptor image.pyspark.yaml
+	cekit --descriptor image.pyspark.yaml build --dry-run docker
 	cp -R target/image/* $(DOCKERFILE_CONTEXT)
 
 zero-tarballs:

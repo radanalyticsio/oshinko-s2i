@@ -4,7 +4,7 @@
    "metadata": {
       "name": "oshinko-python-spark-build",
       "annotations": {
-         "description": "Create a buildconfig and imagestream using source-to-image and Python 2.7 Spark source files hosted in git"
+         "description": "Create a buildconfig and imagestream using source-to-image and Python 3.6 Spark source files hosted in git"
       }
    },
    "labels": {
