@@ -23,7 +23,7 @@ set_worker_count $S2I_TEST_WORKERS
 os::test::junit::declare_suite_start "install_spark"
 
 echo "++ build_md5"
-#build_md5 pyspark-inc $S2I_TEST_IMAGE_PYSPARK_INC
+build_md5 pyspark-inc $S2I_TEST_IMAGE_PYSPARK_INC
 
 # if our md5 build worked, we have a completed image stream so try
 # a basic app with it
