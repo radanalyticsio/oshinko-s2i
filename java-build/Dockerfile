@@ -63,7 +63,7 @@
 ###### \
         # Copy 'spark' module general artifacts
         COPY \
-            spark-3.0.0-bin-hadoop3.2.tgz \
+            spark-3.0.1-bin-hadoop3.2.tgz \
             /tmp/artifacts/
         # Copy 'spark' module content
         COPY modules/spark /tmp/scripts/spark
@@ -105,7 +105,7 @@
             RADANALYTICS_JAVA_SPARK="1.0" \
             SPARK_HOME="/opt/spark" \
             SPARK_INSTALL="/opt/spark-distro" \
-            SPARK_VERSION="3.0.0" \
+            SPARK_VERSION="3.0.1" \
             STI_SCRIPTS_PATH="/usr/local/s2i" 
         # Set 'radanalyticsio/radanalytics-java-spark' image defined labels
         LABEL \

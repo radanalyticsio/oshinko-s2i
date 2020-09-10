@@ -33,7 +33,7 @@ envs:
   - name: APP_LANG
     value: java
   - name: SPARK_VERSION
-    value: 3.0.0
+    value: 3.0.1
 modules:
   repositories:
     - path: modules
