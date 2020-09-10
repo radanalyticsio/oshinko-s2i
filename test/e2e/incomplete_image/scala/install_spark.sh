@@ -19,6 +19,8 @@ fix_template $RESOURCE_DIR/scalabuilddc.json radanalyticsio/radanalytics-scala-s
 cp  $SCALATEMP_DIR/scalabuilddc.json $RESOURCE_DIR/scalabuilddc-is.json
 fix_template_for_imagestream $RESOURCE_DIR/scalabuilddc-is.json radanalyticsio/radanalytics-scala-spark scala-inc:latest
 
+set_worker_count $S2I_TEST_WORKERS
+
 os::test::junit::declare_suite_start "install_spark"
 
 echo "++ build_md5"
@@ -60,9 +62,6 @@ already_installed scala-inc $S2I_TEST_IMAGE_SCALA_INC
 
 echo "++ bad_submit"
 bad_submit scala-inc $S2I_TEST_IMAGE_SCALA_INC
-
-echo "++ copy_nocopy"
-copy_nocopy scala-inc $S2I_TEST_IMAGE_SCALA_INC
 
 echo "++ run_incomplete_app"
 run_incomplete_app $RESOURCE_DIR/scalabuilddc.json https://github.com/radanalyticsio/s2i-integration-test-apps

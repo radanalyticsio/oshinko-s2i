@@ -18,15 +18,17 @@ fix_template $RESOURCE_DIR/pythonbuilddc.json radanalyticsio/radanalytics-pyspar
 cp  $PYSPARK_DIR/pythonbuilddc.json $RESOURCE_DIR/pythonbuilddc-is.json
 fix_template_for_imagestream $RESOURCE_DIR/pythonbuilddc-is.json radanalyticsio/radanalytics-pyspark pyspark-inc:latest
 
+set_worker_count $S2I_TEST_WORKERS
+
 os::test::junit::declare_suite_start "install_spark"
 
 echo "++ build_md5"
-build_md5 pyspark-inc $S2I_TEST_IMAGE_PYSPARK_INC
+#build_md5 pyspark-inc $S2I_TEST_IMAGE_PYSPARK_INC
 
 # if our md5 build worked, we have a completed image stream so try
 # a basic app with it
 echo "++ run_completed_app"
-run_completed_app $RESOURCE_DIR/pythonbuilddc-is.json https://github.com/radanalyticsio/s2i-integration-test-apps
+run_completed_app $RESOURCE_DIR/pythonbuilddc-is.json https://github.com/radanalyticsio/s2i-integration-test-apps clusterconfig
 
 echo "++ build_md5 (md5 deleted)"
 md5=$(find $RESOURCE_DIR/spark-inputs -name "*.md5")
@@ -59,9 +61,6 @@ already_installed pyspark-inc $S2I_TEST_IMAGE_PYSPARK_INC
 
 echo "++ bad_submit"
 bad_submit pyspark-inc $S2I_TEST_IMAGE_PYSPARK_INC
-
-echo "++ copy_nocopy"
-copy_nocopy pyspark-inc $S2I_TEST_IMAGE_PYSPARK_INC
 
 echo "++ run_incomplete_app"
 run_incomplete_app $RESOURCE_DIR/pythonbuilddc.json https://github.com/radanalyticsio/s2i-integration-test-apps
