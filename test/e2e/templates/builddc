@@ -460,16 +460,6 @@ function test_exit {
     run_app
     scrape_for_env $DRIVER APP_EXIT '\"false\"'
     cleanup_app $DRIVER
-
-    set_exit_flag true
-    run_app
-    scrape_for_env $DRIVER APP_EXIT '\"true\"'
-    cleanup_app $DRIVER
-
-    set_exit_flag false
-    run_app
-    scrape_for_env $DRIVER APP_EXIT '\"false\"'
-    cleanup_app $DRIVER
 }
 
 function test_fixed_exit {
