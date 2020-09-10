@@ -291,6 +291,29 @@ function run_incomplete_app() {
 # if we successfully build an image, we should be able to run a new-app using that image.
 # just run a single startup, no need to run all the images
 
+function get_driver_pod() {
+    local count
+    local app_name=$1
+    count=0
+
+    set +e
+    while true; do
+        DRIVER=$(oc get pod -l deploymentconfig=$app_name --template='{{index .items 0 "metadata" "name"}}')
+        if [ "$?" -eq 0 ]; then
+            break
+        fi
+        echo Getting driver pod for $APP_NAME failed, trying again
+        oc get pods
+        sleep 10.0
+        count=$((count + 1))
+        echo $count
+        if [ "$count" -eq 60 ]; then
+            return 1
+        fi
+    done
+    set -e
+}
+
 function run_completed_app() {
     # going to need template, source, app_name, and main class
     # template needs to an imagestream -- do we just copy the templates?
@@ -306,7 +329,8 @@ function run_completed_app() {
     set -e
     local APP_NAME=app-$SUFFIX
     oc new-app --file=$template -p GIT_URI=$source_info -p APPLICATION_NAME=$APP_NAME $config
-    os::cmd::try_until_text 'oc log dc/$APP_NAME' 'test app completed' $((10*minute))
+    get_driver_pod $APP_NAME
+    os::cmd::try_until_text 'oc log $DRIVER' 'test app completed' $((10*minute))
     oc delete buildconfig/$APP_NAME
     oc delete dc/$APP_NAME
     oc delete service $APP_NAME

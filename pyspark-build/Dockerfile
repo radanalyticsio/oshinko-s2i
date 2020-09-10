@@ -50,7 +50,7 @@
 ###### \
         # Copy 'spark' module general artifacts
         COPY \
-            spark-3.0.0-bin-hadoop3.2.tgz \
+            spark-3.0.1-bin-hadoop3.2.tgz \
             /tmp/artifacts/
         # Copy 'spark' module content
         COPY modules/spark /tmp/scripts/spark
