@@ -1,0 +1,803 @@
+#/bin/bash
+
+set +e
+
+# These are the imagestreams we know how to build
+IMAGESTREAMS="radanalytics-pyspark radanalytics-pyspark-py36 radanalytics-java-spark radanalytics-scala-spark openshift-spark openshift-spark-py36"
+
+function include_optional() {
+    if [ "$#" -eq 1 ]; then
+        spc=$1
+    fi
+    if [[ "$IMAGESTREAMS" = *"radanalytics-r-spark"* ]]; then
+        echo "$spc""radanalytics-r-spark"
+    fi
+}
+
+function usage() {
+    echo "usage: rad-image [-h] COMMAND [options] [args]"
+    echo
+    echo "Build usable image streams or local images from incomplete radanalyticsio images and an Apache Spark distribution"
+    echo
+    echo "Options:"
+    echo "  -h       Print this help message"
+    echo
+    echo "Commands:"
+    echo "  build    Build specified image streams with an Apache Spark distribution"
+    echo "  clean    Delete OpenShift objects associated with building specified image streams"
+    echo "  list     List radanalyticsio image streams"
+    echo "  use      Set the tag used to reference image streams in standard templates and confimaps"
+    echo
+    echo "Supported images:"
+    echo "  radanalytics-pyspark"
+    echo "  radanalytics-pyspark-py36"
+    echo "  radanalytics-scala-spark"
+    echo "  radanalytics-java-spark"
+    echo "  openshift-spark"
+    echo "  openshift-spark-py36"
+    include_optional "  "
+    echo
+    echo "For help on a particular command run 'rad-image COMMAND -h'"
+}
+
+if [ "$#" -lt 1 ]; then
+    usage
+    exit 0
+fi
+
+while getopts h option; do
+    case $option in
+        h)
+            usage
+            exit 0
+            ;;
+        *)
+            ;;
+    esac
+done
+
+CMD=$1
+shift
+
+VERBOSE=false
+
+function get_build_num() {
+    local name=$1
+    local BUILDNUM=$(oc get buildconfig $name --template='{{index .status "lastVersion"}}')
+    echo $BUILDNUM
+}
+
+function check_build() {
+    local name=$1
+    local status
+    
+    local BUILDNUM=$(get_build_num $name)
+    if [ "$BUILDNUM" == "0" ]; then
+        # Buildconfig is brand new, lastVersion hasn't been updated yet
+        status="starting"
+    else
+        status=$(oc get build "$name"-$BUILDNUM --template="{{index .status \"phase\"}}")
+    fi
+    echo $status
+}
+
+function cleanup_imagestreamtag() {
+    # There is a strange failure mode where a failed build creates a destination imagestreamtag which is empty
+    # and does not show up with "get" but which nevertheless is listed in the imagestream and causes an error
+    # when the imagestreamtag is created by the buildconfig.
+    # So, if the imagestreamtag doesn't exist, delete it :) This fixes the error
+    res=$(oc get imagestreamtag $1)
+    if [ "$?" -ne 0 ]; then
+        oc delete imagestreamtag $1
+    fi
+}
+
+function make_buildconfig() {
+    local image     # the image in the buildconfig if it exists
+    local type      # the type in the buildconfig if it exists
+    local dest      # the destination in the buildconfig if it exists
+    local imagearg  # the builder image that was passed (arg 1) with the prefix removed
+    local label     # this script's unique label on the buildconfig if it exists
+    local newbuild=true
+
+    local tag
+    if [ -n "$3" ]; then
+        tag="$3"
+    else
+        tag="complete"
+    fi
+
+    # the new-build command will download the docker-image for the builder but will reference it from a
+    # newly created imagestream and the reference will not have the radanalyticsio prefix, so remove it
+    imagearg=${1#"radanalyticsio/"}
+
+    # If the imagestreamtag for the builder image doesn't exist
+    # 1) we have to delete the imagestream itself if it *does* exist so it can be recreated
+    # 2) we have to delete the buildconfig if it exists and recreate it so it will in turn create the imagestream,
+    #    so remember the result of this check
+    oc get imagestreamtag $imagearg &> /dev/null
+    local istag_exists=$?
+    if [ "$istag_exists" -ne 0 ]; then
+        # toss the tag to get the name of the imagestream
+        local is=$(echo $imagearg | sed -e s/:.*//)
+        oc delete imagestream 2> /dev/null $is
+    fi
+
+    # Get values out of the buildconfig if it exists so we can compare them
+    image=$(oc get buildconfig $2 --template='{{.spec.strategy.sourceStrategy.from.name}}' 2> /dev/null)
+    type=$(oc get buildconfig $2 --template='{{.spec.source.type}}' 2> /dev/null)
+    dest=$(oc get buildconfig $2 --template='{{.spec.output.to.name}}' 2> /dev/null)
+
+    # If the buildconfig values don't match or we have to recreate the builder imagestream
+    # then delete the buildconfig as long as it was created by us (otherwise ask the user to delete it)
+    if [ "$?" -eq 0 ]; then
+        if [ "$istag_exists" -ne 0 ] || [ "$type" != "Binary" ] || [ "$image" != $imagearg ] || [ "$dest" != "$2":"$tag" ]; then
+            label=$(oc get buildconfig $2 --template='{{index .metadata.labels "radanalytics.io/imagestream"}}')
+            if [ "$label" == $2 ]; then
+                echo Deleting buildconfig $2
+                # Make sure the destination tag can be created as well
+                cleanup_imagestreamtag $2:$tag
+                oc delete buildconfig $2 > /dev/null
+            else
+                echo Buildconfig $2 exists and must be recreated but was not created by this script, please delete it and try again.
+                return 1
+            fi
+        else
+            newbuild=false
+        fi
+    fi
+    if [ "$newbuild" == "true" ]; then
+        echo Creating buildconfig $2
+        if [ "$VERBOSE" == "true" ]; then
+            echo oc new-build -l radanalytics.io/imagestream=$2 --name $2 --docker-image=$1 --binary --to=$2:$tag
+            oc new-build -l radanalytics.io/imagestream=$2 --name $2 --docker-image=$1 --binary --to=$2:$tag
+        else
+            oc new-build -l radanalytics.io/imagestream=$2 --name $2 --docker-image=$1 --binary --to=$2:$tag > /dev/null  && [ ${PIPESTATUS[0]} -eq 0 ] || return 1
+        fi
+    fi    
+}
+
+function complete() {
+
+    make_buildconfig $1 $2 $3
+    if [ "$?" -ne 0 ]; then
+        return 1
+    fi    
+
+    local status=$(check_build $2)
+    if [ "$status" == "Running" -o "$status" == "Pending" ]; then
+        echo "Build for $2 is already $status, skipping"
+        return 1
+    else
+        # There could be an error in start-build itself, but if the
+        # build number changes then we know we have a pod log to look at.
+        # If verbose is set or we have an error in the pod, show the log.
+        echo Starting build for $2
+        first=$(get_build_num $2)
+        if [ "$VERBOSE" == "true" ]; then
+            echo oc start-build $2 --from-file=$BUILD_INPUT --wait
+        fi
+        oc start-build $2 --from-file=$BUILD_INPUT --wait
+        res=$?
+        second=$(get_build_num $2)
+        if [ "$first" -ne "$second" ] && [ "$VERBOSE" == "true" -o "$res" -ne 0 ]; then
+            oc logs buildconfig/$2
+        fi
+        return $res
+    fi
+}
+
+function complete-s2i() {
+
+    local tag
+    if [ -n "$3" ]; then
+        tag="$3"
+    else
+        tag="complete"
+    fi    
+    
+    echo s2i build $BUILD_INPUT $1 $2:$tag
+    s2i build $BUILD_INPUT $1 $2:$tag
+    return $?
+}
+
+function clean_up() {
+    if [ "$VERBOSE" == true ]; then
+        echo oc delete $2 -l radanalytics.io/imagestream=$1
+        oc delete $2 -l radanalytics.io/imagestream=$1
+    else
+        oc delete $2 -l radanalytics.io/imagestream=$1 > /dev/null && [ ${PIPESTATUS[0]} -eq 0 ] || return 1
+    fi
+}
+
+function reset_is() {
+               # $2 is the imagestream to reset
+               # $1 is the default image to point to
+    local tag
+    local res=0
+    if [[ "$2" == *openshift-spark* ]]; then
+        tag=2.3-latest
+    else
+        tag=stable
+    fi
+    if [ "$VERBOSE" == true ]; then
+        echo oc tag --source=docker $1 $2:$tag
+        oc tag --source=docker $1 $2:$tag || res=1
+
+        echo oc label imagestream $2 radanalytics.io/imagestream=$2
+        oc label imagestream $2 radanalytics.io/imagestream=$2 || res=1
+
+        echo oc set image-lookup $2
+        oc set image-lookup $2 || res=1
+        return $res
+    else
+        oc tag --source=docker $1 $2:$tag > /dev/null && [ ${PIPESTATUS[0]} -eq 0 ] || return 1
+        oc label imagestream $2 radanalytics.io/imagestream=$2 > /dev/null && [ ${PIPESTATUS[0]} -eq 0 ] || return 1
+        oc set image-lookup $2 > /dev/null && [ ${PIPESTATUS[0]} -eq 0 ] || return 1
+    fi
+}
+
+function get_image() {
+    # This returns the incomplete image needed to do a new build
+
+    # Pre-screen the argument against IMAGESTREAMS so we can easily
+    # control support for an image
+    if ! [[ "$IMAGESTREAMS" = *"$1"* ]]; then
+        return 1
+    fi
+
+    case $1 in
+        radanalytics-pyspark)
+            echo radanalyticsio/radanalytics-pyspark-inc:stable
+            ;;
+        radanalytics-pyspark-py36)
+            echo radanalyticsio/radanalytics-pyspark-py36-inc:stable
+            ;;
+        radanalytics-java-spark)
+            echo radanalyticsio/radanalytics-java-spark-inc:stable
+            ;;
+        radanalytics-scala-spark)
+            echo radanalyticsio/radanalytics-scala-spark-inc:stable
+            ;;
+        openshift-spark)
+            echo radanalyticsio/openshift-spark-inc:2.3-latest
+            ;;
+        openshift-spark-py36)
+            echo radanalyticsio/openshift-spark-py36-inc:2.3-latest
+            ;;
+        radanalytics-r-spark)
+            echo radanalyticsio/radanalytics-r-spark-inc:latest
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+function get_complete_image() {
+    # This returns the full image associated with an imagestream (supports rebuilding with 'clean')
+
+    # Pre-screen the argument against IMAGESTREAMS so we can easily
+    # control support for an image
+    if ! [[ "$IMAGESTREAMS" = *"$1"* ]]; then
+        return 1
+    fi
+
+    case $1 in
+        radanalytics-pyspark)
+            echo radanalyticsio/radanalytics-pyspark:stable
+            ;;
+        radanalytics-pyspark-py36)
+            echo radanalyticsio/radanalytics-pyspark-py36:stable
+            ;;
+        radanalytics-java-spark)
+            echo radanalyticsio/radanalytics-java-spark:stable
+            ;;
+        radanalytics-scala-spark)
+            echo radanalyticsio/radanalytics-scala-spark:stable
+            ;;
+        openshift-spark)
+            echo radanalyticsio/openshift-spark:2.3-latest
+            ;;
+        openshift-spark-py36)
+            echo radanalyticsio/openshift-spark-py36:2.3-latest
+            ;;
+        radanalytics-r-spark)
+            echo radanalyticsio/radanalytics-r-spark:latest
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+function get_object() {
+    # This returns template or configmap names associated with an imagestream
+
+    # Pre-screen the argument against IMAGESTREAMS so we can easily
+    # control support for an image
+    if ! [[ "$IMAGESTREAMS" = *"$1"* ]]; then
+        return 1
+    fi
+
+    case $1 in
+        radanalytics-pyspark)
+            echo oshinko-python-spark-build-dc
+            ;;
+        radanalytics-pyspark-py36)
+            echo oshinko-python36-spark-build-dc
+            ;;
+        radanalytics-java-spark)
+            echo oshinko-java-spark-build-dc
+            ;;
+        radanalytics-scala-spark)
+            echo oshinko-scala-spark-build-dc
+            ;;
+        openshift-spark)
+            echo default-oshinko-cluster-config
+            ;;
+        openshift-spark-py36)
+            echo oshinko-py36-conf
+            ;;
+        radanalytics-r-spark)
+            echo oshinko-r-spark-build-dc
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+function check_oc_login() {
+    oc whoami &> /dev/null
+    if [ "$?" -ne 0 ]; then
+        echo No current OpenShift login
+        return 1
+    fi
+}
+
+function results() {
+    local title=$1
+    shift
+    local items=("$@")
+    if [ ${#items[@]} -ne 0 ]; then
+        echo "$title:"
+        for l in ${items[@]}; do
+            echo -e "\t$l"
+        done
+    fi
+}
+
+function build-help() {
+    echo "usage: rad-image build [options] SPARK [images]"
+    echo
+    echo "Build usable image streams or local images from incomplete radanalyticsio images and an Apache Spark distribution"
+    echo "The names of the image streams or images created will match the supported images listed below"
+    echo
+    echo "Options:"
+    echo "  -h       Print this help message"
+    echo "  -t TAG   Optional tag to use for images. Default is 'complete'"
+    echo "  -l       Use the s2i tool to create images on the local host. By default the 'oc'"
+    echo "           command is used to create image streams in the current OpenShift project"
+    echo "  -v       Verbose output"
+    echo 
+    echo "SPARK      A file or url containing an Apache Spark binary distribution tarball"
+    echo
+    echo "               rad-image build https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz"
+    echo "               rad-image build spark-2.3.1-bin-hadoop2.7.tgz"
+    echo
+    echo "           Alternatively, a directory may be used to include an md5 sum for the tarball."
+    echo "           The name of the md5 file must be the name of the tarball with '.md5' appended."
+    echo "           Place both files in the directory and pass the directory as the argument:"
+    echo
+    echo "               build_inputs/"
+    echo "                  spark-2.3.1-bin-hadoop2.7.tgz"
+    echo "                  spark-2.3.1-bin-hadoop2.7.tgz.md5"
+    echo
+    echo "               rad-image build build_inputs"
+    echo
+    echo "Images:    By default, all supported images will be built. To build only certain images,"
+    echo "           specify image names separated by spaces. Supported images are"
+    echo
+    echo "           radanalytics-pyspark"
+    echo "           radanalytics-pyspark-py36"
+    echo "           radanalytics-scala-spark"
+    echo "           radanalytics-java-spark"
+    echo "           openshift-spark"
+    echo "           openshift-spark-py36"
+    include_optional "           "
+}
+
+function clean-help() {
+    echo "usage: rad-image clean [options] TARGETS [images]"
+    echo
+    echo "Remove image streams and tags created by this script and objects used to create them"
+    echo "Associated objects are identified via labels used by the tool"
+    echo
+    echo "Note that 'clean' has no effect on images built with the '-l' option (local images)"
+    echo
+    echo "Options:"
+    echo "  -h       Print this help message"
+    echo "  -v       Verbose output"
+    echo
+    echo "Targets":
+    echo "  build          Delete buildconfigs and builds created by this script for the specified image streams"
+    echo "  imagestream    Remove tags and auxiliary streams created by this script for the specified image streams"
+    echo "                 and restore standard streams needed by radanalyticsio templates."
+    echo "  all            Apply 'clean' to all targets"
+    echo
+    echo "Images:    By default, clean runs for all supported image streams. To run clean for specific image streams,"
+    echo "           specify their names separated by spaces. Supported image streams are"
+    echo
+    echo "           radanalytics-pyspark"
+    echo "           radanalytics-pyspark-py36"
+    echo "           radanalytics-scala-spark"
+    echo "           radanalytics-java-spark"
+    echo "           openshift-spark"
+    echo "           openshift-spark-py36"
+    include_optional "           "
+}
+
+function list-help() {
+    echo "usage: rad-image list [options]"
+    echo
+    echo "List the radanalyticsio image streams in the current project"
+    echo
+    echo "Options:"
+    echo "  -h       Print this help message"
+    echo
+}
+
+function use-help() {
+    echo "usage: rad-image use [options] (-d|TAG) [images]"
+    echo
+    echo "Update the standard templates and configmaps to reference image streams using the specified tag"
+    echo "Only resources associated with specified image streams will be modified"
+    echo
+    echo "Options:"
+    echo "  -h       Print this help message"
+    echo "  -v       Verbose output"
+
+    echo "Required:"
+    echo "  TAG      The tag value to use when referencing image streams. Mutually exclusive with '-d'"
+    echo "  -d       Use default tag values to reference image streams (as defined by standard templates). Mutually exclusive with a TAG value."
+    echo
+    echo "Images:    By default, resources associated with all supported image streams will be modified."
+    echo "           To update resources for particular image streams, specify their names separated by spaces. Supported image streams are"
+    ech
+    echo "           radanalytics-pyspark"
+    echo "           radanalytics-pyspark-py36"
+    echo "           radanalytics-scala-spark"
+    echo "           radanalytics-java-spark"
+    echo "           openshift-spark"
+    echo "           openshift-spark-py36"
+    include_optional "           "
+}
+
+function build() {
+    local targets
+    local tag=
+    local image
+    local localbuild=false
+    local success=()
+    local failure=()
+    local ignore=()
+    
+    while getopts hlvt: option; do
+        case $option in
+            v)
+                VERBOSE=true
+                ;;
+            l)
+                localbuild=true
+                ;;
+            t)
+                tag=$OPTARG
+                ;;
+            h)
+                build-help
+                exit 0
+                ;;
+            *)
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    # We've got to have a build value
+    if [ "$#" -eq 0 ]; then
+        echo error: build input required
+        build-help
+        exit 1
+    fi
+    BUILD_INPUT=$1
+    shift
+
+    # TODO we can add a shortcut error here by testing
+    # for existence of the build input if the value is
+    # not a schema
+
+    if [ "$localbuild" == "false" ]; then
+        check_oc_login
+        if [ "$?" -ne 0 ]; then
+            return 1
+        fi
+    fi
+    
+    # if there are no arguments left, just build everything
+    if [ "$#" -eq 0 ]; then
+        targets=$IMAGESTREAMS
+    else
+        targets="$@"
+    fi
+    
+    for target in $targets; do
+        image=$(get_image $target)
+        if [ "$?" -eq 0 ]; then
+            if [ "$localbuild" == "true" ]; then
+                complete-s2i $image $target $tag
+            else
+                complete $image $target $tag
+            fi
+            if [ "$?" -eq 0 ]; then
+                success+=($target)
+            else
+                failure+=($target)
+            fi
+        else
+            echo Unrecognized target $target
+            ignore+=($target)
+        fi
+        echo
+    done
+    results "Succeeded" ${success[@]}
+    results "Failed"    ${failure[@]}
+    results "Ignored"   ${ignore[@]}
+}
+
+function clean() {
+    local targets
+    local image
+    local success=()
+    local failure=()
+    local ignore=()
+    local CMD
+    local res
+
+    while getopts hv option; do
+        case $option in
+            v)
+                VERBOSE=true
+                ;;
+            h)
+                clean-help
+                exit 0
+                ;;
+            *)
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    # We've got to have a TARGET value
+    if [ "$#" -eq 0 ]; then
+        echo error: TARGET required
+        clean-help
+        exit 1
+    fi
+    CMD=$1
+    shift
+    case $CMD in
+        all | build | imagestream)
+            ;;
+        *)
+            echo error: unrecognized command \'"$CMD"\'
+            clean-help
+            exit 1
+            ;;
+    esac
+
+    # if there are no arguments left, just clean all targets
+    if [ "$#" -eq 0 ]; then
+        targets=$IMAGESTREAMS
+    else
+        targets="$@"
+    fi
+
+    check_oc_login
+    if [ "$?" -ne 0 ]; then
+        return 1
+    fi
+
+    for target in $targets; do
+        image=$(get_complete_image $target)
+        if [ "$?" -ne 0 ]; then
+            echo Unrecognized target $target
+            ignore+=($target)
+            continue
+        fi
+        if [ "$CMD" == "build" -o "$CMD" == "all" ]; then
+            clean_up $target buildconfig
+            res=$?
+        fi
+        if [ "$CMD" == "imagestream" -o "$CMD" == "all" ]; then
+            clean_up $target imagestream
+            res=$?
+            if [ "$res" -eq 0 ]; then
+                # remake the imagestream here with default tags and images
+                reset_is $image $target
+                res=$?
+            fi
+        fi
+        if [ "$res" -eq 0 ]; then
+            success+=($target)
+        else
+            failure+=($target)
+        fi
+    done
+    results "Succeeded" ${success[@]}
+    results "Failed"    ${failure[@]}
+    results "Ignored"   ${ignore[@]}
+}
+
+function list() {
+
+    while getopts h option; do
+        case $option in
+            h)
+                list-help
+                exit 0
+                ;;
+            *)
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+    
+    check_oc_login
+    if [ "$?" -ne 0 ]; then
+        return 1
+    fi
+    
+    oc get is -l radanalytics.io/imagestream
+}
+
+function use {
+    local defaults=false   # set with -d, use default tags for imagestreams
+    local tag              # tag to use for non openshift-spark imagestreams
+    local otag             # tag to use for openshift-spark imagestreams, different value when -d is used
+    local object
+    local targets
+    local success=()
+    local failure=()
+    local ignore=()
+    local temp
+    local image_val
+
+    while getopts hvd option; do
+        case $option in
+            d)
+                defaults=true
+                ;;
+            v)
+                VERBOSE=true
+                ;;
+            h)
+                use-help
+                exit 0
+                ;;
+            *)
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    # if the default flag is not set and there is no tag value specified, it's an error
+    if [ "$defaults" != "true" ]; then
+        if [ "$#" -eq 0 ]; then
+            echo error: tag value required
+            use-help
+            exit 1
+        fi
+        tag=$1
+        otag=$1
+        shift
+    else
+        tag=stable
+        otag=2.3-latest
+    fi
+
+    # if there are no arguments left process all targets
+    if [ "$#" -eq 0 ]; then
+        targets=$IMAGESTREAMS
+    else
+        targets="$@"
+    fi
+
+    check_oc_login
+    if [ "$?" -ne 0 ]; then
+        return 1
+    fi
+
+    for target in $targets; do
+        # get the name of the template or configmap we're referencing based on the imagestream in question
+        object=$(get_object $target)
+        if [ "$?" -eq 0 ]; then
+            case "$target" in
+                # for these we fix up configmaps, for everything else we fix up templates
+                openshift-spark | openshift-spark-py36)
+                    # If we're using a non-default value, then include the full pullspec from the imagestream
+                    # to get around local lookup bugs in oc cluster up cases (>3.7). Oshinko generates specs
+                    # that use DockerImage and not ImageStreamTag, so if lookup is not working ...
+                    if [ "$defaults" == true ]; then
+                        image_val=$target:$otag
+                    else
+                        image_val=$(oc get is $target --template='{{.status.dockerImageRepository}}':$otag)
+                    fi
+                    temp=$(oc get configmap $object -o yaml | sed -e 's@sparkimage: .*$@sparkimage: '$image_val'@g')
+                    if [ "$?" -ne 0 ]; then
+                        failure+=($target)
+                        continue
+                    fi
+                    if [ "$VERBOSE" == "true" ]; then
+                        echo oc patch configmap $object --type=merge --patch="$temp"
+                        oc patch configmap $object --type=merge --patch="$temp"
+                        res=$?
+                    else
+                        res=0
+                        oc patch configmap $object --type=merge --patch="$temp" > /dev/null && [ ${PIPESTATUS[0]} -eq 0 ] || res=1
+                    fi
+                    if [ "$res" -ne 0 ]; then
+                        failure+=($target)
+                        continue
+                    fi
+                    success+=($target)
+                    ;;
+                *)
+                    temp=$(oc get template $object -o yaml | sed -e 's@name: '$target':.*$@name: '$target':'$tag'@g')
+                    if [ "$?" -ne 0 ]; then
+                        failure+=($target)
+                        continue
+                    fi
+                    if [ "$VERBOSE" == "true" ]; then
+                        echo oc patch template $object --type=merge --patch="$temp"
+                        oc patch template $object --type=merge --patch="$temp"
+                        res=$?
+                    else
+                        res=0
+                        oc patch template $object --type=merge --patch="$temp" > /dev/null && [ ${PIPESTATUS[0]} -eq 0 ] || res=1
+                    fi
+                    if [ "$res" -ne 0 ]; then
+                        failure+=($target)
+                        continue
+                    fi
+                    success+=($target)
+                    ;;
+            esac
+        else
+            echo Unrecognized target $target
+            ignore+=($target)
+        fi
+    done
+    results "Succeeded" ${success[@]}
+    results "Failed"    ${failure[@]}
+    results "Ignored"   ${ignore[@]}
+}
+
+case "$CMD" in
+    build)
+        build $@
+        ;;
+    clean)
+        clean $@
+        ;;
+    list)
+        list $@
+        ;;
+    use)
+        use $@
+        ;;
+    *)
+        echo Unrecognized command \'"$CMD"\'
+        ;;
+esac

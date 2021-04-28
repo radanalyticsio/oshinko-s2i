@@ -1,0 +1,11 @@
+#!/bin/sh
+
+fullname=scala-212-build/spark-2.4.4-bin-without-hadoop-scala-2.12.tgz
+if ! [ -s "$fullname" ]; then
+    echo "hooray"
+fi
+
+fullname=scala-build/spark-2.4.0-bin-hadoop2.7.tgz
+if ! [ -s "$fullname" ]; then
+    echo "hooray1"
+fi
