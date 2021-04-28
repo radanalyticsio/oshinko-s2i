@@ -1,14 +1,14 @@
 schema_version: 1
 
-name: "radanalyticsio/radanalytics-pyspark"
+name: "radanalyticsio/radanalytics-pyspark-inc"
 version: 1.0
 release: dev
-from: "centos/python-27-centos7:latest"
+from: "centos/python-36-centos7:latest"
 labels:
   - name: "io.k8s.description"
-    value: "Platform for building a radanalytics Python 2.7 pyspark app"
+    value: "Platform for building a radanalytics Python 3.6 pyspark app"
   - name: "io.k8s.display-name"
-    value: "radanalytics pyspark"
+    value: "radanalytics pyspark-inc"
   - name: "io.openshift.expose-services"
     value: "8080:http"
   - name: "io.openshift.s2i.scripts-url"
@@ -31,19 +31,20 @@ envs:
   - name: APP_LANG
     value: python
 modules:
-    install:
-      - name: common
-      - name: pyspark
+  repositories:
+    - path: modules
+  install:
+    - name: common
+    - name: pyspark
 packages:
     install:
       - java-1.8.0-openjdk
-      - rsync
 artifacts:
   - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.6.1/oshinko_v0.6.1_linux_amd64.tar.gz
     md5: ce740893afa0801134151ff83e7f21e6
 run:
     user: 185
     cmd:
-      - "/usr/libexec/s2i/usage"
+      - /usr/libexec/s2i/usage
     entrypoint:
       - "/opt/app-root/etc/bootstrap.sh"

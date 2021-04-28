@@ -1,5 +1,30 @@
-schema_version: 1
-
-name: common
+artifacts:
+- md5: ce740893afa0801134151ff83e7f21e6
+  name: oshinko_v0.6.1_linux_amd64.tar.gz
+  target: oshinko_v0.6.1_linux_amd64.tar.gz
+  url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.6.1/oshinko_v0.6.1_linux_amd64.tar.gz
+envs:
+- name: SPARK_INSTALL
+  value: /opt/spark-distro
+- name: APP_ROOT
+  value: /opt/app-root
 execute:
-    - script: install
+- directory: common
+  module_name: common
+  name: common/install
+  script: install
+labels: []
+modules:
+  install: []
+  repositories: []
+name: common
+osbs:
+  configuration: {}
+  repository: {}
+packages:
+  install:
+  - wget
+  repositories: []
+ports: []
+version: 1.0
+volumes: []

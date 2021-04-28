@@ -1,5 +1,16 @@
-schema_version: 1
+version: 1.0
 
 name: common
+envs:
+  - name: SPARK_INSTALL
+    value: /opt/spark-distro
+  - name: APP_ROOT
+    value: /opt/app-root
+packages:
+    install:
+        - wget
+artifacts:
+  - url: https://github.com/radanalyticsio/oshinko-cli/releases/download/v0.6.1/oshinko_v0.6.1_linux_amd64.tar.gz
+    md5: ce740893afa0801134151ff83e7f21e6
 execute:
     - script: install

@@ -21,22 +21,6 @@ if [ -z "$S2I_TEST_IMAGE_PYSPARK_INC" ]; then
     fi
 fi
 
-if [ -z "$S2I_TEST_IMAGE_PYSPARK_PY36" ]; then
-    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
-	S2I_TEST_IMAGE_PYSPARK_PY36=radanalytics-pyspark-py36
-    else
-	S2I_TEST_IMAGE_PYSPARK_PY36=docker.io/radanalyticsio/radanalytics-pyspark-py36
-    fi
-fi
-
-if [ -z "$S2I_TEST_IMAGE_PYSPARK_PY36_INC" ]; then
-    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
-	S2I_TEST_IMAGE_PYSPARK_PY36_INC=radanalytics-pyspark-py36-inc
-    else
-	S2I_TEST_IMAGE_PYSPARK_PY36_INC=docker.io/radanalyticsio/radanalytics-pyspark-py36-inc
-    fi
-fi
-
 if [ -z "$S2I_TEST_IMAGE_JAVA" ]; then
     if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
 	S2I_TEST_IMAGE_JAVA=radanalytics-java-spark
@@ -69,24 +53,7 @@ if [ -z "$S2I_TEST_IMAGE_SCALA_INC" ]; then
     fi
 fi
 
-if [ -z "$S2I_TEST_IMAGE_SPARKLYR" ]; then
-    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
-        S2I_TEST_IMAGE_SPARKLYR=radanalytics-sparklyr
-    else
-        S2I_TEST_IMAGE_SPARKLYR=docker.io/radanalyticsio/radanalytics-r-spark
-    fi
-fi
-
-if [ -z "$S2I_TEST_IMAGE_SPARKLYR_INC" ]; then
-    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
-        S2I_TEST_IMAGE_SPARKLYR_INC=radanalytics-sparklyr-inc
-    else
-        S2I_TEST_IMAGE_SPARKLYR_INC=docker.io/radanalyticsio/radanalytics-r-spark-inc
-    fi
-fi
-
-S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark}
-S2I_TEST_SPARK_IMAGE_PY3=${S2I_TEST_SPARK_IMAGE_PY3:-docker.io/radanalyticsio/openshift-spark-py36}
+S2I_TEST_SPARK_IMAGE=${S2I_TEST_SPARK_IMAGE:-docker.io/radanalyticsio/openshift-spark:3.0}
 
 S2I_TEST_WORKERS=${S2I_TEST_WORKERS:-1}
 
@@ -123,15 +90,11 @@ function print_test_env {
         echo Not using external or integrated registry
     fi
     echo Using s2i pyspark image $S2I_TEST_IMAGE_PYSPARK
-    echo Using s2i pyspark-py36 image $S2I_TEST_IMAGE_PYSPARK_PY36
     echo Using s2i java image $S2I_TEST_IMAGE_JAVA
     echo Using s2i scala image $S2I_TEST_IMAGE_SCALA
-    echo Using s2i sparklyr image $S2I_TEST_IMAGE_SPARKLYR
     echo Using incomplete s2i pyspark image $S2I_TEST_IMAGE_PYSPARK_INC
-    echo Using incomplete s2i pyspark-py36 image $S2I_TEST_IMAGE_PYSPARK_PY36_INC
     echo Using incomplete s2i java image $S2I_TEST_IMAGE_JAVA_INC
     echo Using incomplete s2i scala image $S2I_TEST_IMAGE_SCALA_INC
-    echo Using incomplete s2i sparklyr image $S2I_TEST_IMAGE_SPARKLYR_INC
     echo Using spark image $S2I_TEST_SPARK_IMAGE
     echo Using $S2I_TEST_WORKERS workers
 }
@@ -316,9 +279,6 @@ function cleanup_app() {
             os::cmd::try_until_failure 'oc get pod/"$POD_NAME"' $((10*minute))
         fi
     fi
-    # In some cases we may have a deploy pod hanging around that is still terminating
-    # Wait for them to disappear
-    os::cmd::try_until_text 'oc get pods -l openshift.io/deployer-pod-for.name' 'No resources found'
     set -e
 }
 

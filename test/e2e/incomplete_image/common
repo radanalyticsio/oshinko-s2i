@@ -3,6 +3,16 @@
 function build_md5 {
     local myname=$1
     local image=$2
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
+    echo oc new-build --name="$myname" --docker-image="$image" --binary
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
     poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs
 
@@ -10,20 +20,29 @@ function build_md5 {
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from tarball'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing spark native entrypoint'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
-    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' '[pP]ushed'
     os::cmd::expect_success 'oc delete buildconfig "$myname"'
 }
 
 function already_installed {
     local myname=$1
     local image=$2
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
     poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs
 
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Attempting to install Spark'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from tarball'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
-    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' '[pP]ushed'
 
     # Now we should have an imagestream named spark
     local SPARK_PULL=$(oc get is $myname --template='{{index .status "dockerImageRepository"}}')
@@ -38,6 +57,16 @@ function already_installed {
 function build_env_var {
     local myname=$1
     local image=$2
+    local image=$2
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary -e SPARK_URL=https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz -e SPARK_MD5_URL=https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz.md5'
 
     poll_binary_build $myname
@@ -47,13 +76,22 @@ function build_env_var {
     os::cmd::try_until_success 'oc log buildconfig/"$myname" | grep "Downloading.*spark-2.3.0-bin-hadoop2.7.tgz.md5$"'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from tarball'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
-    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' '[pP]ushed'
     os::cmd::expect_success 'oc delete buildconfig "$myname"'
 }
 
 function build_bad_md5 {
     local myname=$1    
     local image=$2
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
     poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs true
 
@@ -65,19 +103,37 @@ function build_bad_md5 {
 function build_from_directory {
     local myname=$1
     local image=$2
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
     poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs/*.tgz
 
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Attempting to install Spark'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Installing from directory'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Spark installed successfully'
-    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Pushed'
+    os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' '[pP]ushed'
     os::cmd::expect_success 'oc delete buildconfig "$myname"'
 }
 
 function tarball_no_submit {
     local myname=$1
     local image=$2
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
     poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs-no-submit true
 
@@ -89,6 +145,15 @@ function tarball_no_submit {
 function directory_no_submit {
     local myname=$1
     local image=$2
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
     poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs-no-submit/*.tgz true
 
@@ -101,6 +166,15 @@ function build_bad_tarball {
     local myname=$1
     local image=$2
     local THIS=$(readlink -f `dirname "${BASH_SOURCE[0]}"`)    
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
 
     poll_binary_build $myname "$THIS" true
@@ -113,22 +187,20 @@ function build_bad_tarball {
 function bad_submit {
     local myname=$1
     local image=$2
+    if [ "$S2I_TEST_LOCAL_IMAGES" == true ]; then
+        if [ -n  "$S2I_TEST_EXTERNAL_REGISTRY" ]; then
+            user=$S2I_TEST_EXTERNAL_USER
+            pushproj=$user
+            pushimage=scratch-$image
+            registry=$S2I_TEST_EXTERNAL_REGISTRY
+            image=$registry/$pushproj/$pushimage
+        fi
+    fi
     os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
     poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs-bad-submit true
 
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'Cannot run spark-submit, Spark install failed'
     os::cmd::expect_success_and_text 'oc log buildconfig/"$myname"' 'no valid Spark distribution found'
-    os::cmd::expect_success 'oc delete buildconfig "$myname"'
-}
-
-function copy_nocopy {
-    local myname=$1
-    local image=$2
-    os::cmd::expect_success 'oc new-build --name="$myname" --docker-image="$image" --binary'
-    poll_binary_build $myname "$RESOURCE_DIR"/spark-inputs-with-conf
-
-    os::cmd::try_until_success 'oc log buildconfig/"$myname" | grep "^Moving.*to /opt/spark/conf"'
-    os::cmd::try_until_success 'oc log buildconfig/"$myname" | grep "^Not moving.*/opt/spark/conf.*already exists"'
     os::cmd::expect_success 'oc delete buildconfig "$myname"'
 }
 
@@ -207,8 +279,9 @@ function run_incomplete_app() {
     local SUFFIX=$(date -Ins | md5sum | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
     set -e
     local APP_NAME=app-$SUFFIX
+    echo oc new-app --file=$template -p GIT_URI=$source_info -p APPLICATION_NAME=$APP_NAME
     oc new-app --file=$template -p GIT_URI=$source_info -p APPLICATION_NAME=$APP_NAME
-    os::cmd::expect_success_and_text 'oc log buildconfig/$APP_NAME' 'no valid Spark distribution found'
+    os::cmd::try_until_text 'oc log buildconfig/$APP_NAME' 'no valid Spark distribution found'
     oc delete buildconfig/$APP_NAME
     oc delete dc/$APP_NAME
     oc delete service $APP_NAME
@@ -217,6 +290,29 @@ function run_incomplete_app() {
 
 # if we successfully build an image, we should be able to run a new-app using that image.
 # just run a single startup, no need to run all the images
+
+function get_driver_pod() {
+    local count
+    local app_name=$1
+    count=0
+
+    set +e
+    while true; do
+        DRIVER=$(oc get pod -l deploymentconfig=$app_name --template='{{index .items 0 "metadata" "name"}}')
+        if [ "$?" -eq 0 ]; then
+            break
+        fi
+        echo Getting driver pod for $APP_NAME failed, trying again
+        oc get pods
+        sleep 10.0
+        count=$((count + 1))
+        echo $count
+        if [ "$count" -eq 60 ]; then
+            return 1
+        fi
+    done
+    set -e
+}
 
 function run_completed_app() {
     # going to need template, source, app_name, and main class
@@ -233,7 +329,8 @@ function run_completed_app() {
     set -e
     local APP_NAME=app-$SUFFIX
     oc new-app --file=$template -p GIT_URI=$source_info -p APPLICATION_NAME=$APP_NAME $config
-    os::cmd::try_until_text 'oc log dc/$APP_NAME' 'test app completed' $((10*minute))
+    get_driver_pod $APP_NAME
+    os::cmd::try_until_text 'oc log $DRIVER' 'test app completed' $((10*minute))
     oc delete buildconfig/$APP_NAME
     oc delete dc/$APP_NAME
     oc delete service $APP_NAME

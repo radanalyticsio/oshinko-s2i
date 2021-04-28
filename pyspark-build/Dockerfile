@@ -1,4 +1,4 @@
-# Copyright 2017 Red Hat
+# Copyright 2019 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,72 +16,128 @@
 #
 # This is a Dockerfile for the radanalyticsio/radanalytics-pyspark:1.0 image.
 
-FROM centos/python-27-centos7:latest
 
-USER root
+## START target image radanalyticsio/radanalytics-pyspark:1.0
+## \
+    FROM centos/python-36-centos7:latest
+
+    USER root
+
+###### START module 'common:1.0'
+###### \
+        # Copy 'common' module general artifacts
+        COPY \
+            oshinko_v0.6.1_linux_amd64.tar.gz \
+            /tmp/artifacts/
+        # Copy 'common' module content
+        COPY modules/common /tmp/scripts/common
+        # Switch to 'root' user to install 'common' module defined packages
+        USER root
+        # Install packages defined in the 'common' module
+        RUN yum --setopt=tsflags=nodocs install -y wget \
+            && rpm -q wget
+        # Set 'common' module defined environment variables
+        ENV \
+            APP_ROOT="/opt/app-root" \
+            SPARK_INSTALL="/opt/spark-distro" 
+        # Custom scripts from 'common' module
+        USER root
+        RUN [ "sh", "-x", "/tmp/scripts/common/install" ]
+###### /
+###### END module 'common:1.0'
+
+###### START module 'spark:1.0'
+###### \
+        # Copy 'spark' module general artifacts
+        COPY \
+            spark-3.0.1-bin-hadoop3.2.tgz \
+            /tmp/artifacts/
+        # Copy 'spark' module content
+        COPY modules/spark /tmp/scripts/spark
+        # Switch to 'root' user to install 'spark' module defined packages
+        USER root
+        # Install packages defined in the 'spark' module
+        RUN yum --setopt=tsflags=nodocs install -y wget \
+            && rpm -q wget
+        # Set 'spark' module defined environment variables
+        ENV \
+            PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
+            SPARK_HOME="/opt/spark" \
+            SPARK_INSTALL="/opt/spark-distro" 
+        # Custom scripts from 'spark' module
+        USER root
+        RUN [ "sh", "-x", "/tmp/scripts/spark/install" ]
+###### /
+###### END module 'spark:1.0'
+
+###### START module 'pyspark:1.0'
+###### \
+        # Copy 'pyspark' module content
+        COPY modules/pyspark /tmp/scripts/pyspark
+        # Set 'pyspark' module defined environment variables
+        ENV \
+            APP_LANG="python" \
+            APP_ROOT="/opt/app-root" \
+            PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
+            PYTHONPATH="/opt/spark/python" \
+            RADANALYTICS_PYSPARK="1.0" 
+        # Custom scripts from 'pyspark' module
+        USER root
+        RUN [ "sh", "-x", "/tmp/scripts/pyspark/install" ]
+###### /
+###### END module 'pyspark:1.0'
+
+###### START image 'radanalyticsio/radanalytics-pyspark:1.0'
+###### \
+        # Copy 'radanalyticsio/radanalytics-pyspark' image general artifacts
+        COPY \
+            spark-3.0.0-bin-hadoop3.2.tgz \
+            oshinko_v0.6.1_linux_amd64.tar.gz \
+            /tmp/artifacts/
+        # Switch to 'root' user to install 'radanalyticsio/radanalytics-pyspark' image defined packages
+        USER root
+        # Install packages defined in the 'radanalyticsio/radanalytics-pyspark' image
+        RUN yum --setopt=tsflags=nodocs install -y java-11-openjdk \
+            && rpm -q java-11-openjdk
+        # Set 'radanalyticsio/radanalytics-pyspark' image defined environment variables
+        ENV \
+            APP_LANG="python" \
+            APP_ROOT="/opt/app-root" \
+            JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-pyspark" \
+            JBOSS_IMAGE_VERSION="1.0" \
+            PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
+            PYTHONPATH="/opt/spark/python" \
+            RADANALYTICS_PYSPARK="1.0" \
+            SPARK_HOME="/opt/spark" \
+            SPARK_INSTALL="/opt/spark-distro" 
+        # Set 'radanalyticsio/radanalytics-pyspark' image defined labels
+        LABEL \
+            io.cekit.version="3.6.0"  \
+            io.k8s.description="Platform for building a radanalytics Python 3.6 pyspark app"  \
+            io.k8s.display-name="radanalytics pyspark"  \
+            io.openshift.expose-services="8080:http"  \
+            io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"  \
+            io.openshift.tags="builder,radanalytics,pyspark"  \
+            io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz"  \
+            name="radanalyticsio/radanalytics-pyspark"  \
+            version="1.0" 
+###### /
+###### END image 'radanalyticsio/radanalytics-pyspark:1.0'
 
 
-# Install required RPMs and ensure that the packages were installed
-RUN yum install -y java-1.8.0-openjdk \
-    && yum clean all && rm -rf /var/cache/yum \
-    && rpm -q java-1.8.0-openjdk
+    # Switch to 'root' user and remove artifacts and modules
+    USER root
+    RUN [ ! -d /tmp/scripts ] || rm -rf /tmp/scripts
+    RUN [ ! -d /tmp/artifacts ] || rm -rf /tmp/artifacts
 
+    # Clear package manager metadata
+    RUN yum clean all && [ ! -d /var/cache/yum ] || rm -rf /var/cache/yum
 
-# Add all artifacts to the /tmp/artifacts
-# directory
-COPY \
-    spark-2.4.0-bin-hadoop2.7.tgz \
-    oshinko_v0.6.1_linux_amd64.tar.gz \
-    /tmp/artifacts/
-
-
-# Environment variables
-ENV \
-    APP_LANG="python" \
-    APP_ROOT="/opt/app-root" \
-    JBOSS_IMAGE_NAME="radanalyticsio/radanalytics-pyspark" \
-    JBOSS_IMAGE_VERSION="1.0" \
-    PATH="/opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin" \
-    PYTHONPATH="/opt/spark/python" \
-    RADANALYTICS_PYSPARK="1.0" \
-    SPARK_HOME="/opt/spark" \
-    SPARK_INSTALL="/opt/spark-distro" 
-
-# Labels
-LABEL \
-      io.cekit.version="2.2.7"  \
-      io.k8s.description="Platform for building a radanalytics Python 2.7 pyspark app"  \
-      io.k8s.display-name="radanalytics pyspark"  \
-      io.openshift.expose-services="8080:http"  \
-      io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"  \
-      io.openshift.tags="builder,radanalytics,pyspark"  \
-      io.radanalytics.sparkdistro="https://archive.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz"  \
-      name="radanalyticsio/radanalytics-pyspark"  \
-      org.concrt.version="2.2.7"  \
-      version="1.0" 
-
-# Add scripts used to configure the image
-COPY modules /tmp/scripts
-
-# Custom scripts
-USER root
-RUN [ "bash", "-x", "/tmp/scripts/common/install" ]
-
-USER root
-RUN [ "bash", "-x", "/tmp/scripts/spark/install" ]
-
-USER root
-RUN [ "bash", "-x", "/tmp/scripts/pyspark/install" ]
-
-USER root
-RUN rm -rf /tmp/scripts
-USER root
-RUN rm -rf /tmp/artifacts
-
-USER 185
-
-
-ENTRYPOINT ["/opt/app-root/etc/bootstrap.sh"]
-
-CMD ["/usr/libexec/s2i/usage"]
-
+    # Define the user
+    USER 185
+    # Define entrypoint
+    ENTRYPOINT ["/opt/app-root/etc/bootstrap.sh"]
+    # Define run cmd
+    CMD ["/usr/libexec/s2i/usage"]
+## /
+## END target image

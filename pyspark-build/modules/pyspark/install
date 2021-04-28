@@ -9,25 +9,6 @@ function last_assemble {
 SCRIPT_DIR=$(dirname $0)
 ADDED_DIR=${SCRIPT_DIR}/added
 
-set +e
-pip show numpy
-res=$?
-set -e
-if [ "$res" -ne 0 ]
-then
-   if [ "$PYTHON_VERSION" == "2.7" ]; then
-        numpy="numpy==1.16.5"
-    else
-        numpy="numpy"
-    fi
-    if [ -f /opt/app-root/etc/scl_enable ]
-    then
-        source /opt/app-root/etc/scl_enable && pip install $numpy
-    else
-        pip install $numpy
-    fi
-fi
-
 cp $ADDED_DIR/s2i/run $STI_SCRIPTS_PATH
 cp $ADDED_DIR/s2i/usage $STI_SCRIPTS_PATH
 

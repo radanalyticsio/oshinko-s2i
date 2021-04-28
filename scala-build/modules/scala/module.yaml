@@ -1,5 +1,21 @@
-schema_version: 1
-
-name: scala
+artifacts: []
+envs: []
 execute:
-    - script: install
+- directory: scala
+  module_name: scala
+  name: scala/install
+  script: install
+labels: []
+modules:
+  install: []
+  repositories: []
+name: scala
+osbs:
+  configuration: {}
+  repository: {}
+packages:
+  install: []
+  repositories: []
+ports: []
+version: 1.0
+volumes: []

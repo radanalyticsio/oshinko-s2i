@@ -1,5 +1,8 @@
-schema_version: 1
+version: 1.0
 
 name: java
+envs:
+    - name: STI_SCRIPTS_PATH
+      value: /usr/local/s2i
 execute:
     - script: install

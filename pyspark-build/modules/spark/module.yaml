@@ -1,5 +1,32 @@
-schema_version: 1
-
-name: spark
+artifacts:
+- md5: 31e019e35e75a4c55c7efa4464641bf1
+  name: spark-3.0.1-bin-hadoop3.2.tgz
+  target: spark-3.0.1-bin-hadoop3.2.tgz
+  url: https://archive.apache.org/dist/spark/spark-3.0.1/spark-3.0.1-bin-hadoop3.2.tgz
+envs:
+- name: PATH
+  value: /opt/app-root/src/.local/bin/:/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/spark/bin
+- name: SPARK_HOME
+  value: /opt/spark
+- name: SPARK_INSTALL
+  value: /opt/spark-distro
 execute:
-    - script: install
+- directory: spark
+  module_name: spark
+  name: spark/install
+  script: install
+labels: []
+modules:
+  install: []
+  repositories: []
+name: spark
+osbs:
+  configuration: {}
+  repository: {}
+packages:
+  install:
+  - wget
+  repositories: []
+ports: []
+version: 1.0
+volumes: []

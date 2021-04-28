@@ -126,7 +126,7 @@ function run_app_without_optionals() {
     set +e
     oc get is $APP_NAME &> /dev/null
     local stream_exists=$?
-    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME $APP_MAIN_CLASS &> /dev/null
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_CLUSTER_NAME=$GEN_CLUSTER_NAME -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG $APP_MAIN_CLASS &> /dev/null
     set -e
     if [ "$stream_exists" -ne 0 ]; then
         poll_build
@@ -143,7 +143,7 @@ function run_app_without_clustername() {
     set +e
     oc get is $APP_NAME &> /dev/null
     local stream_exists=$?
-    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME $APP_MAIN_CLASS &> /dev/null
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p APPLICATION_NAME=$APP_NAME -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG $APP_MAIN_CLASS &> /dev/null
     set -e
     if [ "$stream_exists" -ne 0 ]; then
         poll_build
@@ -157,7 +157,7 @@ function run_app_without_clustername() {
 
 function run_app_without_application_name() {
     app_preamble
-    oc new-app --file=$TEMPLATE $SOURCE_INFO $APP_MAIN_CLASS
+    oc new-app --file=$TEMPLATE $SOURCE_INFO -p OSHINKO_NAMED_CONFIG=$NAMED_CONFIG $APP_MAIN_CLASS
 }
 
 function get_driver_pod() {
@@ -216,12 +216,12 @@ function scrape_for_env() {
     local ENVNAME=$2
     if [ "$#" -eq 3 ]; then
         local VALUE=$3
-        local SCRAPE='oc export pod '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value: '$VALUE'"'
+        local SCRAPE='oc get pod -o yaml '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value: '$VALUE'"'
         os::cmd::try_until_success "$SCRAPE"
     else
-        local SCRAPE='oc export pod '$PODNAME' | grep "name: '$ENVNAME'"'
+        local SCRAPE='oc get pod -o yaml '$PODNAME' | grep "name: '$ENVNAME'"'
         os::cmd::try_until_success "$SCRAPE"
-        SCRAPE='oc export pod '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value:"'
+        SCRAPE='oc get pod -o yaml '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value:"'
         os::cmd::try_until_failure "$SCRAPE"
     fi
 }
@@ -231,12 +231,12 @@ function scrape_build_for_env() {
     local ENVNAME=$2
     if [ "$#" -eq 3 ]; then
         local VALUE=$3
-        local SCRAPE='oc export build '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value: '$VALUE'"'
+        local SCRAPE='oc get build -o yaml '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value: '$VALUE'"'
         os::cmd::try_until_success "$SCRAPE"
     else
-        local SCRAPE='oc export build '$PODNAME' | grep "name: '$ENVNAME'"'
+        local SCRAPE='oc get build -o yaml '$PODNAME' | grep "name: '$ENVNAME'"'
         os::cmd::try_until_success "$SCRAPE"
-        SCRAPE='oc export build '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value:"'
+        SCRAPE='oc get build -o yaml '$PODNAME' | grep -A 1 "name: '$ENVNAME'" | grep "value:"'
         os::cmd::try_until_failure "$SCRAPE"
     fi
 }
@@ -262,7 +262,8 @@ function dc_test_no_app_name {
     os::cmd::try_until_text 'oc get pod -l deploymentconfig' 'No resources found'
     run_app_without_application_name
     os::cmd::try_until_not_text 'oc get pod -l deploymentconfig' 'No resources found' $((10*minute))
-    DRIVER=$(oc get pod -l deploymentconfig --template='{{index .items 0 "metadata" "name"}}')
+    os::cmd::try_until_success "oc get pod -l deploymentconfig -o jsonpath='{.items[0].metadata.name}'"
+    DRIVER=$(oc get pod -l deploymentconfig -o jsonpath='{.items[0].metadata.name}')
     os::cmd::try_until_text 'oc logs "$DRIVER"' 'cluster'
     os::cmd::expect_success 'oc delete dc --all'
 }
@@ -354,9 +355,9 @@ function test_cluster_name {
 
     cleanup_app $DRIVER
 
-    run_app_without_clustername
-    scrape_for_env $DRIVER OSHINKO_CLUSTER_NAME
-    cleanup_app $DRIVER
+    #run_app_without_clustername
+    #scrape_for_env $DRIVER OSHINKO_CLUSTER_NAME
+    #cleanup_app $DRIVER
 }
 
 function test_no_source_or_image {
@@ -372,9 +373,9 @@ function test_named_config {
     scrape_for_env $DRIVER OSHINKO_NAMED_CONFIG myconfig
     cleanup_app $DRIVER
 
-    run_app_without_optionals
-    scrape_for_env $DRIVER OSHINKO_NAMED_CONFIG
-    cleanup_app $DRIVER
+    #run_app_without_optionals
+    #scrape_for_env $DRIVER OSHINKO_NAMED_CONFIG
+    #cleanup_app $DRIVER
 }
 
 function test_app_file {
@@ -424,7 +425,7 @@ function test_git_ref {
     set_git_uri $1 $commit
     run_app skipwait
     SOURCE_INFO=$old_source
-    os::cmd::try_until_success 'oc export build "$APP_NAME"-1 | grep -e commit\:\ "$commit"'
+    os::cmd::try_until_success 'oc get build -o yaml "$APP_NAME"-1 | grep -e commit\:\ "$commit"'
     cleanup_app
     os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
     os::cmd::expect_success 'oc delete is "$APP_NAME"'
@@ -456,16 +457,6 @@ function test_spark_options {
 
 function test_exit {
     set_defaults
-    run_app
-    scrape_for_env $DRIVER APP_EXIT '\"false\"'
-    cleanup_app $DRIVER
-
-    set_exit_flag true
-    run_app
-    scrape_for_env $DRIVER APP_EXIT '\"true\"'
-    cleanup_app $DRIVER
-
-    set_exit_flag false
     run_app
     scrape_for_env $DRIVER APP_EXIT '\"false\"'
     cleanup_app $DRIVER
@@ -520,7 +511,7 @@ function test_context_dir {
     force_random_app_name
     run_app skipwait
 
-    os::cmd::try_until_text 'oc export buildconfig "$APP_NAME"' 'contextDir: mycontext'
+    os::cmd::try_until_text 'oc get buildconfig -o yaml "$APP_NAME"' 'contextDir: mycontext'
     cleanup_app
     os::cmd::expect_success 'oc delete buildconfig "$APP_NAME"'
     os::cmd::expect_success 'oc delete is "$APP_NAME"'

@@ -33,9 +33,11 @@ envs:
   - name: SPARK_VERSION
     value: 2.4.0
 modules:
+  repositories:
+    - path: modules
   install:
-    - name: common
     - name: java
+    - name: common
 packages:
   install:
     - tar
